@@ -14,6 +14,17 @@ const router = createRouter({
           path: '/autoOpration',
           name: 'AutoOpration',
           component: () => import('../views/autoJSON.vue'),
+          meta: {
+            title: '自动化运营配置',
+          },
+        },
+        {
+          path: '/templates',
+          name: 'Templates',
+          component: () => import('../views/templates.vue'),
+          meta: {
+            title: '模板管理',
+          },
         },
       ],
     },
