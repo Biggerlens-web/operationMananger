@@ -47,7 +47,6 @@
                     {{ loading ? '登录中...' : '登录' }}
                 </el-button>
 
-
             </form>
         </div>
     </div>
@@ -58,7 +57,11 @@
     import { useRouter } from 'vue-router'
     import service from '../axios/index.ts'
     import { ElMessage } from 'element-plus'
-
+    import { desEncrypt } from '@/utils/des.ts'
+    import { useCounterStore } from '@/stores/counter.ts'
+    import { storeToRefs } from 'pinia'
+    const counterStore = useCounterStore()
+    const { userName, userAvatar } = storeToRefs(counterStore)
     interface AccountForm {
         username: string
         password: string,
@@ -88,23 +91,17 @@
 
 
     //获取验证码
+    const sessionUUID = ref<any>()
     const verifyCodeUrl = ref<any>()
     const getVerifyCode = async () => {
         try {
-            const res: any = await service.get('/verifyCode',
-                {
-                    responseType: 'blob'
-                }
-            )
-            const arrayBuffer = await res.data.arrayBuffer()
-            // 转换为 base64
-            const base64 = btoa(
-                new Uint8Array(arrayBuffer)
-                    .reduce((data, byte) => data + String.fromCharCode(byte), '')
-            )
+            const res = await service.get('/verifyCode')
+            console.log('res', res);
 
-            verifyCodeUrl.value = `data:image/png;base64,${base64}`
-            console.log('验证码', verifyCodeUrl.value)
+
+            verifyCodeUrl.value = `data:image/png;base64,${res.data.data.img}`
+            sessionUUID.value = res.data.data.verifyCodeUUID
+
         } catch (err) {
             console.log('获取失败', err);
         }
@@ -160,25 +157,30 @@
                     username: accountForm.username,
                     password: accountForm.password,
                     verifyCode: accountForm.verifyCode,
+                    verifyCodeUUID: sessionUUID.value,
+                    timestamp: new Date().getTime(),
                 }
                 : {
                     username: phoneForm.phone,
                     verifyCode: phoneForm.code,
                 }
+            console.log('参数', params);
+            const paramsStr = desEncrypt(JSON.stringify(params))
             const res: any = await service.post('/loginAuth',
-                params
+                {
+                    enData: paramsStr
+                }
             )
-
             console.log('登录', res);
             if (res.data.code === 200) {
                 ElMessage.success('登录成功')
-                localStorage.setItem('token', res.token ?? '')
+                localStorage.setItem('token', res.data.data.token ?? '')
+                userName.value = res.data.data.username ?? '管理员'
+                userAvatar.value = res.data.data.userAvatar ?? ''
                 router.push('/autoOpration')
             } else {
                 ElMessage.error(res.data.msg)
             }
-
-
         } catch (error) {
             ElMessage.error('登录失败：' + (error as Error).message)
         } finally {

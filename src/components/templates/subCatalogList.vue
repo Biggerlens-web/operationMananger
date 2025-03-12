@@ -1,6 +1,8 @@
 <template>
+
     <ul class="catalog-list">
-        <li v-for="item in catalogList" :key="item.id" class="catalog-item">
+
+        <li v-for="item in catalogList" :key="item.id" class="catalog-item" @click="goTemplates(item)">
             <div class="item-main">
                 <div class="item-icon">
                     <img :src="item.img" alt="" class="template-icon">
@@ -10,16 +12,33 @@
                     <span class="item-date">{{ item.date }}</span>
                 </div>
             </div>
-            <div class="item-action">
-                <img :src="moreIcon" alt="更多" class="more-icon">
+            <div class="item-action" @click.stop>
+                <el-dropdown>
+                    <img :src="moreIcon" alt="更多" class="more-icon">
+                    <template #dropdown>
+                        <el-dropdown-menu>
+                            <el-dropdown-item>删除</el-dropdown-item>
+                            <el-dropdown-item @click="editor(item)">编辑</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </template>
+                </el-dropdown>
             </div>
         </li>
     </ul>
 </template>
 
 <script lang="ts" setup>
+    import { useTemplateStore } from '@/stores/template';
     import moreIcon from '../../assets/template/更多.png'
     import { ref } from 'vue'
+    import { storeToRefs } from 'pinia';
+    const templateStore = useTemplateStore()
+    const { subTypeTitle } = storeToRefs(templateStore)
+
+    const emit = defineEmits<{
+        'goDetail': [value: any],
+        'editorTemplateType': [value: any]
+    }>()
     const catalogList = ref([
         {
             name: '子模版',
@@ -82,6 +101,23 @@
             date: '2024-03-01'
         }
     ])
+    const goTemplates = (item: any) => {
+        const k = {
+            type: 'templatesList',
+            id: item.id
+        }
+        subTypeTitle.value = item.name
+        emit('goDetail', k)
+    }
+
+    //编辑
+    const editor = (item: any) => {
+        const k = {
+            type: 'addTemplateSubCatalog',
+            id: item.id
+        }
+        emit('editorTemplateType', k)
+    }
 </script>
 
 <style lang="scss" scoped>

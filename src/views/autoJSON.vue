@@ -33,7 +33,7 @@
     </el-card>
 
     <el-card class="table-card">
-      <el-table :data="tableData" border style="width: 100%" height="600" v-loading="loading">
+      <el-table :data="tableData" border style="width: 100%" height="630" v-loading="loading">
         <el-table-column prop="date" label="应用" />
         <el-table-column prop="name" label="编码" />
         <el-table-column prop="address" label="名称" />
@@ -189,7 +189,7 @@
   watch(() => appList.value, (newV) => {
     if (newV.length > 0) {
       activeApp.value = 11
-      getAutoConfig()
+      // getAutoConfig()
     }
   }, { immediate: true, deep: true })
 </script>

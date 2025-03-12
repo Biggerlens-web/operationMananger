@@ -4,8 +4,8 @@ import { ElMessage } from 'element-plus'
 import router from '@/router'
 
 const service: AxiosInstance = axios.create({
-  baseURL: 'https://inapp.iepose.cn/',
-  withCredentials: true,
+  baseURL: 'http://192.168.31.110:18090',
+  // withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -14,7 +14,7 @@ const service: AxiosInstance = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
   (config) => {
-    config.withCredentials = true
+    // config.withCredentials = true
     const token = localStorage.getItem('token')
 
     if (token && config.headers) {
@@ -63,25 +63,5 @@ service.interceptors.response.use(
     return Promise.reject(error)
   },
 )
-
-// 封装 GET 请求
-export function get<T>(url: string, params?: any): Promise<T> {
-  return service.get(url, { params })
-}
-
-// 封装 POST 请求
-export function post<T>(url: string, data?: any): Promise<T> {
-  return service.post(url, data)
-}
-
-// 封装 PUT 请求
-export function put<T>(url: string, data?: any): Promise<T> {
-  return service.put(url, data)
-}
-
-// 封装 DELETE 请求
-export function del<T>(url: string): Promise<T> {
-  return service.delete(url)
-}
 
 export default service

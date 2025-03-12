@@ -1,12 +1,22 @@
 <template>
     <div class="view">
-
+        <addTemplateCatalog v-model:dialogEditor="edtiorTemplateType" :isEditor="isEditorTemplateType"
+            @clearMark="clearEditorMark" />
+        <img class="backIcon" v-show="activeCataType !== 'catalogList'" @click="goback" :src="backIcon" alt="">
         <div class="page-header">
 
-            <el-button type="primary" :icon="Plus">新增模板</el-button>
+            <el-button type="primary" :icon="Plus" @click="addTemplateType">新增模板分类</el-button>
+            <el-button type="primary" v-show="activeCataType === 'templatesList'" :icon="Plus"
+                @click="addTemplate">新增模板</el-button>
+            <span class="typeTitle">
+
+                {{ `${typeTitle}` }}{{ subTypeTitle ? `-${subTypeTitle}` : '' }}
+
+            </span>
         </div>
 
         <el-card class="filter-card">
+
             <div class="filter-box">
                 <div class="filter-item">
                     <span class="label">应用:</span>
@@ -14,16 +24,12 @@
                         <el-option v-for="item in appList" :key="item.id" :label="item.name" :value="item.id" />
                     </el-select>
                 </div>
-                <!-- <div class="filter-actions">
-                    <el-button type="primary">查询</el-button>
-                    <el-button>重置</el-button>
-                </div> -->
             </div>
         </el-card>
 
 
         <el-card class="content-card">
-            <component :is="componentId" @goDetail="goDetail"></component>
+            <component :is="componentId" @goDetail="goDetail" @editorTemplateType="editorTemplateType"></component>
         </el-card>
 
 
@@ -31,18 +37,70 @@
 </template>
 
 <script lang="ts" setup>
-    import { ref } from 'vue'
+    import { onMounted, ref } from 'vue'
     import { Plus } from '@element-plus/icons-vue'
     import subCatalogList from '@/components/templates/subCatalogList.vue'
     import catalogList from '@/components/templates/catalogList.vue'
-    const componentId = ref(catalogList)
-    const components = {
+    import templatesList from '../components/templates/templatesList.vue'
+    import { useTemplateStore } from '@/stores/template'
+    import { storeToRefs } from 'pinia'
+    import backIcon from '../assets/template/返回.png'
+    import addTemplateCatalog from '@/components/templates/addTemplateCatalog.vue'
+    const componentId = ref<any>()
+    const templateStore = useTemplateStore()
+    const { activeCataType, activeCalaId, activeSubId, typeTitle, subTypeTitle, addTemplateMark } = storeToRefs(templateStore)
+    const components: any = {
         catalogList,
-        subCatalogList
+        subCatalogList,
+        templatesList
     }
-    const componentStr = ref('catalogList')
 
-    const goDetail = (id: number) => {
+    //新增模板类型
+    const edtiorTemplateType = ref<boolean>(false)
+    const addTemplateType = () => {
+        edtiorTemplateType.value = true
+    }
+    const addTemplate = () => {
+        console.log('addTemplate');
+        addTemplateMark.value = !addTemplateMark.value
+    }
+
+    //编辑模板类型
+    const isEditorTemplateType = ref<string>('')
+    const editorTemplateType = (obj: any) => {
+        console.log('obj', obj);
+        isEditorTemplateType.value = obj.type
+        edtiorTemplateType.value = true
+    }
+    const clearEditorMark = () => {
+        isEditorTemplateType.value = ''
+    }
+
+    //前进
+    const goDetail = (k: any) => {
+        console.log('k', k);
+        if (k.type === 'subCatalogList') {
+            activeCalaId.value = k.id
+        } else if (k.type === 'templatesList') {
+            activeSubId.value = k.id
+        }
+        activeCataType.value = k.type
+        componentId.value = components[k.type]
+    }
+
+    //返回
+    const goback = () => {
+        console.log('activeCataType', activeCataType.value);
+        if (activeCataType.value === 'catalogList') return
+        if (activeCataType.value === 'templatesList') {
+            activeCataType.value = 'subCatalogList'
+            subTypeTitle.value = ''
+            componentId.value = components['subCatalogList']
+        } else if (activeCataType.value === 'subCatalogList') {
+            activeCataType.value = 'catalogList'
+            typeTitle.value = '类目管理'
+            componentId.value = components['catalogList']
+        }
 
     }
 
@@ -64,21 +122,39 @@
         { id: 9, name: '123123' },
         { id: 10, name: '123123' }
     ])
-
-
+    onMounted(() => {
+        componentId.value = components[activeCataType.value]
+    })
 
 </script>
 
 <style lang="scss" scoped>
     .view {
         min-height: 100%;
+        position: relative;
+
+        .backIcon {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 146px;
+            left: 5px;
+            cursor: pointer;
+        }
     }
 
     .page-header {
         display: flex;
-        justify-content: space-between;
+        // justify-content: space-between;
         align-items: center;
         margin-bottom: 16px;
+        position: relative;
+
+        .typeTitle {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
     }
 
     .page-header h2 {
@@ -90,6 +166,8 @@
 
     .filter-card {
         margin-bottom: 16px;
+
+
     }
 
     .filter-box {
@@ -122,5 +200,6 @@
     .content-card {
         height: 680px;
         overflow-y: scroll;
+
     }
 </style>

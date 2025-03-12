@@ -51,7 +51,9 @@
     }
 
     const editorContainer = ref<HTMLElement>()
-    let editor: JSONEditor | null = null
+
+
+    let editor: any = null
 
 
 
@@ -71,7 +73,7 @@
         return matchedKey ? props.commentData[matchedKey] : undefined
     }
 
-
+    const expendList = ref<string[]>([])
     const initParamsDesc = async () => {
         await nextTick()
 
@@ -226,23 +228,22 @@
         if (!editorContainer.value) {
             return
         }
-
-
-
-
-
         const defaultOptions: any = {
             mode: 'tree',
             onChange: () => {
                 try {
-                    // const json = editor?.get()
-                    // emit('update:modelValue', json)
-                    // initParamsDesc()
+
+                    initParamsDesc()
                 } catch (e) {
                     console.error('JSON解析错误', e)
                 }
             },
-            onExpand: initParamsDesc
+            onExpand: (path: any) => {
+                console.log('打开的路径', path);
+                expendList.value = path.path
+                console.log('记录打开的路径', expendList.value);
+                initParamsDesc()
+            }
         }
 
         editor = new JSONEditor(
@@ -257,8 +258,16 @@
     watch(() => props.modelValue, (newVal) => {
         console.log('newVal', newVal);
         if (editor) {
+            console.log('editor', editor);
             editor.set(newVal)
-            // initParamsDesc()
+            const options = {
+                path: expendList.value,
+                isExpand: true,
+                recursive: false
+            }
+            editor.expand(options)
+            initParamsDesc()
+
         }
     }, {
         deep: true

@@ -4,19 +4,19 @@
     <el-aside :width="isCollapse ? '64px' : '200px'" class="aside">
       <div class="logo">
         <!-- <img src="@/assets/logo.png" alt="Logo" /> -->
-        <span v-show="!isCollapse">后台管理系统</span>
+        <span v-show="!isCollapse">运营管理后台</span>
       </div>
       <el-menu :default-active="activeMenu" class="el-menu-vertical" :collapse="isCollapse" background-color="#304156"
         text-color="#bfcbd9" active-text-color="#409EFF" router>
         <el-menu-item index="/autoOpration">
           <el-icon>
-            <CreditCard />
+            <Document />
           </el-icon>
           <template #title>自动化运营配置</template>
         </el-menu-item>
         <el-menu-item index="/templates">
           <el-icon>
-            <CreditCard />
+            <Notebook />
           </el-icon>
           <template #title>模板管理</template>
         </el-menu-item>
@@ -43,8 +43,9 @@
         <div class="header-right">
           <el-dropdown>
             <span class="user-info">
-              <el-avatar :size="32" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
-              <span>管理员</span>
+              <el-avatar :size="32"
+                :src="userAvatar ? userAvatar : `https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png`" />
+              <span>{{ userName }}</span>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
@@ -58,7 +59,7 @@
       </el-header>
 
       <!-- 主要内容区 -->
-      <el-main class="main">
+      <el-main class="main" style="overflow: visible;">
         <router-view></router-view>
       </el-main>
     </el-container>
@@ -69,10 +70,14 @@
   import { ref, computed, onMounted } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import { House, User, Setting, Fold, Expand } from '@element-plus/icons-vue'
+
   import service from '@/axios'
+  import { useCounterStore } from '@/stores/counter'
+  import { storeToRefs } from 'pinia'
   const router = useRouter()
   const route = useRoute()
-
+  const counterStore = useCounterStore()
+  const { userName, userAvatar } = storeToRefs(counterStore)
   const isCollapse = ref(false)
   const activeMenu = computed(() => route.path)
   const currentRoute = computed(() => route.meta.title || '页面')
@@ -97,6 +102,7 @@
       console.log('获取失败', err);
     }
   }
+
   onMounted(() => {
     getFormData()
   })
