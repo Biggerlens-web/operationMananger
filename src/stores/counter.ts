@@ -13,7 +13,7 @@ export const useCounterStore = defineStore(
   {
     persist: {
       key: 'counter',
-      storage: sessionStorage,
+      storage: localStorage,
     },
   },
 )
