@@ -6,25 +6,23 @@
         <!-- <img src="@/assets/logo.png" alt="Logo" /> -->
         <span v-show="!isCollapse">运营管理后台</span>
       </div>
-      <el-menu :default-active="activeMenu" class="el-menu-vertical" :collapse="isCollapse" background-color="#304156"
-        text-color="#bfcbd9" active-text-color="#409EFF" router>
-        <el-menu-item index="/autoOpration">
-          <el-icon>
-            <Document />
-          </el-icon>
-          <template #title>自动化运营配置</template>
-        </el-menu-item>
-        <el-menu-item index="/templates">
-          <el-icon>
-            <Notebook />
-          </el-icon>
-          <template #title>模板管理</template>
-        </el-menu-item>
+      <div class="menu-container">
+        <el-menu :default-active="activeMenu" class="el-menu-vertical" :collapse="isCollapse" background-color="#304156"
+          text-color="#bfcbd9" active-text-color="#409EFF" router>
+          <el-sub-menu :index="item.index" v-for="item in menuList" :key="item.index">
+            <template #title>
+              <el-icon>
+                <Document />
+              </el-icon>
+              <span>{{ item.parentName }}</span>
+            </template>
 
-
-
-
-      </el-menu>
+            <el-menu-item :index="child.menuUrl" v-for="child in item.children" :key="child.id">
+              {{ child.menuText }}
+            </el-menu-item>
+          </el-sub-menu>
+        </el-menu>
+      </div>
     </el-aside>
 
     <el-container>
@@ -77,7 +75,7 @@
   const router = useRouter()
   const route = useRoute()
   const counterStore = useCounterStore()
-  const { userName, userAvatar, appList } = storeToRefs(counterStore)
+  const { userName, userAvatar, appList, menuList } = storeToRefs(counterStore)
   const isCollapse = ref(false)
   const activeMenu = computed(() => route.path)
   const currentRoute = computed(() => route.meta.title || '页面')
@@ -133,6 +131,29 @@
     width: 32px;
     height: 32px;
     margin-right: 12px;
+  }
+
+  .menu-container {
+    height: 100%;
+    /* 或者设置一个固定高度，如 100vh 或 600px */
+    overflow-y: auto;
+    /* 添加垂直滚动 */
+    overflow-x: hidden;
+    /* 防止水平滚动 */
+  }
+
+  /* 美化滚动条样式 */
+  .menu-container::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .menu-container::-webkit-scrollbar-thumb {
+    background-color: #41546d;
+    border-radius: 3px;
+  }
+
+  .menu-container::-webkit-scrollbar-track {
+    background-color: #304156;
   }
 
   .el-menu-vertical {
