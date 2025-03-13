@@ -1,99 +1,100 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import service from '@/axios'
+
+import { pinia } from '@/main'
+import { useCounterStore } from '@/stores/counter'
+const routes = [
+  {
+    path: '/',
+    name: 'home',
+    component: HomeView,
+    redirect: '/autoOpration',
+    children: [] as RouteRecordRaw[],
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('../views/login.vue'),
+  },
+]
+let menusList: any = null
+
+const getRouterList = async () => {
+  try {
+    const res = await service.get('/base/baseData/getBaseDatas/2')
+    const menusObj = res.data.data.menus
+    let menusSub: any = []
+    for (const key in menusObj) {
+      menusSub = [...menusSub, ...menusObj[key]]
+    }
+    console.log('路由数组', menusSub)
+    const parentItem = routes[0].children
+    for (const item of menusSub) {
+      const routeItem = {
+        path: item.menuUrl,
+        name: item.menuIdentify,
+        component: () => import(`../views/${item.menuIdentify}.vue`),
+        meta: {
+          title: item.menuText,
+        },
+      }
+      routes[0].redirect = '/appConfig/index'
+      if (parentItem) {
+        parentItem.push(routeItem)
+      }
+    }
+
+    menusList = res.data.data.menus
+    console.log('获取菜单', menusList)
+  } catch (err) {
+    console.log('获取菜单失败', err)
+  }
+}
+
+await getRouterList()
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView,
-      redirect: '/autoOpration',
-      children: [
-        {
-          path: '/autoOpration',
-          name: 'AutoOpration',
-          component: () => import('../views/autoJSON.vue'),
-          meta: {
-            title: '自动化运营配置',
-          },
-        },
-        {
-          path: '/templates',
-          name: 'Templates',
-          component: () => import('../views/templates.vue'),
-          meta: {
-            title: '模板管理',
-          },
-        },
-        {
-          path: '/system',
-          name: 'System',
-         redirect: '/system/menu',
-          meta: {
-            title: '系统管理',
-          },
-          children: [
-            {
-              path: 'menu',
-              name: 'MenuManagement',
-              component: () => import('../views/system/menuManagement.vue'),
-              meta: {
-                title: '菜单管理',
-              },
-            },
-            {
-              path: 'user',
-              name: 'UserManagement',
-              component: () => import('../views/system/userManagement.vue'),
-              meta: {
-                title: '用户管理',
-              },
-            },
-            {
-              path: 'role',
-              name: 'RoleManagement',
-              component: () => import('../views/system/roleManagement.vue'),
-              meta: {
-                title: '角色管理',
-              },
-            },
-            {
-              path: 'permission',
-              name: 'PermissionManagement',
-              component: () => import('../views/system/permissionManagement.vue'),
-              meta: {
-                title: '权限管理',
-              },
-            },
-          ],
-        },
-      ],
-    },
-   
-    {
-      path: '/login',
-      name: 'Login',
-      component: () => import('../views/login.vue'),
-    },
-  ],
+  history: createWebHistory(),
+  routes,
 })
+//白名单
 const whiteList = ['/login']
 
-// router.beforeEach((to, from, next) => {
-//   const hasToken = localStorage.getItem('token')
-//   if (hasToken) {
-//     if (to.path === '/login') {
-//       next('/')
-//     } else {
-//       next()
-//     }
-//   } else {
-//     if (whiteList.includes(to.path)) {
-//       next()
-//     } else {
-//       next('/login')
-//     }
-//   }
-// })
+const setMenuStore = () => {
+  let menusArr = []
+  let index = 1
+  for (const key in menusList) {
+    const item = {
+      parentName: key,
+      index: index,
+      children: menusList[key],
+    }
+
+    menusArr.push(item)
+    index++
+  }
+
+  useCounterStore(pinia).menuList = menusArr
+
+  console.log('pinia', useCounterStore(pinia).menuList)
+}
+router.beforeEach(async (to, from, next) => {
+  const hasToken = localStorage.getItem('token')
+  setMenuStore()
+  if (hasToken) {
+    if (to.path === '/login') {
+      next('/')
+    } else {
+      next()
+    }
+  } else {
+    if (whiteList.includes(to.path)) {
+      next()
+    } else {
+      next('/login')
+    }
+  }
+})
 export default router
