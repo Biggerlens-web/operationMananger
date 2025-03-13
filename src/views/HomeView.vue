@@ -4,7 +4,7 @@
     <el-aside :width="isCollapse ? '64px' : '200px'" class="aside">
       <div class="logo">
         <!-- <img src="@/assets/logo.png" alt="Logo" /> -->
-        <span v-show="!isCollapse">运营管理后台</span>
+        <span class="logo_text" :class="{ hidden: isCollapse }">运营管理后台</span>
       </div>
       <el-menu :default-active="activeMenu" class="el-menu-vertical" :collapse="isCollapse" background-color="#304156"
         text-color="#bfcbd9" active-text-color="#409EFF" router>
@@ -22,6 +22,18 @@
         </el-menu-item>
 
 
+        <el-sub-menu index="3">
+          <template #title>
+            <el-icon>
+              <Setting />
+            </el-icon>
+            <span>系统管理</span>
+          </template>
+          <el-menu-item index="/system/menu">菜单管理</el-menu-item>
+          <el-menu-item index="/system/user">用户管理</el-menu-item>
+          <el-menu-item index="/system/role">角色管理</el-menu-item>
+          <el-menu-item index="/system/permission">权限管理</el-menu-item>
+        </el-sub-menu>
 
 
       </el-menu>
@@ -67,137 +79,154 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted } from 'vue'
-  import { useRouter, useRoute } from 'vue-router'
-  import { House, User, Setting, Fold, Expand } from '@element-plus/icons-vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { House, User, Setting, Fold, Expand } from '@element-plus/icons-vue'
 
-  import service from '@/axios'
-  import { useCounterStore } from '@/stores/counter'
-  import { storeToRefs } from 'pinia'
-  const router = useRouter()
-  const route = useRoute()
-  const counterStore = useCounterStore()
-  const { userName, userAvatar, appList } = storeToRefs(counterStore)
-  const isCollapse = ref(false)
-  const activeMenu = computed(() => route.path)
-  const currentRoute = computed(() => route.meta.title || '页面')
+import service from '@/axios'
+import { useCounterStore } from '@/stores/counter'
+import { storeToRefs } from 'pinia'
+const router = useRouter()
+const route = useRoute()
+const counterStore = useCounterStore()
+const { userName, userAvatar, appList } = storeToRefs(counterStore)
+const isCollapse = ref(false)
+const activeMenu = computed(() => route.path)
+const currentRoute = computed(() => route.meta.title || '页面')
 
-  const toggleCollapse = () => {
-    isCollapse.value = !isCollapse.value
+const toggleCollapse = () => {
+  isCollapse.value = !isCollapse.value
+}
+
+const handleLogout = () => {
+  // 清除token等登录信息
+  localStorage.removeItem('token')
+  router.push('/login')
+}
+
+
+//获取表单数据
+const getFormData = async () => {
+  const params = {
+    timestamp: new Date().getTime()
   }
 
-  const handleLogout = () => {
-    // 清除token等登录信息
-    localStorage.removeItem('token')
-    router.push('/login')
+  try {
+    const res = await service.get('/base/baseData/getBaseDatas/0')
+    console.log('基础表单数据', res);
+    appList.value = res.data.data.apps
+  } catch (err) {
+    console.log('获取失败', err);
   }
+}
 
-
-  //获取表单数据
-  const getFormData = async () => {
-    try {
-      const res = await service.get('/base/formData/getFormDatas/0')
-      console.log('基础表单数据', res);
-      appList.value = res.data.data.apps
-    } catch (err) {
-      console.log('获取失败', err);
-    }
-  }
-
-  onMounted(() => {
-    getFormData()
-  })
+onMounted(() => {
+  getFormData()
+})
 </script>
 
 <style scoped>
-  .layout-container {
-    height: 100vh;
-  }
+.layout-container {
+  height: 100vh;
+}
 
+.aside {
+  background-color: #304156;
+  transition: width 0.3s;
+  overflow: hidden;
+}
+
+.logo {
+  overflow: hidden;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: #2b2f3a;
+  color: #fff;
+
+}
+
+.logo_text {
+  transition: opacity 0.3s, transform 0.3s;
+  white-space: nowrap;
+  color: #fff;
+}
+
+.logo_text.hidden {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.logo img {
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
+}
+
+.el-menu-vertical {
+  border-right: none;
+}
+
+.el-menu-vertical:not(.el-menu--collapse) {
+  width: 200px;
+}
+
+.header {
+  background-color: #fff;
+  border-bottom: 1px solid #dcdfe6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.collapse-btn {
+  font-size: 20px;
+  cursor: pointer;
+  margin-right: 20px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.user-info span {
+  margin-left: 8px;
+  font-size: 14px;
+}
+
+.main {
+  background-color: #f0f2f5;
+  padding: 20px;
+}
+
+/* 响应式处理 */
+@media screen and (max-width: 768px) {
   .aside {
-    background-color: #304156;
-    transition: width 0.3s;
-    overflow: hidden;
-  }
-
-  .logo {
-    height: 60px;
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-    background: #2b2f3a;
-    color: #fff;
-  }
-
-  .logo img {
-    width: 32px;
-    height: 32px;
-    margin-right: 12px;
-  }
-
-  .el-menu-vertical {
-    border-right: none;
-  }
-
-  .el-menu-vertical:not(.el-menu--collapse) {
-    width: 200px;
+    position: fixed;
+    height: 100%;
+    z-index: 1000;
   }
 
   .header {
-    background-color: #fff;
-    border-bottom: 1px solid #dcdfe6;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-  }
-
-  .header-left {
-    display: flex;
-    align-items: center;
-  }
-
-  .collapse-btn {
-    font-size: 20px;
-    cursor: pointer;
-    margin-right: 20px;
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-  }
-
-  .user-info {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
+    padding: 0 10px;
   }
 
   .user-info span {
-    margin-left: 8px;
-    font-size: 14px;
+    display: none;
   }
-
-  .main {
-    background-color: #f0f2f5;
-    padding: 20px;
-  }
-
-  /* 响应式处理 */
-  @media screen and (max-width: 768px) {
-    .aside {
-      position: fixed;
-      height: 100%;
-      z-index: 1000;
-    }
-
-    .header {
-      padding: 0 10px;
-    }
-
-    .user-info span {
-      display: none;
-    }
-  }
+}
 </style>
