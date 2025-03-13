@@ -22,6 +22,8 @@
         commentData?: Record<string, string>
         options?: any
         commentStyle?: Record<string, string>
+        editorType: string
+        dialogJSON: boolean
     }>(), {
         modelValue: () => ({}),
         commentData: () => ({}),
@@ -80,7 +82,7 @@
         if (editor) {
             const mode = editor.getMode()
             console.log('mode', mode);
-            if (mode === 'tree') {
+            if (mode === 'tree' && props.editorType === 'value') {
                 const treeElement = document.querySelector('.jsoneditor-tree')
                 if (
                     treeElement
@@ -223,20 +225,37 @@
             }
         }
     }
+    let timer: any = null
     // 初始化编辑器
     const initEditor = () => {
         if (!editorContainer.value) {
             return
         }
+        if (editor) {
+            editor.destroy()
+            editor = null
+        }
         const defaultOptions: any = {
             mode: 'tree',
             onChange: () => {
                 try {
+                    if (timer) {
+                        clearTimeout(timer)
+                    }
+                    timer = setTimeout(() => {
+                        const newValue = editor.get()
+                        emit('update:modelValue', newValue)
+                        initParamsDesc()
+                    }, 500)
 
-                    initParamsDesc()
                 } catch (e) {
                     console.error('JSON解析错误', e)
                 }
+            },
+            onBlur: () => {
+                console.log('失去焦点');
+
+
             },
             onExpand: (path: any) => {
                 console.log('打开的路径', path);
@@ -281,7 +300,14 @@
     onMounted(() => {
         initEditor()
     })
+    watch(() => props.dialogJSON, (newV) => {
 
+        if (newV) {
+            initEditor()
+        } else {
+            editor?.destroy()
+        }
+    })
     onBeforeUnmount(() => {
         editor?.destroy()
     })

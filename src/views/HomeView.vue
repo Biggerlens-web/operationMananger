@@ -77,7 +77,7 @@
   const router = useRouter()
   const route = useRoute()
   const counterStore = useCounterStore()
-  const { userName, userAvatar } = storeToRefs(counterStore)
+  const { userName, userAvatar, appList } = storeToRefs(counterStore)
   const isCollapse = ref(false)
   const activeMenu = computed(() => route.path)
   const currentRoute = computed(() => route.meta.title || '页面')
@@ -98,6 +98,7 @@
     try {
       const res = await service.get('/base/formData/getFormDatas/0')
       console.log('基础表单数据', res);
+      appList.value = res.data.data.apps
     } catch (err) {
       console.log('获取失败', err);
     }
