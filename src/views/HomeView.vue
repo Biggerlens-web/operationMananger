@@ -96,7 +96,7 @@
   //获取表单数据
   const getFormData = async () => {
     try {
-      const res = await service.get('/base/formData/getFormDatas/0')
+      const res = await service.get('/base/baseData/getBaseDatas/0')
       console.log('基础表单数据', res);
       appList.value = res.data.data.apps
     } catch (err) {

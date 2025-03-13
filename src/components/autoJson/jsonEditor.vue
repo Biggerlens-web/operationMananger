@@ -12,10 +12,12 @@
     import dayjs from 'dayjs'
     //检测是否为日期时间格式
     const isValidDateTime = (dateStr: string): boolean => {
+        console.log('dateStr', dateStr);
         const date = dayjs(dateStr, 'YYYY-MM-DD HH:mm:ss')
         const date2 = dayjs(dateStr, 'YYYY-MM-DD')
         const date3 = dayjs(dateStr, 'HH:mm:ss')
-        return date.isValid() && (date.format('YYYY-MM-DD HH:mm:ss') === dateStr || date2.format('YYYY-MM-DD') === dateStr || date3.format('HH:mm:ss') === dateStr)
+        console.log('date2', date.isValid());
+        return (date.format('YYYY-MM-DD HH:mm:ss') === dateStr || date2.format('YYYY-MM-DD') === dateStr || date3.format('HH:mm:ss') === dateStr)
     }
     const props = withDefaults(defineProps<{
         modelValue?: object | any[]
@@ -116,7 +118,7 @@
                                     // console.log('value', valueTd.innerHTML);
 
                                     const isdate = isValidDateTime(valueTd.innerHTML)
-                                    // console.log('是否是日期', isdate);
+                                    console.log('是否是日期', isdate);
                                     if (isdate) {
                                         const date = valueTd.innerHTML
                                         console.log('日期', valueTd.innerHTML);
@@ -227,6 +229,52 @@
     }
     let timer: any = null
     // 初始化编辑器
+    // const initEditor = () => {
+    //     if (!editorContainer.value) {
+    //         return
+    //     }
+    //     if (editor) {
+    //         editor.destroy()
+    //         editor = null
+    //     }
+    //     const defaultOptions: any = {
+    //         mode: 'tree',
+    //         onChange: () => {
+    //             try {
+    //                 if (timer) {
+    //                     clearTimeout(timer)
+    //                 }
+    //                 timer = setTimeout(() => {
+    //                     const newValue = editor.get()
+    //                     emit('update:modelValue', newValue)
+    //                     initParamsDesc()
+
+    //                 }, 500)
+
+    //             } catch (e) {
+    //                 console.error('JSON解析错误', e)
+    //             }
+    //         },
+    //         onBlur: () => {
+    //             console.log('失去焦点');
+
+
+    //         },
+    //         onExpand: (path: any) => {
+    //             console.log('打开的路径', path);
+    //             expendList.value = path.path
+    //             console.log('记录打开的路径', expendList.value);
+    //             initParamsDesc()
+    //         }
+    //     }
+
+    //     editor = new JSONEditor(
+    //         editorContainer.value,
+    //         Object.assign(defaultOptions, props.options),
+    //         props.modelValue
+    //     )
+    //     initParamsDesc()
+    // }
     const initEditor = () => {
         if (!editorContainer.value) {
             return
@@ -235,32 +283,50 @@
             editor.destroy()
             editor = null
         }
+
+        let isUpdating = false // 添加一个标记，防止重复更新
+
         const defaultOptions: any = {
             mode: 'tree',
             onChange: () => {
                 try {
+                    // 如果正在更新中，不要触发新的更新
+                    if (isUpdating) {
+                        return
+                    }
+
                     if (timer) {
                         clearTimeout(timer)
                     }
+
                     timer = setTimeout(() => {
+                        isUpdating = true // 标记开始更新
                         const newValue = editor.get()
-                        emit('update:modelValue', newValue)
-                        initParamsDesc()
+
+                        // 只有当值真正发生变化时才触发更新
+                        if (JSON.stringify(newValue) !== JSON.stringify(props.modelValue)) {
+                            emit('update:modelValue', newValue)
+                            initParamsDesc()
+                        }
+
+                        // 使用 nextTick 确保在 DOM 更新后再重置标记
+                        nextTick(() => {
+                            isUpdating = false
+                        })
                     }, 500)
 
                 } catch (e) {
                     console.error('JSON解析错误', e)
+                    isUpdating = false // 发生错误时也要重置标记
                 }
             },
             onBlur: () => {
-                console.log('失去焦点');
-
-
+                console.log('失去焦点')
             },
             onExpand: (path: any) => {
-                console.log('打开的路径', path);
+                console.log('打开的路径', path)
                 expendList.value = path.path
-                console.log('记录打开的路径', expendList.value);
+                console.log('记录打开的路径', expendList.value)
                 initParamsDesc()
             }
         }
@@ -272,7 +338,6 @@
         )
         initParamsDesc()
     }
-
     // 监听数据变化
     watch(() => props.modelValue, (newVal) => {
         console.log('newVal', newVal);
