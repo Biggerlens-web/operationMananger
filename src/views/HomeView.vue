@@ -4,7 +4,7 @@
     <el-aside :width="isCollapse ? '64px' : '200px'" class="aside">
       <div class="logo">
         <!-- <img src="@/assets/logo.png" alt="Logo" /> -->
-        <span v-show="!isCollapse">运营管理后台</span>
+        <span class="logo_text" :class="{ hidden: isCollapse }">运营管理后台</span>
       </div>
       <div class="menu-container">
         <el-menu :default-active="activeMenu" class="el-menu-vertical" :collapse="isCollapse" background-color="#304156"
@@ -119,12 +119,25 @@
   }
 
   .logo {
+    overflow: hidden;
     height: 60px;
     display: flex;
     align-items: center;
     padding: 0 16px;
     background: #2b2f3a;
     color: #fff;
+
+  }
+
+  .logo_text {
+    transition: opacity 0.3s, transform 0.3s;
+    white-space: nowrap;
+    color: #fff;
+  }
+
+  .logo_text.hidden {
+    opacity: 0;
+    transform: translateX(-20px);
   }
 
   .logo img {
