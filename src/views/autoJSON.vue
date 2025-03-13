@@ -15,7 +15,6 @@
     </el-dialog>
     <configEditor v-model:dialogEditor="dialogEditor" :activeApp="activeApp" @update="getAutoConfig" />
     <div class="page-header">
-
       <el-button type="primary" :icon="Plus" @click="addConfig">新增配置</el-button>
     </div>
 
@@ -23,7 +22,7 @@
       <div class="filter-box">
         <div class="filter-item">
           <span class="label">应用:</span>
-          <el-select v-model="activeApp" placeholder="请选择应用" @select="getAutoConfig" clearable class="filter-select">
+          <el-select v-model="activeApp" placeholder="请选择应用" @change="getAutoConfig" clearable class="filter-select">
             <el-option v-for="item in appList" :key="item.appNo"
               :label="`应用:${item.appAbbreviation} 公司:${item.companyName}`" :value="item.appNo" />
           </el-select>
@@ -46,7 +45,18 @@
         <el-table-column prop="config" label="JSON配置" width="250">
 
           <template #default="scope">
-            <div style="white-space: pre">{{ scope.row.config }}</div>
+            <div style="white-space: pre">{{ scope.row.config ? JSON.stringify(JSON.parse(scope.row.config), null, 2)
+              : '' }}</div>
+          </template>
+
+        </el-table-column>
+        <el-table-column prop="config" label="JSON注释配置" width="250">
+
+          <template #default="scope">
+            <div style="white-space: pre">{{ scope.row.configNote ? JSON.stringify(JSON.parse(scope.row.configNote),
+              null,
+              2)
+              : '' }}</div>
           </template>
 
         </el-table-column>
@@ -56,7 +66,7 @@
             <el-button type="primary">编辑</el-button>
             <el-button type="primary" @click="editorJSON(scope.row, 'value')">JSON配置</el-button>
             <el-button type="primary" @click="editorJSON(scope.row, 'note')">JSON注释配置</el-button>
-            <el-button type="danger">删除</el-button>
+            <el-button type="danger" @click="deleteConfig(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -71,12 +81,14 @@ import { ref, watch } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import jsonEditor from '../components/autoJson/jsonEditor.vue'
 
-import { server } from 'typescript'
+
 import service from '@/axios'
 import { useCounterStore } from '@/stores/counter'
 import { storeToRefs } from 'pinia'
 import configEditor from '@/components/autoJson/configEditor.vue'
 import { useAutoOpration } from '@/stores/autoOpration'
+import { desEncrypt } from '@/utils/des'
+import { ElMessage } from 'element-plus'
 
 const counterStore = useCounterStore()
 const autoOprationStore = useAutoOpration()
@@ -152,9 +164,6 @@ const handleComfirmJSON = async () => {
     console.log('JSON配置', jsonData.value);
     console.log('配置类型', editorType.value);
     configingItem.value
-
-
-
     if (editorType.value === 'value') {
       configingItem.value.config = JSON.stringify(jsonData.value)
       JSONEditorValue.value = jsonData.value
@@ -166,14 +175,21 @@ const handleComfirmJSON = async () => {
       ...configingItem.value, timestamp: new Date().getTime()
     }
     console.log('保存参数', params);
-    const paramStr = JSON.stringify(params)
+    const paramStr = desEncrypt(JSON.stringify(params))
     const res = await service.post('/appConfig/json/save', {
       enData: paramStr
     })
     console.log('保存结果', res);
-    handleCloseJSON()
-  } catch (err) {
+    if (res.data.code === 200) {
+      ElMessage.success('保存成功')
+      handleCloseJSON()
+      getAutoConfig()
+    } else {
+      ElMessage.error('保存失败')
+    }
 
+  } catch (err) {
+    ElMessage.error('保存失败')
   }
 
 }
@@ -252,13 +268,28 @@ const addConfig = () => {
   dialogEditor.value = true
 }
 
+const deleteConfig = async (item: any) => {
+  try {
+    const res = await service.post(`/appConfig/json/delete/${item.id}`)
+    if (res.data.code === 200) {
+      ElMessage.success('删除成功')
+      getAutoConfig()
+    } else {
+      ElMessage.error('删除失败')
+    }
+  } catch (err) {
+    ElMessage.error('删除失败')
+  }
 
+}
 watch(() => appList.value, (newV) => {
   if (newV.length > 0) {
+    if (appList.value.length === 0) return
     activeApp.value = appList.value[0].appNo
     getAutoConfig()
   }
-}, { deep: true })
+}, { immediate: true, deep: true })
+
 </script>
 
 <style scoped>

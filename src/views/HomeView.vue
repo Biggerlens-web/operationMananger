@@ -107,10 +107,6 @@ const handleLogout = () => {
 
 //获取表单数据
 const getFormData = async () => {
-  const params = {
-    timestamp: new Date().getTime()
-  }
-
   try {
     const res = await service.get('/base/baseData/getBaseDatas/0')
     console.log('基础表单数据', res);

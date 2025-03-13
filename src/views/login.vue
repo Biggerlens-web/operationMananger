@@ -175,7 +175,7 @@ const handleSubmit = async () => {
         if (res.data.code === 200) {
             ElMessage.success('登录成功')
             localStorage.setItem('token', res.data.data.token ?? '')
-            userName.value = res.data.data.username ?? '管理员'
+            userName.value = res.data.data.userName ?? '管理员'
             userAvatar.value = res.data.data.userAvatar ?? ''
             router.push('/autoOpration')
         } else {
