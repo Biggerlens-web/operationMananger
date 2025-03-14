@@ -57,7 +57,7 @@
       </el-header>
 
       <!-- 主要内容区 -->
-      <el-main class="main" style="overflow: visible;">
+      <el-main class="main" style="overflow-y: scroll;">
         <router-view></router-view>
       </el-main>
     </el-container>
@@ -75,7 +75,7 @@
   const router = useRouter()
   const route = useRoute()
   const counterStore = useCounterStore()
-  const { userName, userAvatar, appList, menuList } = storeToRefs(counterStore)
+  const { userName, userAvatar, appList, menuList, channelList, OSlist } = storeToRefs(counterStore)
   const isCollapse = ref(false)
   const activeMenu = computed(() => route.path)
   const currentRoute = computed(() => route.meta.title || '页面')
@@ -97,6 +97,8 @@
       const res = await service.get('/base/baseData/getBaseDatas/0')
       console.log('基础表单数据', res);
       appList.value = res.data.data.apps
+      channelList.value = res.data.data.channels
+      OSlist.value = res.data.data.oss
     } catch (err) {
       console.log('获取失败', err);
     }

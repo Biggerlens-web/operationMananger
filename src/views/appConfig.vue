@@ -2,8 +2,8 @@
   <div class="view">
 
     <el-dialog v-model="dialogJSON" title="JSON配置" width="1000" :before-close="handleCloseJSON">
-      <jsonEditor v-model="jsonData" :comment-data="comments" @inputChecked="inputChecked" @dateChange="dateChange"
-        :editorType="editorType" :dialogJSON="dialogJSON" />
+      <jsonEditor ref="childRef" v-model="jsonData" :comment-data="comments" @updateNote="updateNote"
+        @inputChecked="inputChecked" @dateChange="dateChange" :editorType="editorType" :dialogJSON="dialogJSON" />
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="handleCloseJSON">取消</el-button>
@@ -13,7 +13,8 @@
         </div>
       </template>
     </el-dialog>
-    <configEditor v-model:dialogEditor="dialogEditor" :activeApp="activeApp" @update="getAutoConfig" />
+    <configEditor v-model:dialogEditor="dialogEditor" :editorFormData="editorFormData" :activeApp="activeApp"
+      @update="getAutoConfig" />
     <div class="page-header">
       <el-button type="primary" :icon="Plus" @click="addConfig">新增配置</el-button>
     </div>
@@ -22,7 +23,8 @@
       <div class="filter-box">
         <div class="filter-item">
           <span class="label">应用:</span>
-          <el-select v-model="activeApp" placeholder="请选择应用" @change="getAutoConfig" clearable class="filter-select">
+          <el-select filterable v-model="activeApp" placeholder="请选择应用" @change="getAutoConfig" clearable
+            class="filter-select">
             <el-option v-for="item in appList" :key="item.appNo"
               :label="`应用:${item.appAbbreviation} 公司:${item.companyName}`" :value="item.appNo" />
           </el-select>
@@ -42,6 +44,26 @@
           </template>
         </el-table-column>
         <el-table-column prop="code" label="编码" />
+        <el-table-column prop="open" label="开关">
+          <template #default="scope">
+            <el-switch v-model="scope.row.open" @change="changeSwitch(scope.row)" />
+          </template>
+
+        </el-table-column>
+        <el-table-column prop="channel" label="渠道">
+          <template #default="scope">
+            <div class="channel-tags">
+              <span v-for="(item, index) in scope.row.channel.split(',')" :key="index" class="channel-tag">
+                {{ initChannel(item) }}
+              </span>
+            </div>
+          </template>
+
+        </el-table-column>
+        <el-table-column prop="os" label="系统">
+
+
+        </el-table-column>
         <el-table-column prop="config" label="JSON配置" width="250">
 
           <template #default="scope">
@@ -50,22 +72,32 @@
           </template>
 
         </el-table-column>
-        <el-table-column prop="config" label="JSON注释配置" width="250">
+        <!-- <el-table-column prop="config" label="JSON注释配置" width="250">
 
           <template #default="scope">
-            <div style="white-space: pre">{{ scope.row.configNote ? JSON.stringify(JSON.parse(scope.row.configNote),
-              null,
-              2)
-              : '' }}</div>
+            <div style="white-space: pre">{{scope.row.configNote ?
+              (() => {
+                try {
+                  const parsed = JSON.parse(scope.row.configNote);
+                  return Object.keys(parsed).length !== 0 ?
+                    JSON.stringify(parsed, null, 2) :
+                    '';
+                } catch (e) {
+                  console.error('JSON解析错误:', e);
+                  return scope.row.configNote;
+                }
+              })()
+              : ''
+            }}</div>
           </template>
 
-        </el-table-column>
+        </el-table-column> -->
         <el-table-column prop="desc" label="备注" width="250" />
-        <el-table-column label="操作" width="450" fixed="right">
+        <el-table-column label="操作" width="300" fixed="right">
           <template #default="scope">
-            <el-button type="primary">编辑</el-button>
-            <el-button type="primary" @click="editorJSON(scope.row, 'value')">JSON配置</el-button>
-            <el-button type="primary" @click="editorJSON(scope.row, 'note')">JSON注释配置</el-button>
+            <el-button type="primary" @click="editorConfig(scope.row)">编辑</el-button>
+            <el-button type="primary" @click="editorJSON(scope.row)">JSON配置</el-button>
+            <!-- <el-button type="primary" @click="editorJSON(scope.row, 'note')">JSON注释配置</el-button> -->
             <el-button type="danger" @click="deleteConfig(scope.row)">删除</el-button>
           </template>
         </el-table-column>
@@ -77,307 +109,418 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { Plus } from '@element-plus/icons-vue'
-import jsonEditor from '../components/autoJson/jsonEditor.vue'
+  import { ref, watch } from 'vue'
+  import { Plus } from '@element-plus/icons-vue'
+  import jsonEditor from '../components/autoJson/jsonEditor.vue'
+  import { getKeysAsObject } from '../utils/keyAsObj'
+  import service from '@/axios'
+  import { useCounterStore } from '@/stores/counter'
+  import { storeToRefs } from 'pinia'
+  import configEditor from '@/components/autoJson/configEditor.vue'
+  import { useAutoOpration } from '@/stores/autoOpration'
+  import { desEncrypt } from '@/utils/des'
+  import { ElMessage } from 'element-plus'
+  const childRef = ref()
+  // 调用子组件方法
+  const callChildMethod = () => {
+    childRef.value?.setJsonData()
+  }
+  const counterStore = useCounterStore()
+  const autoOprationStore = useAutoOpration()
+  const { JSONEditorValue, JSONEditorNote } = storeToRefs(autoOprationStore)
+  const {
+    appList, channelList, OSlist
+  } = storeToRefs(counterStore)
+  // 筛选相关
+  const activeApp = ref<string | number>('')
 
 
-import service from '@/axios'
-import { useCounterStore } from '@/stores/counter'
-import { storeToRefs } from 'pinia'
-import configEditor from '@/components/autoJson/configEditor.vue'
-import { useAutoOpration } from '@/stores/autoOpration'
-import { desEncrypt } from '@/utils/des'
-import { ElMessage } from 'element-plus'
-
-const counterStore = useCounterStore()
-const autoOprationStore = useAutoOpration()
-const { JSONEditorValue, JSONEditorNote } = storeToRefs(autoOprationStore)
-const {
-  appList
-} = storeToRefs(counterStore)
-// 筛选相关
-const activeApp = ref<string | number>('')
-
-
-// 表格相关
-const loading = ref(false)
-const tableData = ref([
-
-])
-
-
-//编辑JSON
-type JsonDataType = Record<string, any>;
-const jsonData = ref<JsonDataType>({
-  // "netip": "会员服务ip",
-  // "piCutConfigBean": "皮卡配置",
-  // "questionnaireConfigBeanList": "调查问卷配置",
-  // "xiaomiConfig": "小米配置",
-  // "adsConfig": "广告配置",
-  // "vipConfig": "vip配置",
-  // "xiaomiFirstPayDistanceOpen": "注释",
-  // "xiaomiFirstPayDistance": "注释",
-  // "huaweiConfig": "华为配置",
-  // "feeConfig": "付费点配置",
-  // "jsonUpdateTime": "2023-07-11 11:11:11",
-  // "helpMeRetouchConfig": {
-  //   "version": '123123',
-  //   "isShowTaobao": true,
-  //   "isCanPay": true,
-  // },
-})
-const comments = ref<JsonDataType>({})
+  // 表格相关
+  const loading = ref(false)
+  interface TableItem {
+    configNote: string;
+    // 添加其他必要的字段
+    [key: string]: any; // 如果有其他动态字段，可以使用索引签名
+  }
+  const tableData = ref<TableItem[]>(
+    []
+  )
+  //修改开关
+  const switchFn = async (params: any) => {
+    try {
+      params.timestamp = Date.now()
+      const paramStr = desEncrypt(JSON.stringify(params))
+      const res = await service.post('/appConfig/json/save', {
+        enData: paramStr
+      })
+      console.log('修改状态', res);
+      if (res.data.code === 200) {
+        ElMessage.success('修改成功')
+        getAutoConfig()
+      } else {
+        ElMessage.error(res.data.msg)
+      }
+    } catch (err) {
+      console.log('修改失败', err);
+    }
+  }
+  const changeSwitch = (item: any) => {
+    console.log('item', item);
+    switchFn(item)
+  }
 
 
+  //格式化渠道显示
+  const initChannel = (item: any) => {
+    return channelList.value.find((el: any) => el.id === parseInt(item))?.channelName
+  }
 
-const editorType = ref<string>('value')
-const dialogJSON = ref<boolean>(false)
-const configingItem = ref<any>({})
-const editorJSON = (item: any, type: string) => {
-  configEditorJSON(type, item)
-}
+  //编辑JSON
+  type JsonDataType = Record<string, any>;
+  const jsonData = ref<JsonDataType>({
+    // "netip": "会员服务ip",
+    // "piCutConfigBean": "皮卡配置",
+    // "questionnaireConfigBeanList": "调查问卷配置",
+    // "xiaomiConfig": "小米配置",
+    // "adsConfig": "广告配置",
+    // "vipConfig": "vip配置",
+    // "xiaomiFirstPayDistanceOpen": "注释",
+    // "xiaomiFirstPayDistance": "注释",
+    // "huaweiConfig": "华为配置",
+    // "feeConfig": "付费点配置",
+    // "jsonUpdateTime": "2023-07-11 11:11:11",
+    // "helpMeRetouchConfig": {
+    //   "version": '123123',
+    //   "isShowTaobao": true,
+    //   "isCanPay": true,
+    // },
+  })
+  const comments = ref<JsonDataType>({})
 
 
-//配置编辑json
-const configEditorJSON = (type: string, item: any) => {
-  console.log('type', type);
-  configingItem.value = item
-  editorType.value = type
-  comments.value = JSON.parse(item.configNote)
-  if (JSONEditorValue.value && type === 'value') {
+  //编辑配置
+  const editorFormData = ref<any>()
+  const editorConfig = (item: any) => {
+    console.log('item', item);
+    editorFormData.value = item
+    dialogEditor.value = true
+  }
+
+
+
+
+  const editorType = ref<string>('value')
+  const dialogJSON = ref<boolean>(false)
+  const configingItem = ref<any>({})
+  const editorJSON = (item: any) => {
+    configEditorJSON(item)
+  }
+
+
+  //配置编辑json
+  const configEditorJSON = (item: any) => {
+
+    configingItem.value = item
     jsonData.value = JSON.parse(item.config)
-
+    comments.value = JSON.parse(item.configNote)
+    dialogJSON.value = true
   }
-  if (JSONEditorNote.value && type === 'note') {
-    jsonData.value = JSON.parse(item.configNote)
-  }
-  dialogJSON.value = true
-}
 
-const handleCloseJSON = () => {
-  jsonData.value = {}
-  dialogJSON.value = false
-}
-const handleComfirmJSON = async () => {
-  try {
-    console.log('JSON配置', jsonData.value);
-    console.log('配置类型', editorType.value);
-    configingItem.value
-    if (editorType.value === 'value') {
+  const handleCloseJSON = () => {
+    jsonData.value = {}
+    dialogJSON.value = false
+  }
+  const handleComfirmJSON = async () => {
+    try {
+      callChildMethod()
+      console.log('JSON配置', jsonData.value);
       configingItem.value.config = JSON.stringify(jsonData.value)
-      JSONEditorValue.value = jsonData.value
-    } else {
-      configingItem.value.configNote = JSON.stringify(jsonData.value)
-      JSONEditorNote.value = jsonData.value
-    }
-    const params = {
-      ...configingItem.value, timestamp: new Date().getTime()
-    }
-    console.log('保存参数', params);
-    const paramStr = desEncrypt(JSON.stringify(params))
-    const res = await service.post('/appConfig/json/save', {
-      enData: paramStr
-    })
-    console.log('保存结果', res);
-    if (res.data.code === 200) {
-      ElMessage.success('保存成功')
-      handleCloseJSON()
-      getAutoConfig()
-    } else {
+      configingItem.value.configNote = JSON.stringify(comments.value)
+      const params = {
+        ...configingItem.value, timestamp: new Date().getTime()
+      }
+      console.log('jsonData', JSON.parse(params.config));
+      console.log('保存参数', params);
+      const paramStr = desEncrypt(JSON.stringify(params))
+      const res = await service.post('/appConfig/json/save', {
+        enData: paramStr
+      })
+      console.log('保存结果', res);
+      if (res.data.code === 200) {
+        ElMessage.success('保存成功')
+        handleCloseJSON()
+        getAutoConfig()
+      } else {
+        ElMessage.error('保存失败')
+      }
+
+    } catch (err) {
       ElMessage.error('保存失败')
     }
 
-  } catch (err) {
-    ElMessage.error('保存失败')
   }
 
-}
-const dateChange = (dateObj: any) => {
-  const { path, value } = dateObj;
+  //编辑日期
+  const dateChange = (dateObj: any) => {
+    const { path, value } = dateObj;
 
-  // 遍历 jsonData 中的所有属性
-  for (const [key, val] of Object.entries(jsonData.value)) {
-    // 如果是直接匹配到顶层属性
-    if (key === path) {
-      jsonData.value[path] = value;
-      console.log(`更新顶层属性 ${path}:`, value);
-      return;
-    }
-
-    // 如果是对象，检查其内部属性
-    if (val && typeof val === 'object' && !Array.isArray(val)) {
-      if (path in val) {
-        val[path] = value;
-        console.log(`更新嵌套属性 ${key}.${path}:`, value);
+    // 遍历 jsonData 中的所有属性
+    for (const [key, val] of Object.entries(jsonData.value)) {
+      // 如果是直接匹配到顶层属性
+      if (key === path) {
+        jsonData.value[path] = value;
+        console.log(`更新顶层属性 ${path}:`, value);
         return;
       }
-    }
-  }
 
-  console.warn(`未找到路径 ${path}`);
-}
-const inputChecked = (key: string) => {
-  // 遍历 jsonData 中的所有属性
-  for (const [dataKey, value] of Object.entries(jsonData.value)) {
-    // 如果是对象类型，检查其内部属性
-    if (typeof value === 'object' && value !== null) {
-      // 如果在嵌套对象中找到了对应的 key
-      if (key in value && typeof value[key] === 'boolean') {
-        value[key] = !value[key];
-        console.log(`修改嵌套值 ${dataKey}.${key}:`, value[key]);
+      // 如果是对象，检查其内部属性
+      if (val && typeof val === 'object' && !Array.isArray(val)) {
+        if (path in val) {
+          val[path] = value;
+          console.log(`更新嵌套属性 ${key}.${path}:`, value);
+          return;
+        }
+      }
+    }
+
+    console.warn(`未找到路径 ${path}`);
+  }
+  //编辑布尔值
+  const inputChecked = (key: string) => {
+    // 遍历 jsonData 中的所有属性
+    for (const [dataKey, value] of Object.entries(jsonData.value)) {
+      // 如果是对象类型，检查其内部属性
+      if (typeof value === 'object' && value !== null) {
+        // 如果在嵌套对象中找到了对应的 key
+        if (key in value && typeof value[key] === 'boolean') {
+          value[key] = !value[key];
+          console.log(`修改嵌套值 ${dataKey}.${key}:`, value[key]);
+          console.log('Jsondata', jsonData.value);
+          return;
+        }
+      }
+      // 如果是顶层属性
+      else if (dataKey === key) {
+        if (typeof value === 'boolean') {
+          jsonData.value[key] = !value;
+        } else {
+          // 如果不是布尔值，可以设置一个默认的布尔值
+          jsonData.value[key] = true;
+        }
+        console.log(`修改顶层值 ${key}:`, jsonData.value[key]);
         console.log('Jsondata', jsonData.value);
         return;
       }
     }
-    // 如果是顶层属性
-    else if (dataKey === key) {
-      if (typeof value === 'boolean') {
-        jsonData.value[key] = !value;
-      } else {
-        // 如果不是布尔值，可以设置一个默认的布尔值
-        jsonData.value[key] = true;
-      }
-      console.log(`修改顶层值 ${key}:`, jsonData.value[key]);
-      console.log('Jsondata', jsonData.value);
-      return;
+
+  }
+
+
+  //编辑备注
+  const assaginOBj = (key: string, value: any, obj: any) => {
+    if (Object.keys(comments.value).length === 0) {
+
+      comments.value = obj
+    } else {
+      comments.value[key] = value
     }
   }
+  const updateNote = (note: any) => {
 
-}
+    const noteObj = getKeysAsObject(jsonData.value)
+    console.log('noteObj', noteObj);
+    const { value, path } = note
+    // 遍历 jsonData 中的所有属性
 
 
+    for (const [key, val] of Object.entries(noteObj)) {
+      // 如果是直接匹配到顶层属性
+      console.log('val', val);
+      if (key === path) {
+        noteObj[path] = value;
+        console.log(`更新顶层属性 ${path}:`, value);
+        console.log('noteObj', noteObj);
+        console.log('comments', comments.value);
+        assaginOBj(key, value, noteObj)
+        console.log('noteObj', comments.value);
+        return;
+      }
 
-const getAutoConfig = async () => {
-  try {
-    loading.value = true
-    const appNo = encodeURIComponent(activeApp.value)
-    const res = await service.get(`/appConfig/json/list/${appNo}`)
-    console.log('获取自动化配置列表', res);
-    tableData.value = res.data.rows
+      if (key.includes(',')) {
+        if (key.includes(path)) {
+          noteObj[key] = value;
+          assaginOBj(key, value, noteObj)
+          return
+        }
+      }
+    }
 
-  } catch (err) {
-    console.log('获取自动化配置列表', err);
-  } finally {
-    loading.value = false
+
   }
-}
-//编辑配置
-const dialogEditor = ref<boolean>(false)
-const addConfig = () => {
-  dialogEditor.value = true
-}
 
-const deleteConfig = async (item: any) => {
-  try {
-    const res = await service.post(`/appConfig/json/delete/${item.id}`)
-    if (res.data.code === 200) {
-      ElMessage.success('删除成功')
-      getAutoConfig()
-    } else {
+  const getAutoConfig = async () => {
+    try {
+      loading.value = true
+      const appNo = encodeURIComponent(activeApp.value)
+      const res = await service.get(`/appConfig/json/list/${appNo}`)
+      console.log('获取自动化配置列表', res);
+      tableData.value = res.data.rows
+      for (const item of tableData.value) {
+        if (!item.configNote) {
+          item.configNote = JSON.stringify({})
+        }
+      }
+    } catch (err) {
+      console.log('获取自动化配置列表', err);
+    } finally {
+      loading.value = false
+    }
+  }
+  //编辑配置
+  const dialogEditor = ref<boolean>(false)
+  const addConfig = () => {
+    editorFormData.value = null
+    dialogEditor.value = true
+  }
+
+  watch(() => dialogEditor.value, (newV) => {
+    if (!newV) {
+      editorFormData.value = null
+    }
+  })
+
+  const deleteConfig = async (item: any) => {
+    try {
+      const res = await service.post(`/appConfig/json/delete/${item.id}`)
+      if (res.data.code === 200) {
+        ElMessage.success('删除成功')
+        getAutoConfig()
+      } else {
+        ElMessage.error('删除失败')
+      }
+    } catch (err) {
       ElMessage.error('删除失败')
     }
-  } catch (err) {
-    ElMessage.error('删除失败')
-  }
 
-}
-watch(() => appList.value, (newV) => {
-  if (newV.length > 0) {
-    if (appList.value.length === 0) return
-    activeApp.value = appList.value[0].appNo
-    getAutoConfig()
   }
-}, { immediate: true, deep: true })
+  watch(() => appList.value, (newV) => {
+    if (newV.length > 0) {
+      if (appList.value.length === 0) return
+      activeApp.value = appList.value[0].appNo
+      getAutoConfig()
+    }
+  }, { immediate: true, deep: true })
 
 </script>
 
 <style scoped>
-.view {
-  min-height: 100%;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.page-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 500;
-  color: #1f2f3d;
-}
-
-.filter-card {
-  margin-bottom: 16px;
-}
-
-.filter-box {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: flex-start;
-}
-
-.filter-item {
-  display: flex;
-  align-items: center;
-  margin-right: 24px;
-}
-
-.filter-item .label {
-  margin-right: 8px;
-  color: #606266;
-  font-size: 14px;
-}
-
-.filter-select {
-  width: 200px;
-}
-
-.filter-actions {
-  margin-left: auto;
-}
-
-.table-card {
-  margin-bottom: 16px;
-}
-
-.pagination-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #EBEEF5;
-}
-
-/* 响应式处理 */
-@media screen and (max-width: 768px) {
-  .filter-box {
-    flex-direction: column;
+  .view {
+    min-height: 100%;
   }
 
-  .filter-item {
-    margin-right: 0;
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 16px;
   }
 
+  .page-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #1f2f3d;
+  }
+
+  .filter-card {
+    margin-bottom: 16px;
+  }
+
+  .filter-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .filter-item {
+    display: flex;
+    align-items: center;
+    margin-right: 24px;
+  }
+
+  .filter-item .label {
+    margin-right: 8px;
+    color: #606266;
+    font-size: 14px;
+  }
+
   .filter-select {
-    width: 100%;
+    width: 200px;
   }
 
   .filter-actions {
-    margin-left: 0;
-    width: 100%;
-    display: flex;
-    gap: 8px;
+    margin-left: auto;
   }
 
-  .filter-actions .el-button {
-    flex: 1;
+  .table-card {
+    /* margin-bottom: 16px; */
   }
-}
+
+  .pagination-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #EBEEF5;
+  }
+
+  .channel-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .channel-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 4px;
+    color: #fff;
+    background-color: #409EFF;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+
+
+  }
+
+  /* 响应式处理 */
+  @media screen and (max-width: 768px) {
+    .filter-box {
+      flex-direction: column;
+    }
+
+    .filter-item {
+      margin-right: 0;
+      margin-bottom: 16px;
+    }
+
+    .filter-select {
+      width: 100%;
+    }
+
+    .filter-actions {
+      margin-left: 0;
+      width: 100%;
+      display: flex;
+      gap: 8px;
+    }
+
+    .filter-actions .el-button {
+      flex: 1;
+    }
+  }
 </style>

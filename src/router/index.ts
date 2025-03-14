@@ -10,7 +10,7 @@ const routes = [
     path: '/',
     name: 'home',
     component: HomeView,
-    redirect: '/autoOpration',
+    redirect: '/appConfig/index',
     children: [] as RouteRecordRaw[],
   },
   {
@@ -53,7 +53,13 @@ const getRouterList = async () => {
   }
 }
 
-await getRouterList()
+const getMeuns = async () => {
+  const hasToken = localStorage.getItem('token')
+  if (hasToken) {
+    await getRouterList()
+  }
+}
+await getMeuns()
 
 const router = createRouter({
   history: createWebHistory(),

@@ -4,7 +4,7 @@ import { ElMessage } from 'element-plus'
 import router from '@/router'
 
 const service: AxiosInstance = axios.create({
-  baseURL: 'http://192.168.31.110:18090',
+  baseURL: 'http://192.168.31.110:18091',
   // withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

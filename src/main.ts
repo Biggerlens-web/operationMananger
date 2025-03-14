@@ -6,7 +6,7 @@ import 'element-plus/dist/index.css'
 import App from './App.vue'
 import router from './router'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-
+import 'animate.css'
 // 1. 创建 pinia 实例
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)

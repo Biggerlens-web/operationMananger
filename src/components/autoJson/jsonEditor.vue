@@ -3,6 +3,9 @@
     <el-date-picker ref="datePicker" v-model="dateTime" class="datePicker" :class="{ showDatePicker: dateTime }"
         @change="handleDateChange" :style="{ left: mouseX, top: mouseY }" type="datetime"
         placeholder="Select date and time" />
+    <el-input ref="noteInputRef" v-model="noteText" @blur="handleNote" class="noteInput"
+        :class="{ showNoteInput: noteText !== null }" style="width: 100px;height: 22px;"
+        :style="{ left: mouseX, top: mouseY }"></el-input>
 </template>
 
 <script setup lang="ts">
@@ -36,8 +39,24 @@
         })
     })
 
-    const emit = defineEmits(['update:modelValue', 'inputChecked', 'dateChange'])
+    const emit = defineEmits(['update:modelValue', 'inputChecked', 'dateChange', 'updateNote'])
 
+    //编辑备注
+    const noteText = ref<any>(null)
+    const notePath = ref<string>('')
+    const noteInputRef = ref<HTMLElement>()
+    const handleNote = () => {
+
+        emit('updateNote', {
+            value: noteText.value,
+            path: notePath.value
+        })
+        const editorInput = document.querySelector(`#jsoneditor-desc${notePath.value}`)
+        if (editorInput instanceof HTMLElement) {
+            editorInput.textContent = noteText.value
+        }
+        noteText.value = null
+    }
 
 
     //编辑时间日期
@@ -48,6 +67,7 @@
     const datePath = ref<string>('')
     const handleDateChange = (value: string) => {
         console.log('日期', value);
+        dateTime.value = ''
         emit('dateChange', {
             value: dayjs(value).format('YYYY-MM-DD HH:mm:ss'),
             path: datePath.value
@@ -200,8 +220,22 @@
                                 if (contentTd?.length) {
                                     for (let item of contentTd) {
                                         if (item.className === 'jsoneditor-desc') {
+                                            console.log('item', item);
                                             haveDesc = true
                                             item.textContent = comment
+                                            item.addEventListener('click', (e) => {
+                                                const target = e.target
+                                                if (target instanceof HTMLElement) {
+                                                    const rect = (e.target as HTMLElement).getBoundingClientRect();
+                                                    const elementX = rect.left;
+                                                    const elementY = rect.top;
+                                                    mouseX.value = `${elementX}px`
+                                                    mouseY.value = `${elementY}px`
+                                                    noteText.value = comment
+                                                    notePath.value = jsonPath
+                                                    noteInputRef.value?.focus()
+                                                }
+                                            })
                                             break
                                         } else {
                                             haveDesc = false
@@ -210,7 +244,25 @@
                                 }
                                 const newTd = document.createElement('td')
                                 newTd.className = 'jsoneditor-desc'
+                                newTd.id = `jsoneditor-desc${jsonPath}`
                                 newTd.textContent = comment
+                                newTd.addEventListener('click', (e) => {
+                                    console.log('e', e);
+                                    const target = e.target
+                                    console.log('target', target);
+                                    if (target instanceof HTMLElement) {
+
+                                        const rect = (e.target as HTMLElement).getBoundingClientRect();
+                                        console.log('rect', rect);
+                                        const elementX = rect.left;
+                                        const elementY = rect.top;
+                                        mouseX.value = `${elementX}px`
+                                        mouseY.value = `${elementY}px`
+                                        noteText.value = comment
+                                        notePath.value = jsonPath
+                                        noteInputRef.value?.focus()
+                                    }
+                                })
                                 if (contentTr?.childNodes[1] && !haveDesc) {
                                     contentTr.childNodes[1].after(newTd)
                                 }
@@ -228,53 +280,7 @@
         }
     }
     let timer: any = null
-    // 初始化编辑器
-    // const initEditor = () => {
-    //     if (!editorContainer.value) {
-    //         return
-    //     }
-    //     if (editor) {
-    //         editor.destroy()
-    //         editor = null
-    //     }
-    //     const defaultOptions: any = {
-    //         mode: 'tree',
-    //         onChange: () => {
-    //             try {
-    //                 if (timer) {
-    //                     clearTimeout(timer)
-    //                 }
-    //                 timer = setTimeout(() => {
-    //                     const newValue = editor.get()
-    //                     emit('update:modelValue', newValue)
-    //                     initParamsDesc()
 
-    //                 }, 500)
-
-    //             } catch (e) {
-    //                 console.error('JSON解析错误', e)
-    //             }
-    //         },
-    //         onBlur: () => {
-    //             console.log('失去焦点');
-
-
-    //         },
-    //         onExpand: (path: any) => {
-    //             console.log('打开的路径', path);
-    //             expendList.value = path.path
-    //             console.log('记录打开的路径', expendList.value);
-    //             initParamsDesc()
-    //         }
-    //     }
-
-    //     editor = new JSONEditor(
-    //         editorContainer.value,
-    //         Object.assign(defaultOptions, props.options),
-    //         props.modelValue
-    //     )
-    //     initParamsDesc()
-    // }
     const initEditor = () => {
         if (!editorContainer.value) {
             return
@@ -305,7 +311,7 @@
 
                         // 只有当值真正发生变化时才触发更新
                         if (JSON.stringify(newValue) !== JSON.stringify(props.modelValue)) {
-                            emit('update:modelValue', newValue)
+                            // emit('update:modelValue', newValue)
                             initParamsDesc()
                         }
 
@@ -370,11 +376,19 @@
         if (newV) {
             initEditor()
         } else {
+
             editor?.destroy()
         }
     })
     onBeforeUnmount(() => {
         editor?.destroy()
+    })
+    const setJsonData = () => {
+        const value = editor.get()
+        emit('update:modelValue', value)
+    }
+    defineExpose({
+        setJsonData
     })
 </script>
 
@@ -400,6 +414,13 @@
         display: flex !important;
         align-items: center !important;
         color: #f2632e !important;
+
+
+    }
+
+    .jsoneditor-desc:hover {
+        border: 1px solid #f2632e !important;
+
     }
 
     .jsoneditor-initvalue {
@@ -474,6 +495,17 @@
 
     .showDatePicker {
         z-index: 10;
-        /* opacity: 1; */
+
+    }
+
+    .noteInput {
+        position: fixed;
+        z-index: -1;
+        opacity: 0;
+    }
+
+    .showNoteInput {
+        z-index: 10;
+        opacity: 1;
     }
 </style>

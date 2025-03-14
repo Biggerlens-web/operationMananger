@@ -177,7 +177,7 @@
                 localStorage.setItem('token', res.data.data.token ?? '')
                 userName.value = res.data.data.userName ?? '管理员'
                 userAvatar.value = res.data.data.userAvatar ?? ''
-                router.push('/')
+                router.go(0)
             } else {
                 ElMessage.error(res.data.msg)
             }
