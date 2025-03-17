@@ -21,7 +21,9 @@
                 <div class="filter-item">
                     <span class="label">应用:</span>
                     <el-select v-model="activeApp" placeholder="请选择应用" clearable class="filter-select">
-                        <el-option v-for="item in appList" :key="item.id" :label="item.name" :value="item.id" />
+                        <el-option v-for="item in appList" :key="item.id"
+                            :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
+                            :value="item.appNo" />
                     </el-select>
                 </div>
             </div>
@@ -46,8 +48,11 @@
     import { storeToRefs } from 'pinia'
     import backIcon from '../assets/template/返回.png'
     import addTemplateCatalog from '@/components/templates/addTemplateCatalog.vue'
+    import { useCounterStore } from '@/stores/counter'
     const componentId = ref<any>()
     const templateStore = useTemplateStore()
+    const conterStore = useCounterStore()
+    const { appList } = storeToRefs(conterStore)
     const { activeCataType, activeCalaId, activeSubId, typeTitle, subTypeTitle, addTemplateMark } = storeToRefs(templateStore)
     const components: any = {
         catalogList,
@@ -104,24 +109,9 @@
 
     }
 
-    // 筛选相关
-    interface AppItem {
-        id: number
-        name: string
-    }
+
     const activeApp = ref('')
-    const appList = ref<AppItem[]>([
-        { id: 1, name: '123123' },
-        { id: 2, name: '123123' },
-        { id: 3, name: '123123' },
-        { id: 4, name: '123123' },
-        { id: 5, name: '123123' },
-        { id: 6, name: '123123' },
-        { id: 7, name: '123123' },
-        { id: 8, name: '123123' },
-        { id: 9, name: '123123' },
-        { id: 10, name: '123123' }
-    ])
+
     onMounted(() => {
         componentId.value = components[activeCataType.value]
     })

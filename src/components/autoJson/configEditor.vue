@@ -8,12 +8,8 @@
             <el-form-item label="应用" prop="appNo">
                 <el-select filterable v-model="formData.appNo" placeholder="请选择应用" class="filter-select">
                     <el-option v-for="item in appList" :key="item.appNo"
-                        :label="`应用:${item.appAbbreviation} 公司:${item.companyName}`" :value="item.appNo" />
-                </el-select>
-            </el-form-item>
-            <el-form-item label="渠道" prop="channel">
-                <el-select filterable multiple v-model="formData.channel" placeholder="请选择渠道" class="filter-select">
-                    <el-option v-for="item in channelList" :key="item.id" :label="item.channelName" :value="item.id" />
+                        :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
+                        :value="item.appNo" />
                 </el-select>
             </el-form-item>
             <el-form-item label="系统" prop="os">
@@ -21,6 +17,12 @@
                     <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
                 </el-select>
             </el-form-item>
+            <el-form-item label="渠道" prop="channel" v-if="showChannelEditor">
+                <el-select filterable multiple v-model="formData.channel" placeholder="请选择渠道" class="filter-select">
+                    <el-option v-for="item in channelList" :key="item.id" :label="item.channelName" :value="item.id" />
+                </el-select>
+            </el-form-item>
+
             <el-form-item label="开关" prop="open">
                 <el-switch v-model="formData.open"></el-switch>
             </el-form-item>
@@ -58,7 +60,7 @@
     import { desEncrypt } from '@/utils/des';
     import { ElMessage } from 'element-plus';
     import { storeToRefs } from 'pinia';
-    import { reactive, ref, watch } from 'vue';
+    import { computed, reactive, ref, watch } from 'vue';
     const counterStore = useCounterStore()
     const autoOprationStore = useAutoOpration()
     const { JSONEditorNote, JSONEditorValue } = storeToRefs(autoOprationStore)
@@ -69,6 +71,8 @@
         editorFormData: any
     }>()
 
+
+    const showChannelEditor = computed(() => !['IOS', 'MAC'].includes(formData.os))
     const emits = defineEmits<{
         'update:dialogEditor': [value: boolean]
         'update': []
@@ -121,16 +125,7 @@
                 required: true, message: '请选择渠道', trigger: 'blur'
             }
         ],
-        startTime: [
-            {
-                required: true, message: '请选择开始时间', trigger: 'blur'
-            }
-        ],
-        endTime: [
-            {
-                required: true, message: '请选择结束时间', trigger: 'blur'
-            }
-        ]
+
     })
     watch(() => props.dialogEditor, (newV) => {
         if (newV) {

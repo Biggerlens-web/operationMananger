@@ -56,8 +56,8 @@
             </div>
         </el-card>
         <el-card class="content-card">
-            <Transition enter-active-class="animate__animated animate__slideInLeft"
-                leave-active-class="animate__animated animate__slideOutLeft">
+            <Transition enter-active-class="animate__animated animate__fadeIn"
+                leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="companyData"></component>
             </Transition>
 

@@ -1,19 +1,19 @@
 <template>
     <div class="view">
         <el-card class="filter-card">
-            <div class="card-header">
+            <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
                     <el-button type="primary" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
-                        新增菜单
+                        新增配置连接
                     </el-button>
                     <el-button type="primary" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
-                        EXECL导入
+                        EXECEL导入
                     </el-button>
                 </div>
                 <div class="right-actions">
@@ -26,13 +26,26 @@
 
             <div class="filter-container">
                 <div class="filter-row">
+
+
                     <div class="filter-item">
-                        <el-input v-model="searchParams.menuText" placeholder="输入端点查询" clearable prefix-icon="Search" />
+                        <el-select filterable v-model="searchParams.companyNo" placeholder="请选择所属公司"
+                            class="filter-select">
+                            <el-option v-for="item in appList" :key="item.appNo"
+                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
+                                :value="item.appNo" />
+                        </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-input v-model="searchParams.menuText" placeholder="输入域（bucket）查询" clearable
-                            prefix-icon="Search" />
+                        <el-select filterable v-model="searchParams.companyNo" placeholder="请选择所属应用"
+                            class="filter-select">
+                            <el-option v-for="item in appList" :key="item.appNo"
+                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
+                                :value="item.appNo" />
+                        </el-select>
                     </div>
+
+
 
                     <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getUserList">
@@ -56,8 +69,7 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="bucketData"></component>
-
+                <component :is="componentName" :filterParams="filterParams" :tableData="appData"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -74,7 +86,7 @@
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     const counterStore = useCounterStore()
-    const { showPagestion } = storeToRefs(counterStore)
+    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -82,80 +94,132 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+
+
     //搜索参数
     interface SearchParams {
-        menuText: string
-        menuType: string
-        menuUrl: string
-        menuUrlType: string
-        parentId: number | string
+        inputText: string
+        companyNo: string
+
+
+
     }
     const searchParams = ref<SearchParams>(
         {
-            menuText: '',
-            menuType: '',
-            menuUrl: '',
-            menuUrlType: '',
-            parentId: ''
+            inputText: '',
+            companyNo: '',
+
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            menuText: '',
-            menuType: '',
-            menuUrl: '',
-            menuUrlType: '',
-            parentId: ''
+            inputText: '',
+            companyNo: '',
+
         }
         getUserList()
     }
-    //定义域类型
-    interface EndpointItem {
-        id: number;        // 编号
-        endpoint: string;  // 端点
-        domain: string;    // 域
-        description: string; // 说明
+    interface ApplicationData {
+        companyName: string;   // 公司名称
+        appName: string;       // 应用名称
+        endpoint: string;      // 端点
+        domain: string;        // 域
+        folderPath: string;    // 文件夹
+        fileName: string;      // 文件名
     }
-    const userNote: any = {
-        id: '编号',
+
+
+    const appNote: any = {
+        companyName: '公司名称',
+        appName: '应用名称',
         endpoint: '端点',
         domain: '域',
-        description: '说明',
-
+        folderPath: '文件夹',
+        fileName: '文件名'
 
     }
-    // 生成菜单数据
-    const bucketData = ref<EndpointItem[]>([
+    // 生成用户数据
+    const appData = ref<ApplicationData[]>([
         {
-            id: 1,
-            endpoint: '/users',
-            domain: 'api.example.com',
-            description: '这是第 1 个端点的说明信息'
+            companyName: "腾讯科技",
+            appName: "微信",
+            endpoint: "/api/messages",
+            domain: "wechat.com",
+            folderPath: "/apps/wechat",
+            fileName: "messages.json"
         },
         {
-            id: 2,
-            endpoint: '/products',
-            domain: 'test.example.com',
-            description: '这是第 2 个端点的说明信息'
+            companyName: "阿里巴巴",
+            appName: "淘宝",
+            endpoint: "/api/products",
+            domain: "taobao.com",
+            folderPath: "/apps/taobao",
+            fileName: "products.xml"
         },
         {
-            id: 3,
-            endpoint: '/orders',
-            domain: 'dev.example.com',
-            description: '这是第 3 个端点的说明信息'
+            companyName: "字节跳动",
+            appName: "抖音",
+            endpoint: "/api/videos",
+            domain: "douyin.com",
+            folderPath: "/apps/douyin",
+            fileName: "videos.mp4"
         },
         {
-            id: 4,
-            endpoint: '/categories',
-            domain: 'api.example.com',
-            description: '这是第 4 个端点的说明信息'
+            companyName: "百度",
+            appName: "百度地图",
+            endpoint: "/api/location",
+            domain: "map.baidu.com",
+            folderPath: "/apps/maps",
+            fileName: "locations.dat"
         },
         {
-            id: 5,
-            endpoint: '/settings',
-            domain: 'test.example.com',
-            description: '这是第 5 个端点的说明信息'
+            companyName: "美团",
+            appName: "美团外卖",
+            endpoint: "/api/restaurants",
+            domain: "waimai.meituan.com",
+            folderPath: "/apps/meituan",
+            fileName: "restaurants.db"
+        },
+        {
+            companyName: "京东",
+            appName: "京东商城",
+            endpoint: "/api/orders",
+            domain: "jd.com",
+            folderPath: "/apps/jd",
+            fileName: "orders.csv"
+        },
+        {
+            companyName: "网易",
+            appName: "网易云音乐",
+            endpoint: "/api/music",
+            domain: "music.163.com",
+            folderPath: "/apps/netease",
+            fileName: "songs.mp3"
+        },
+        {
+            companyName: "小米",
+            appName: "小米商城",
+            endpoint: "/api/devices",
+            domain: "mi.com",
+            folderPath: "/apps/xiaomi",
+            fileName: "devices.yaml"
+        },
+        {
+            companyName: "滴滴出行",
+            appName: "滴滴打车",
+            endpoint: "/api/rides",
+            domain: "didi.com",
+            folderPath: "/apps/didi",
+            fileName: "trips.log"
+        },
+        {
+            companyName: "哔哩哔哩",
+            appName: "B站",
+            endpoint: "/api/anime",
+            domain: "bilibili.com",
+            folderPath: "/apps/bilibili",
+            fileName: "streams.ts"
         }
     ])
     interface filterParams {
@@ -166,11 +230,11 @@
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
         console.log('获取用户列表');
-        const dataItem = bucketData.value[0]
+        const dataItem = appData.value[0]
         const keys = Object.keys(dataItem)
         filterParams.value = keys.map((item) => {
             return {
-                note: userNote[item],
+                note: appNote[item],
                 isShow: true,
                 key: item
             }
@@ -259,11 +323,6 @@
                     }
                 }
             }
-        }
-
-        /* 确保select组件占满宽度 */
-        :deep(.el-select) {
-            width: 100%;
         }
 
         .content-card {

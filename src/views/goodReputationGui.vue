@@ -1,20 +1,15 @@
 <template>
     <div class="view">
         <el-card class="filter-card">
-            <div class="card-header">
+            <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
                     <el-button type="primary" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
-                        新增菜单
+                        新增
                     </el-button>
-                    <el-button type="primary" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        EXECL导入
-                    </el-button>
+
                 </div>
                 <div class="right-actions">
                     <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -26,12 +21,23 @@
 
             <div class="filter-container">
                 <div class="filter-row">
+
                     <div class="filter-item">
-                        <el-input v-model="searchParams.menuText" placeholder="输入端点查询" clearable prefix-icon="Search" />
+                        <el-select filterable v-model="searchParams.companyNo" placeholder="应用" class="filter-select">
+                            <el-option v-for="item in appList" :key="item.appNo"
+                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
+                                :value="item.appNo" />
+                        </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-input v-model="searchParams.menuText" placeholder="输入域（bucket）查询" clearable
-                            prefix-icon="Search" />
+                        <el-select filterable v-model="searchParams.companyNo" placeholder="系统" class="filter-select">
+                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
+                        </el-select>
+                    </div>
+                    <div class="filter-item">
+                        <el-select filterable v-model="searchParams.companyNo" placeholder="开关" class="filter-select">
+                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
+                        </el-select>
                     </div>
 
                     <div class="filter-item filter-actions">
@@ -56,8 +62,7 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="bucketData"></component>
-
+                <component :is="componentName" :filterParams="filterParams" :tableData="appData"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -74,7 +79,7 @@
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     const counterStore = useCounterStore()
-    const { showPagestion } = storeToRefs(counterStore)
+    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -82,80 +87,121 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+
+
     //搜索参数
     interface SearchParams {
-        menuText: string
-        menuType: string
-        menuUrl: string
-        menuUrlType: string
-        parentId: number | string
+        inputText: string
+        companyNo: string
+
+
+
     }
     const searchParams = ref<SearchParams>(
         {
-            menuText: '',
-            menuType: '',
-            menuUrl: '',
-            menuUrlType: '',
-            parentId: ''
+            inputText: '',
+            companyNo: '',
+
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            menuText: '',
-            menuType: '',
-            menuUrl: '',
-            menuUrlType: '',
-            parentId: ''
+            inputText: '',
+            companyNo: '',
+
         }
         getUserList()
     }
-    //定义域类型
-    interface EndpointItem {
-        id: number;        // 编号
-        endpoint: string;  // 端点
-        domain: string;    // 域
-        description: string; // 说明
+    interface AppFeatureConfig {
+        appName: string;         // 所属应用
+        system: string;  // 系统
+        featureName: string;     // 名称
+        isEnabled: boolean;      // 开关
+        probability: number;    //概率设置
     }
-    const userNote: any = {
-        id: '编号',
-        endpoint: '端点',
-        domain: '域',
-        description: '说明',
+
+
+    const appNote: any = {
+        appName: '所属应用',
+        system: '系统',
+        featureName: '名称',
+        isEnabled: '开关',
+        probability: '概率设置',
 
 
     }
-    // 生成菜单数据
-    const bucketData = ref<EndpointItem[]>([
+    // 生成用户数据
+    const appData = ref<AppFeatureConfig[]>([
         {
-            id: 1,
-            endpoint: '/users',
-            domain: 'api.example.com',
-            description: '这是第 1 个端点的说明信息'
+            appName: "美图秀秀",
+            system: "iOS",
+            featureName: "一键美颜",
+            isEnabled: true,
+            probability: 100
         },
         {
-            id: 2,
-            endpoint: '/products',
-            domain: 'test.example.com',
-            description: '这是第 2 个端点的说明信息'
+            appName: "美图秀秀",
+            system: "Android",
+            featureName: "智能修图",
+            isEnabled: true,
+            probability: 80
         },
         {
-            id: 3,
-            endpoint: '/orders',
-            domain: 'dev.example.com',
-            description: '这是第 3 个端点的说明信息'
+            appName: "轻颜相机",
+            system: "iOS",
+            featureName: "人像磨皮",
+            isEnabled: true,
+            probability: 90
         },
         {
-            id: 4,
-            endpoint: '/categories',
-            domain: 'api.example.com',
-            description: '这是第 4 个端点的说明信息'
+            appName: "轻颜相机",
+            system: "Android",
+            featureName: "美白增强",
+            isEnabled: false,
+            probability: 0
         },
         {
-            id: 5,
-            endpoint: '/settings',
-            domain: 'test.example.com',
-            description: '这是第 5 个端点的说明信息'
+            appName: "B612咔叽",
+            system: "All",
+            featureName: "滤镜特效",
+            isEnabled: true,
+            probability: 100
+        },
+        {
+            appName: "B612咔叽",
+            system: "iOS",
+            featureName: "AR贴纸",
+            isEnabled: true,
+            probability: 85
+        },
+        {
+            appName: "Faceu激萌",
+            system: "Android",
+            featureName: "表情识别",
+            isEnabled: true,
+            probability: 95
+        },
+        {
+            appName: "Faceu激萌",
+            system: "iOS",
+            featureName: "动态贴纸",
+            isEnabled: true,
+            probability: 75
+        },
+        {
+            appName: "无他相机",
+            system: "All",
+            featureName: "智能场景",
+            isEnabled: true,
+            probability: 70
+        },
+        {
+            appName: "无他相机",
+            system: "Android",
+            featureName: "美颜特效",
+            isEnabled: false,
+            probability: 0
         }
     ])
     interface filterParams {
@@ -166,11 +212,11 @@
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
         console.log('获取用户列表');
-        const dataItem = bucketData.value[0]
+        const dataItem = appData.value[0]
         const keys = Object.keys(dataItem)
         filterParams.value = keys.map((item) => {
             return {
-                note: userNote[item],
+                note: appNote[item],
                 isShow: true,
                 key: item
             }
@@ -259,11 +305,6 @@
                     }
                 }
             }
-        }
-
-        /* 确保select组件占满宽度 */
-        :deep(.el-select) {
-            width: 100%;
         }
 
         .content-card {

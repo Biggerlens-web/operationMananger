@@ -7,7 +7,14 @@
                         <el-icon>
                             <Plus />
                         </el-icon>
-                        新增标签
+                        新增
+                    </el-button>
+
+                    <el-button type="primary" class="add-button">
+                        <el-icon>
+                            <Plus />
+                        </el-icon>
+                        导入国际化
                     </el-button>
                 </div>
                 <div class="right-actions">
@@ -16,35 +23,29 @@
                 </div>
             </div>
 
-            <!-- <el-divider class="divider" />
+            <el-divider class="divider" />
 
             <div class="filter-container">
                 <div class="filter-row">
 
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.appNo" placeholder="请选择应用" clearable>
+                        <el-select filterable v-model="searchParams.companyNo" placeholder="应用" class="filter-select">
                             <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName}`" :value="item.appNo" />
+                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
+                                :value="item.appNo" />
+                        </el-select>
+                    </div>
+                    <div class="filter-item">
+                        <el-select filterable v-model="searchParams.companyNo" placeholder="国内外" class="filter-select">
+                            <el-option v-for="item in appList" :key="item.appNo"
+                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
+                                :value="item.appNo" />
+                        </el-select>
+                    </div>
+                    <div class="filter-item">
+                        <el-input v-model="searchParams.inputText" placeholder="类名"></el-input>
 
-                        </el-select>
                     </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.os" placeholder="请选择系统" clearable>
-                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.language" placeholder="请选择语言" clearable>
-                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.channel" placeholder="请选择渠道" clearable>
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
-                                :value="item.id" />
-                        </el-select>
-                    </div>
-
 
                     <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getUserList">
@@ -63,12 +64,12 @@
                 </div>
 
 
-            </div> -->
+            </div>
         </el-card>
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="tagData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="appData"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -97,49 +98,173 @@
 
     //搜索参数
     interface SearchParams {
-        appNo: string
-        os: string
-        language: string
-        channel: string
+        inputText: string
+        companyNo: string
+
 
 
     }
     const searchParams = ref<SearchParams>(
         {
-            appNo: '',
-            os: '',
-            language: '',
-            channel: '',
+            inputText: '',
+            companyNo: '',
 
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            appNo: '',
-            os: '',
-            language: '',
-            channel: '',
+            inputText: '',
+            companyNo: '',
+
         }
         getUserList()
     }
-    interface TagItem {
-        id: number | string;     // 编号
-        tag: string;    // 标签
+    interface AppContentConfig {
+        appName: string;           // 所属应用
+        sequence: number;          // 序号
+        name: string;              // 名称
+        region: string;            // 地区
+        i18n: {                    // 国际化
+            enabled: boolean;
+            supportedLanguages: string[];
+        };
+        totalClicks: number;       // 总点击数
+        lastUpdateTime: string;    // 最近更新时间
     }
 
-    const metaLabelNote: any = {
-        id: '编号',
-        tag: '标签',
 
+    const appNote: any = {
+        appName: '所属应用',
+        sequence: '序号',
+        name: '名称',
+        region: '地区',
+        i18n: '国际化',
+        totalClicks: '总点击数',
+        lastUpdateTime: '最近更新时间',
     }
     // 生成用户数据
-    const tagData = ref<TagItem[]>([
-        { id: 1, tag: '热门' },
-        { id: 2, tag: '推荐' },
-        { id: 3, tag: '新品' },
-        { id: 4, tag: '促销' },
-        { id: 5, tag: '限时' }
+    const appData = ref<AppContentConfig[]>([
+        {
+            appName: "美图秀秀",
+            sequence: 1,
+            name: "热门滤镜集",
+            region: "中国大陆",
+            i18n: {
+                enabled: true,
+                supportedLanguages: ["zh-CN", "en-US", "ja-JP"]
+            },
+            totalClicks: 1258463,
+            lastUpdateTime: "2023-06-15 09:30:22"
+        },
+        {
+            appName: "美图秀秀",
+            sequence: 2,
+            name: "人像美化工具",
+            region: "全球",
+            i18n: {
+                enabled: true,
+                supportedLanguages: ["zh-CN", "en-US", "ja-JP", "ko-KR", "fr-FR"]
+            },
+            totalClicks: 3452789,
+            lastUpdateTime: "2023-07-22 14:15:36"
+        },
+        {
+            appName: "轻颜相机",
+            sequence: 1,
+            name: "自然美颜",
+            region: "亚洲",
+            i18n: {
+                enabled: true,
+                supportedLanguages: ["zh-CN", "zh-TW", "ja-JP", "ko-KR"]
+            },
+            totalClicks: 978562,
+            lastUpdateTime: "2023-05-18 11:45:03"
+        },
+        {
+            appName: "轻颜相机",
+            sequence: 2,
+            name: "一键修图",
+            region: "中国大陆",
+            i18n: {
+                enabled: false,
+                supportedLanguages: ["zh-CN"]
+            },
+            totalClicks: 658942,
+            lastUpdateTime: "2023-08-03 16:20:45"
+        },
+        {
+            appName: "B612咔叽",
+            sequence: 1,
+            name: "AR贴纸包",
+            region: "全球",
+            i18n: {
+                enabled: true,
+                supportedLanguages: ["zh-CN", "en-US", "ja-JP", "ko-KR", "th-TH"]
+            },
+            totalClicks: 2564871,
+            lastUpdateTime: "2023-07-05 08:55:17"
+        },
+        {
+            appName: "B612咔叽",
+            sequence: 2,
+            name: "动态滤镜",
+            region: "东南亚",
+            i18n: {
+                enabled: true,
+                supportedLanguages: ["en-US", "th-TH", "vi-VN", "id-ID"]
+            },
+            totalClicks: 1236548,
+            lastUpdateTime: "2023-08-12 10:10:33"
+        },
+        {
+            appName: "Faceu激萌",
+            sequence: 1,
+            name: "趣味贴纸",
+            region: "中国大陆",
+            i18n: {
+                enabled: false,
+                supportedLanguages: ["zh-CN"]
+            },
+            totalClicks: 3987452,
+            lastUpdateTime: "2023-06-28 15:40:21"
+        },
+        {
+            appName: "Faceu激萌",
+            sequence: 2,
+            name: "特效相机",
+            region: "亚洲",
+            i18n: {
+                enabled: true,
+                supportedLanguages: ["zh-CN", "zh-TW", "ja-JP", "ko-KR"]
+            },
+            totalClicks: 2145698,
+            lastUpdateTime: "2023-07-30 12:25:48"
+        },
+        {
+            appName: "无他相机",
+            sequence: 1,
+            name: "专业修图工具",
+            region: "中国大陆",
+            i18n: {
+                enabled: false,
+                supportedLanguages: ["zh-CN"]
+            },
+            totalClicks: 856321,
+            lastUpdateTime: "2023-05-25 09:15:27"
+        },
+        {
+            appName: "无他相机",
+            sequence: 2,
+            name: "智能美颜",
+            region: "全球",
+            i18n: {
+                enabled: true,
+                supportedLanguages: ["zh-CN", "en-US", "ja-JP", "ko-KR", "ru-RU"]
+            },
+            totalClicks: 1458963,
+            lastUpdateTime: "2023-08-08 17:30:52"
+        }
     ])
     interface filterParams {
         note: string
@@ -149,11 +274,11 @@
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
         console.log('获取用户列表');
-        const dataItem = tagData.value[0]
+        const dataItem = appData.value[0]
         const keys = Object.keys(dataItem)
         filterParams.value = keys.map((item) => {
             return {
-                note: metaLabelNote[item],
+                note: appNote[item],
                 isShow: true,
                 key: item
             }

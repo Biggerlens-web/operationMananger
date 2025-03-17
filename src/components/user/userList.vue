@@ -49,14 +49,40 @@
                                 </div>
                                 <div class="detail-content">
                                     <div class="detail-label">{{ param.note }}</div>
-                                    <div class="detail-value">{{ formatValue(item[param.key], param.key) }}</div>
+                                    <div class="detail-value"
+                                        v-if="param.key === 'photoEditTitle' || param.key === 'versionNumber' || param.key === 'taobaoPageLink' || param.key === 'wechatServiceLink'">
+                                        <el-input v-model="item[param.key]"></el-input>
+                                    </div>
+
+                                    <div class="detail-value" v-else-if="param.key === 'price'">
+                                        <el-input-number style="width: 100px;" size="small" v-model="item[param.key]" />
+                                    </div>
+                                    <div class="detail-value"
+                                        v-else-if="param.key === 'isCharged' || param.key === 'showTaobaoPage' || param.key === 'isEnabled' || param.key === 'subscriptionLoginEnabled'">
+
+                                        <el-switch v-model="item[param.key]" :active-value="true"
+                                            :inactive-value="false" />
+                                    </div>
+
+                                    <div class="detail-value" v-else-if="param.key === 'i18nConfig'">
+                                        <div>
+                                            <el-button>配置</el-button>
+                                        </div>
+                                    </div>
+                                    <div class="detail-value" v-else>
+                                        <span>
+                                            {{ formatValue(item[param.key], param.key) }}
+                                        </span>
+
+
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- 右侧：操作按钮 -->
-                    <div class="user-actions">
+                    <div class="user-actions" v-if="showAction">
                         <el-button type="primary" size="small" plain @click="handleEditor(item)">
                             <el-icon>
                                 <Edit />
@@ -78,10 +104,15 @@
 
 <script lang="ts" setup>
     import { computed } from 'vue'
-    const props = defineProps<{
+
+
+    const props = withDefaults(defineProps<{
         filterParams: any
         tableData: any
-    }>()
+        showAction: boolean
+    }>(), {
+        showAction: true
+    })
 
     import {
         User, Phone, Message, Calendar, Location,

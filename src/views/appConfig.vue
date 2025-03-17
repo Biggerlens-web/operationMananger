@@ -26,7 +26,22 @@
           <el-select filterable v-model="activeApp" placeholder="请选择应用" @change="getAutoConfig" clearable
             class="filter-select">
             <el-option v-for="item in appList" :key="item.appNo"
-              :label="`应用:${item.appAbbreviation} 公司:${item.companyName}`" :value="item.appNo" />
+              :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
+              :value="item.appNo" />
+          </el-select>
+        </div>
+        <div class="filter-item">
+          <span class="label">渠道:</span>
+          <el-select filterable v-model="activeChannel" placeholder="请选择渠道" @change="getAutoConfig" clearable
+            class="filter-select">
+            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName" :value="item.id" />
+          </el-select>
+        </div>
+        <div class="filter-item">
+          <span class="label">系统:</span>
+          <el-select filterable v-model="activeOS" placeholder="请选择系统" @change="getAutoConfig" clearable
+            class="filter-select">
+            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
           </el-select>
         </div>
 
@@ -109,7 +124,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
+  import { onMounted, ref, watch } from 'vue'
   import { Plus } from '@element-plus/icons-vue'
   import jsonEditor from '../components/autoJson/jsonEditor.vue'
   import { getKeysAsObject } from '../utils/keyAsObj'
@@ -133,8 +148,8 @@
   } = storeToRefs(counterStore)
   // 筛选相关
   const activeApp = ref<string | number>('')
-
-
+  const activeChannel = ref<string | number>('')
+  const activeOS = ref<string | number>('')
   // 表格相关
   const loading = ref(false)
   interface TableItem {
@@ -325,17 +340,50 @@
       comments.value[key] = value
     }
   }
+  // 检查嵌套属性是否存在
+  function hasCommaNestedProperty(obj: Record<string, any>, path: string): boolean {
+    // 直接检查是否有完全匹配的键
+    if (path in obj) {
+      return true;
+    }
+
+    // 检查是否有以逗号形式表示的嵌套属性
+    for (const key of Object.keys(obj)) {
+      if (key.includes(',')) {
+        const parts = key.split(',');
+        // 如果path作为任何部分出现在逗号分隔的键中
+        if (parts.includes(path)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
   const updateNote = (note: any) => {
+    callChildMethod()
+    const { value, path } = note
+    const hasPath = hasCommaNestedProperty(jsonData.value, path)
+    console.log('hasPath', hasPath);
+    // if (!hasPath) {
+    //   jsonData.value[path] = ''
+    // }
 
     const noteObj = getKeysAsObject(jsonData.value)
     console.log('noteObj', noteObj);
-    const { value, path } = note
+
     // 遍历 jsonData 中的所有属性
-
-
+    console.log('path', path);
     for (const [key, val] of Object.entries(noteObj)) {
       // 如果是直接匹配到顶层属性
-      console.log('val', val);
+      if (key.includes(',')) {
+        if (key.includes(path)) {
+          noteObj[key] = value;
+          assaginOBj(key, value, noteObj)
+          return
+        }
+      }
       if (key === path) {
         noteObj[path] = value;
         console.log(`更新顶层属性 ${path}:`, value);
@@ -346,13 +394,7 @@
         return;
       }
 
-      if (key.includes(',')) {
-        if (key.includes(path)) {
-          noteObj[key] = value;
-          assaginOBj(key, value, noteObj)
-          return
-        }
-      }
+
     }
 
 
@@ -362,7 +404,19 @@
     try {
       loading.value = true
       const appNo = encodeURIComponent(activeApp.value)
-      const res = await service.get(`/appConfig/json/list/${appNo}`)
+      const params = {
+        os: activeOS.value,
+        channel: activeChannel.value,
+        timestamp: Date.now()
+      }
+      console.log('参数------', params);
+      const paramStr = desEncrypt(JSON.stringify(params))
+
+      const res = await service.get(`/appConfig/json/list/${appNo}`, {
+        params: {
+          enData: paramStr
+        }
+      })
       console.log('获取自动化配置列表', res);
       tableData.value = res.data.rows
       for (const item of tableData.value) {
@@ -409,7 +463,10 @@
       activeApp.value = appList.value[0].appNo
       getAutoConfig()
     }
-  }, { immediate: true, deep: true })
+  }, { deep: true })
+
+
+
 
 </script>
 

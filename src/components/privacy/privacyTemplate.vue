@@ -1,22 +1,27 @@
 <template>
-    <div class="view">
-        <el-card class="filter-card">
-            <div class="card-header" style="margin: 0;">
-                <div class="left-actions">
-                    <el-button type="primary" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        新增标签
-                    </el-button>
+    <el-dialog :model-value="dialogVisible" title="第三方SDK模板" width="1000" :before-close="handleClose">
+        <div class="view">
+            <el-card class="filter-card">
+                <div class="card-header" style="margin: 0;">
+                    <div class="left-actions">
+                        <el-button type="primary" class="add-button">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+                            新增模板
+                        </el-button>
+                        <el-select v-model="language" placeholder="请选择语言" style="width: 150px;margin-left: 10px;">
+                            <el-option v-for="item in options" :key="item.value" :label="item.label"
+                                :value="item.value" />
+                        </el-select>
+                    </div>
+                    <div class="right-actions">
+                        <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
+                            @changeView="changeView" />
+                    </div>
                 </div>
-                <div class="right-actions">
-                    <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
-                        @changeView="changeView" />
-                </div>
-            </div>
 
-            <!-- <el-divider class="divider" />
+                <!-- <el-divider class="divider" />
 
             <div class="filter-container">
                 <div class="filter-row">
@@ -64,20 +69,31 @@
 
 
             </div> -->
-        </el-card>
-        <el-card class="content-card">
-            <Transition enter-active-class="animate__animated animate__fadeIn"
-                leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="tagData"></component>
-            </Transition>
+            </el-card>
+            <el-card class="content-card">
+                <Transition enter-active-class="animate__animated animate__fadeIn"
+                    leave-active-class="animate__animated animate__fadeOut" mode="out-in">
+                    <component :is="componentName" :filterParams="filterParams" :tableData="roleData"
+                        :showAction="false"></component>
+                </Transition>
 
-            <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                :total="1000" />
-        </el-card>
-    </div>
+                <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
+                    :total="1000" />
+            </el-card>
+        </div>
+        <template #footer>
+            <div class="dialog-footer">
+                <el-button @click="handleClose">取消</el-button>
+                <el-button type="primary" @click="handleComfirm">
+                    确定
+                </el-button>
+            </div>
+        </template>
+    </el-dialog>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
+
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
@@ -85,61 +101,107 @@
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion } = storeToRefs(counterStore)
+    const props = defineProps<{
+        dialogVisible: boolean
+    }>()
+
+
+    //选择语言
+    const language = ref('')
+    const options = ref([
+        {
+            value: '1',
+            label: '中文'
+        },
+        {
+            value: '2',
+            label: '英文'
+        }
+    ])
+
+    const emit = defineEmits<{
+
+        'update:dialogVisible': [value: boolean]
+    }>()
+
+
+
+    const handleClose = () => {
+        emit('update:dialogVisible', false)
+    }
+
+    const handleComfirm = () => {
+        emit('update:dialogVisible', false)
+    }
+
+
+
     const components: any = {
         userTable,
         userList
     }
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
-
-
-
-    //搜索参数
-    interface SearchParams {
-        appNo: string
-        os: string
-        language: string
-        channel: string
-
+    interface SDKItem {
+        sdkName: string;        // SDK名称
+        packageName: string;    // 包名
+        purpose: string;        // 使用目的
+        sharedInfoScope: string; // 共享信息范围
+        company: string;        // SDK所属公司
+        privacyPolicyUrl: string; // 隐私政策链接
+    }
+    const userNote: any = {
+        sdkName: 'SDK名称',
+        packageName: '包名',
+        purpose: '使用目的',
+        sharedInfoScope: '共享信息范围',
+        company: 'SDK所属公司',
+        privacyPolicyUrl: '隐私政策链接',
 
     }
-    const searchParams = ref<SearchParams>(
+    // 生成角色数据
+    const roleData = ref<SDKItem[]>([
         {
-            appNo: '',
-            os: '',
-            language: '',
-            channel: '',
-
+            sdkName: 'Firebase Analytics',
+            packageName: 'com.google.firebase.analytics',
+            purpose: '数据分析与统计',
+            sharedInfoScope: '设备信息、应用使用情况、用户行为',
+            company: 'Google LLC',
+            privacyPolicyUrl: 'https://firebase.google.com/support/privacy'
+        },
+        {
+            sdkName: 'Tencent Bugly',
+            packageName: 'com.tencent.bugly',
+            purpose: '崩溃分析与错误报告',
+            sharedInfoScope: '设备信息、应用错误日志',
+            company: '腾讯科技(深圳)有限公司',
+            privacyPolicyUrl: 'https://privacy.qq.com/document/preview/fc748b3d96224fdb825ea79e132c1a56'
+        },
+        {
+            sdkName: 'Umeng Analytics',
+            packageName: 'com.umeng.analytics',
+            purpose: '用户行为分析',
+            sharedInfoScope: '设备信息、应用使用情况、用户行为',
+            company: '阿里巴巴集团',
+            privacyPolicyUrl: 'https://www.umeng.com/page/policy'
+        },
+        {
+            sdkName: 'JPush',
+            packageName: 'cn.jpush.android',
+            purpose: '消息推送服务',
+            sharedInfoScope: '设备信息、推送标识符',
+            company: '极光推送',
+            privacyPolicyUrl: 'https://www.jiguang.cn/license/privacy'
+        },
+        {
+            sdkName: 'WeChat SDK',
+            packageName: 'com.tencent.mm.opensdk',
+            purpose: '微信登录与分享',
+            sharedInfoScope: '用户授权信息',
+            company: '腾讯科技(深圳)有限公司',
+            privacyPolicyUrl: 'https://weixin.qq.com/cgi-bin/readtemplate?lang=zh_CN&t=weixin_agreement&s=privacy'
         }
-    )
-    //重置搜索
-    const resetSearch = () => {
-        searchParams.value = {
-            appNo: '',
-            os: '',
-            language: '',
-            channel: '',
-        }
-        getUserList()
-    }
-    interface TagItem {
-        id: number | string;     // 编号
-        tag: string;    // 标签
-    }
-
-    const metaLabelNote: any = {
-        id: '编号',
-        tag: '标签',
-
-    }
-    // 生成用户数据
-    const tagData = ref<TagItem[]>([
-        { id: 1, tag: '热门' },
-        { id: 2, tag: '推荐' },
-        { id: 3, tag: '新品' },
-        { id: 4, tag: '促销' },
-        { id: 5, tag: '限时' }
     ])
     interface filterParams {
         note: string
@@ -149,11 +211,11 @@
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
         console.log('获取用户列表');
-        const dataItem = tagData.value[0]
+        const dataItem = roleData.value[0]
         const keys = Object.keys(dataItem)
         filterParams.value = keys.map((item) => {
             return {
-                note: metaLabelNote[item],
+                note: userNote[item],
                 isShow: true,
                 key: item
             }
@@ -186,7 +248,7 @@
     })
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
     .view {
         .filter-card {
             width: 100%;

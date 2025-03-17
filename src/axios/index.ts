@@ -2,10 +2,11 @@ import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
-
+import { decryptDes } from '@/utils/des'
 const service: AxiosInstance = axios.create({
   baseURL: 'http://192.168.31.110:18091',
-  // withCredentials: true,
+  //baseURL:'https://privacy.biggerlens.cn:18090'
+
   headers: {
     'Content-Type': 'application/json',
   },
@@ -14,7 +15,6 @@ const service: AxiosInstance = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
   (config) => {
-    // config.withCredentials = true
     const token = localStorage.getItem('token')
 
     if (token && config.headers) {
@@ -30,6 +30,17 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   (response: AxiosResponse) => {
+    if (typeof response.data === 'string') {
+      console.log('response', decryptDes(response.data))
+      const { code, message } = JSON.parse(decryptDes(response.data))
+
+      if (code === 3) {
+        ElMessage.error(message)
+        localStorage.removeItem('token')
+        router.push('/login')
+      }
+    }
+
     return response
   },
   (error) => {

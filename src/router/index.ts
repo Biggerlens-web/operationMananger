@@ -86,6 +86,18 @@ const setMenuStore = () => {
 
   console.log('pinia', useCounterStore(pinia).menuList)
 }
+
+const getBaseData = async () => {
+  try {
+    const res = await service.get('/base/baseData/getBaseDatas/0')
+    console.log('基础表单数据', res)
+    useCounterStore().appList = res.data.data.apps
+    useCounterStore().channelList = res.data.data.channels
+    useCounterStore().OSlist = res.data.data.oss
+  } catch (err) {
+    console.log('获取基础数据失败')
+  }
+}
 router.beforeEach(async (to, from, next) => {
   const hasToken = localStorage.getItem('token')
   setMenuStore()
@@ -93,6 +105,7 @@ router.beforeEach(async (to, from, next) => {
     if (to.path === '/login') {
       next('/')
     } else {
+      getBaseData()
       next()
     }
   } else {

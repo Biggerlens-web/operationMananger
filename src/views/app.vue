@@ -34,7 +34,8 @@
                         <el-select filterable v-model="searchParams.companyNo" placeholder="请选择所属公司"
                             class="filter-select">
                             <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName}`" :value="item.appNo" />
+                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
+                                :value="item.appNo" />
                         </el-select>
                     </div>
 
@@ -60,8 +61,8 @@
             </div>
         </el-card>
         <el-card class="content-card">
-            <Transition enter-active-class="animate__animated animate__slideInLeft"
-                leave-active-class="animate__animated animate__slideOutLeft">
+            <Transition enter-active-class="animate__animated animate__fadeIn"
+                leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="appData"></component>
             </Transition>
 

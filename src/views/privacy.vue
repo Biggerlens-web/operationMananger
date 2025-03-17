@@ -1,5 +1,8 @@
 <template>
     <div class="view">
+        <privacyTemplate v-model:dialogVisible="dialogSDKtemplateVisible" />
+        <prermissionTemplate v-model:dialogVisible="dialogPermissiontemplateVisible" />
+        <otherTemplate v-model:dialogVisible="dialogOthertemplateVisible" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
@@ -9,16 +12,13 @@
                         </el-icon>
                         通过json文件添加
                     </el-button>
-                    <el-button type="primary" class="add-button">
-
+                    <el-button type="primary" class="add-button" @click="showSDKtemplate">
                         第三方SDK模板
                     </el-button>
-                    <el-button type="primary" class="add-button">
-
+                    <el-button type="primary" class="add-button" @click="showPermissiontemplate">
                         权限模板
                     </el-button>
-                    <el-button type="primary" class="add-button">
-
+                    <el-button type="primary" class="add-button" @click="showOthertemplate">
                         其他说明模板
                     </el-button>
                 </div>
@@ -36,9 +36,30 @@
 </template>
 
 <script lang="ts" setup>
+    import { ref } from 'vue';
     import echartTree from '@/components/echartTree.vue';
+    import privacyTemplate from '@/components/privacy/privacyTemplate.vue';
+    import prermissionTemplate from '@/components/privacy/prermissionTemplate.vue';
+    import otherTemplate from '@/components/privacy/otherTemplate.vue';
 
+    //显示SDK模板
 
+    const dialogSDKtemplateVisible = ref(false);
+    const showSDKtemplate = () => {
+        dialogSDKtemplateVisible.value = true;
+    }
+
+    //显示权限模板
+    const dialogPermissiontemplateVisible = ref(false);
+    const showPermissiontemplate = () => {
+        dialogPermissiontemplateVisible.value = true;
+    }
+
+    //显示其他模板
+    const dialogOthertemplateVisible = ref(false);
+    const showOthertemplate = () => {
+        dialogOthertemplateVisible.value = true;
+    }
 </script>
 
 <style lang="scss" scoped>
