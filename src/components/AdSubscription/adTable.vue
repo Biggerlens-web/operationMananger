@@ -13,7 +13,20 @@
         <el-table :data="viewList" border style="width: 100%" :max-height="420" highlight-current-row
             :header-cell-style="{ background: '#f5f7fa' }" :cell-style="{ padding: '8px 0' }">
             <template v-for="item in keyList" :key="item.key">
-                <el-table-column :prop="item.key" :label="item.note" show-overflow-tooltip />
+                <el-table-column :prop="item.key" :label="item.note" show-overflow-tooltip>
+
+
+                    <template
+                        v-if="item.key === 'showAd' || item.key === 'splashAd' || item.key === 'bannerAd' || item.key === 'rewardedAd' || item.key === 'fullscreenAd' || item.key === 'feedAd' || item.key === 'content'"
+                        #default="scope">
+                        <el-switch v-model="scope.row[item.key]" active-text="开" inactive-text="关" />
+                        <div v-if="scope.row[item.key]">
+                            <p>开始<el-input style="width: 50px;"></el-input></p>
+                            <p>间隔<el-input style="width: 50px;"></el-input></p>
+                        </div>
+
+                    </template>
+                </el-table-column>
             </template>
 
             <el-table-column label="操作" fixed="right" width="150" align="center">
@@ -448,6 +461,7 @@
     const note = ref<any>({
         id: '编号',
         channel: '渠道',
+        adType: '广告类型',
         startTime: '开始时间',
         endTime: '结束时间',
         showAd: '显示广告',

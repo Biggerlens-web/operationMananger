@@ -1,9 +1,10 @@
 <template>
     <div class="view">
+        <backgroundEditor v-model:dialog-visible="showEditor" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" @click='addBackground' class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
@@ -74,7 +75,8 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="appData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="appData"
+                    @editor="editorBackground" @delete="deleteBackground"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -87,9 +89,11 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import backgroundEditor from '@/components/background/backgroundEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
     const components: any = {
@@ -99,8 +103,30 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+    //新增图库
+    const showEditor = ref<boolean>(false)
+    const addBackground = () => {
+        showEditor.value = true
+    }
+    //编辑图库
+    const editorBackground = (item: any) => {
+        showEditor.value = true
 
+    }
 
+    //删除图库
+    const deleteBackground = (item: any) => {
+
+        ElMessageBox.confirm(
+            '确定删除该图库吗？',
+            '提示',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }
+        )
+    }
     //搜索参数
     interface SearchParams {
         inputText: string

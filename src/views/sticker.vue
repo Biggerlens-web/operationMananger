@@ -1,9 +1,10 @@
 <template>
     <div class="view">
+        <stickerEditor v-model:show-editor="showEditor" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" @click="addSticker" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
@@ -74,7 +75,8 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="appData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="appData" @editor="editSticker"
+                    @delete="deleteSticker"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -87,9 +89,11 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import stickerEditor from '@/components/sticker/stickerEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
     const components: any = {
@@ -99,7 +103,29 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+    //新增贴纸
+    const showEditor = ref<boolean>(false)
+    const addSticker = () => {
+        showEditor.value = true
+    }
 
+    //编辑贴纸
+    const editSticker = (row: any) => {
+        showEditor.value = true
+    }
+    //删除贴纸
+    const deleteSticker = (row: any) => {
+        console.log(row)
+        ElMessageBox.confirm(
+            '确定删除该贴纸吗？',
+            '提示',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }
+        )
+    }
 
     //搜索参数
     interface SearchParams {

@@ -1,6 +1,7 @@
 <template>
     <div class="view">
         <subPageEditor v-model:show-editor="showEditor" />
+        <autoOpenEditor v-model:show-editor="showAutoOpenEditor" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
@@ -54,7 +55,7 @@
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="appData" @editor="editorConfig"
-                    @delete="deleteConfig"></component>
+                    @delete="deleteConfig" @AutoOpenMethod="AutoOpenMethod"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -68,6 +69,7 @@
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import subPageEditor from '@/components/subPage/subPageEditor.vue';
+    import autoOpenEditor from '@/components/subPage/autoOpenEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
@@ -101,6 +103,14 @@
             cancelButtonText: '取消',
             type: 'warning',
         })
+    }
+
+
+    //添加自动打开方案
+    const showAutoOpenEditor = ref<boolean>(false)
+    const AutoOpenMethod = (item: any) => {
+        console.log('添加自动打开方案', item)
+        showAutoOpenEditor.value = true
     }
     //搜索参数
     interface SearchParams {

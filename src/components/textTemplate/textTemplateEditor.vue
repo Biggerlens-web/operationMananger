@@ -10,26 +10,88 @@
                 </el-select>
             </el-form-item>
 
-            <el-form-item label="系统" prop="os">
-                <el-select v-model="formData.os">
-                    <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
-                </el-select>
-            </el-form-item>
+
 
             <el-form-item label="地区" prop="area">
                 <el-input v-model="formData.area" />
             </el-form-item>
-            <el-form-item label="教程类型" prop="line">
+            <el-form-item label="类型" prop="line">
                 <el-input v-model="formData.line" />
             </el-form-item>
-            <el-form-item label="名称" prop="line">
+            <el-form-item label="版本" prop="line">
                 <el-input v-model="formData.line" />
             </el-form-item>
-            <el-form-item label="访问名" prop="line">
+            <el-form-item label="颜色" prop="line">
                 <el-input v-model="formData.line" />
             </el-form-item>
-            <el-form-item label="描述" prop="line">
+            <el-form-item label="颜色透明度" prop="line">
                 <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="阴影半径" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="阴影透明度" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="阴影颜色" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="阴影角度" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="阴影水平偏移量" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="边框宽" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="边框颜色" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="边框透明度" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="背景颜色" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="背景透明度" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="背景半径" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="字间距" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="行间距" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="气泡索引" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="对齐" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="字体" prop="line">
+                <el-input v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="是否垂直显示" prop="line">
+                <el-switch v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="是否使用画笔颜色" prop="line">
+                <el-switch v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="是否显示删除线" prop="line">
+                <el-switch v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="是否变化字形" prop="line">
+                <el-switch v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="是否显示下划线" prop="line">
+                <el-switch v-model="formData.line" />
+            </el-form-item>
+            <el-form-item label="是否使用新的颜色格式" prop="line">
+                <el-switch v-model="formData.line" />
             </el-form-item>
         </el-form>
 

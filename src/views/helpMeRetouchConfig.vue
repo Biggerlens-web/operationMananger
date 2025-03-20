@@ -1,5 +1,6 @@
 <template>
     <div class="view">
+        <languageEditor v-model:dialog-visable="showLanguageEditor" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
@@ -76,7 +77,8 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="appData" :showAction="false">
+                <component :is="componentName" :filterParams="filterParams" :tableData="appData" :showAction="false"
+                    @editorLanguage="editorLanguage">
                 </component>
             </Transition>
 
@@ -90,6 +92,7 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import languageEditor from '@/components/public/languageEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
@@ -102,7 +105,11 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
-
+    //配置国际化
+    const showLanguageEditor = ref<boolean>(false)
+    const editorLanguage = (item: any) => {
+        showLanguageEditor.value = true
+    }
 
     //搜索参数
     interface SearchParams {

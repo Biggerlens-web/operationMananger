@@ -69,6 +69,12 @@
                                             <el-button>配置</el-button>
                                         </div>
                                     </div>
+                                    <div class="detail-value" v-else-if="param.key === 'autoOpenPlan'">
+                                        <el-select v-model="item[param.key]">
+
+                                        </el-select>
+                                        <el-button @click="addAutoOpenMethod(item)">添加</el-button>
+                                    </div>
                                     <div class="detail-value" v-else>
                                         <span>
                                             {{ formatValue(item[param.key], param.key) }}
@@ -142,7 +148,8 @@
         'rolesEditor': [value: any],
         'ban': [value: any],
         'assginRole': [value: any],
-        'scannImg': [value: any]
+        'scannImg': [value: any],
+        'AutoOpenMethod': [value: any],
     }>()
     import {
         User, Phone, Message, Calendar, Location,
@@ -257,6 +264,10 @@
     const scannImg = (item: any) => {
         console.log('扫描轮播图路径下图片', item)
         emit('scannImg', item)
+    }
+    //添加自动打开方案
+    const addAutoOpenMethod = (item: any) => {
+        emit('AutoOpenMethod', item)
     }
 </script>
 

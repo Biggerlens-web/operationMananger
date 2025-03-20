@@ -1,20 +1,21 @@
 <template>
     <div class="view">
+        <fontEditor v-model:dialog-visible="showEditor" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" @click="addFont" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         批量新增
                     </el-button>
 
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" @click="addFont" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
-                        新增描边
+                        新增字体
                     </el-button>
                     <el-button type="primary" class="add-button">
                         全部选中
@@ -92,9 +93,11 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import fontEditor from '@/components/font/fontEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
     const components: any = {
@@ -104,6 +107,29 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+    //新增字体
+    const showEditor = ref<boolean>(false)
+    const addFont = () => {
+        showEditor.value = true
+    }
+
+    //编辑字体
+    const editorFont = (item: any) => {
+        showEditor.value = true
+    }
+    //删除字体
+    const deleteFont = (item: any) => {
+        console.log('删除字体', item);
+        ElMessageBox.confirm(
+            '确定删除该字体吗？',
+            '删除提示',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }
+        )
+    }
 
 
     //搜索参数

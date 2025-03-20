@@ -1,5 +1,6 @@
 <template>
     <div class="view">
+        <textTemplateEditor v-model:show-editor="showEditor" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
@@ -12,7 +13,7 @@
                     <el-button type="primary" class="add-button">
                         公共空间
                     </el-button>
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" @click="addTextTemplate" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
@@ -96,6 +97,7 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import textTemplateEditor from '@/components/textTemplate/textTemplateEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
@@ -108,7 +110,11 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
-
+    //新增模板
+    const showEditor = ref<boolean>(false)
+    const addTextTemplate = () => {
+        showEditor.value = true
+    }
 
     //搜索参数
     interface SearchParams {

@@ -34,15 +34,15 @@ service.interceptors.response.use(
       console.log('response', decryptDes(response.data))
       const { code, msg } = JSON.parse(decryptDes(response.data))
 
-      if (code === 3) {
+      if (code == 3) {
         ElMessage.error(msg)
         localStorage.removeItem('token')
         router.push('/login')
       }
-      if (code !== 200) {
-        console.log('message', msg)
-        ElMessage.error(msg)
-      }
+      // if (code != 200) {
+      //   console.log('message', msg)
+      //   ElMessage.error(msg)
+      // }
     }
 
     return response

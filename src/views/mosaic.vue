@@ -1,16 +1,17 @@
 <template>
     <div class="view">
+        <mosaicEditor v-model:dialog-visible="showEditor" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" @click="addMosaic" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         批量新增
                     </el-button>
 
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" @click="addMosaic" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
@@ -92,6 +93,7 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import mosaicEditor from '@/components/mosaic/mosaicEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
@@ -104,7 +106,12 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+    //新增马赛克
+    const showEditor = ref<boolean>(false)
 
+    const addMosaic = () => {
+        showEditor.value = true
+    }
 
     //搜索参数
     interface SearchParams {

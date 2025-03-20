@@ -71,8 +71,6 @@
 
     }
     const checkFn = (item: any) => {
-        console.log('checkFn', item);
-
         console.log('object', props.filterParams);
         // 触发更新事件
         const obj = {
