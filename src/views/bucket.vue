@@ -1,13 +1,14 @@
 <template>
     <div class="view">
+        <bucketEditor v-model:dialog-visible="showBucketEditor" />
         <el-card class="filter-card">
             <div class="card-header">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" class="add-button" @click="addBucket">
                         <el-icon>
                             <Plus />
                         </el-icon>
-                        新增菜单
+                        新增域(bucket)
                     </el-button>
                     <el-button type="primary" class="add-button">
                         <el-icon>
@@ -56,7 +57,8 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="bucketData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="bucketData"
+                    @editor="eidtorBucket" @delete="deleteBucket"></component>
 
             </Transition>
 
@@ -70,9 +72,11 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import bucketEditor from '@/components/bucket/bucketEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion } = storeToRefs(counterStore)
     const components: any = {
@@ -81,6 +85,30 @@
     }
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
+
+    //新增域
+    const showBucketEditor = ref<boolean>(false)
+    const addBucket = () => {
+        console.log('新增域');
+        showBucketEditor.value = true
+    }
+    //编辑域
+    const eidtorBucket = (row: any) => {
+        console.log('编辑域', row);
+        showBucketEditor.value = true
+    }
+    //删除域
+    const deleteBucket = (row: any) => {
+        ElMessageBox.confirm('确认删除吗？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+        }).then(res => {
+
+        }).catch(err => {
+
+        })
+    }
 
     //搜索参数
     interface SearchParams {

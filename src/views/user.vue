@@ -1,8 +1,10 @@
 <template>
   <div class="view">
+    <userEditor v-model:dialog-visible="showEditor" />
+    <roleEditor v-model:dialog-visible="showRole" />
     <el-card class="filter-card">
       <div>
-        <el-button type="primary"> <el-icon>
+        <el-button type="primary" @click="addUser"> <el-icon>
             <Plus />
           </el-icon>新增用户</el-button>
         <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -14,7 +16,8 @@
     <el-card class="content-card">
       <Transition enter-active-class="animate__animated animate__fadeIn"
         leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-        <component :is="componentName" :filterParams="filterParams" :tableData="userData"></component>
+        <component :is="componentName" :filterParams="filterParams" :tableData="userData" @editor="editorUser"
+          @delete="deleteUser" :userList="true" @rolesEditor="rolesEditor" @ban="banUser"></component>
       </Transition>
 
       <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next" :total="1000" />
@@ -26,9 +29,12 @@
   import tableAciton from '@/components/public/tableAciton.vue';
   import userTable from '@/components/user/userTable.vue';
   import userList from '@/components/user/userList.vue';
+  import userEditor from '@/components/user/userEditor.vue';
+  import roleEditor from '@/components/user/roleEditor.vue';
   import { onMounted, ref } from 'vue';
   import { useCounterStore } from '@/stores/counter';
   import { storeToRefs } from 'pinia';
+  import { ElMessageBox } from 'element-plus';
   const counterStore = useCounterStore()
   const { showPagestion } = storeToRefs(counterStore)
   const components: any = {
@@ -37,6 +43,44 @@
   }
   const componentStr = ref('userTable')
   const componentName = ref<any>(userTable)
+
+
+  //编辑用户
+  const showEditor = ref<boolean>(false)
+  const addUser = () => {
+    showEditor.value = true
+  }
+
+  const editorUser = (item: any) => {
+    console.log('父组件编辑', item);
+    showEditor.value = true
+  }
+  const deleteUser = (item: any) => {
+    console.log('父组件删除', item);
+    ElMessageBox.confirm('确定删除吗?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then((res) => {
+      console.log('删除', res)
+    }).catch(err => {
+      console.log('取消', err)
+    })
+  }
+
+  //角色分配
+  const showRole = ref<boolean>(false)
+  const rolesEditor = (item: any) => {
+    console.log('父组件分配角色', item);
+    showRole.value = true
+  }
+
+
+  //禁用用户
+  const banUser = (item: any) => {
+    console.log('父组件禁用用户', item);
+  }
+
   // 定义用户类型
   interface User {
     id: number                // 编号

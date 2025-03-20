@@ -1,5 +1,8 @@
 <template>
     <div class="ad-management-view">
+        <channelAdvEditor v-model:show-editor="showChannelEditor" />
+        <cornEditor v-model:show-editor="showCornEditor" />
+        <interstitialAdsEditor v-model:show-editor="showInterstitialAdsEditor" />
         <el-card class="filter-card">
             <div class="card-head">
                 <el-select filterable v-model="activeApp" placeholder="请选择应用" class="filter-select">
@@ -11,7 +14,7 @@
         </el-card>
         <el-card class="content-card">
             <adTable v-for="item in tableELArray" :key="item.type" :title="item.title" :filter="item.filter"
-                :type="item.type" class="ad-table" />
+                :type="item.type" class="ad-table" @add="addData" @editor="editorData" @delete="deleteData" />
         </el-card>
     </div>
 </template>
@@ -21,6 +24,10 @@
     import { storeToRefs } from 'pinia';
     import { reactive, ref } from 'vue'
     import adTable from '@/components/AdSubscription/adTable.vue';
+    import channelAdvEditor from '@/components/AdSubscription/editor/channelAdvEditor.vue';
+    import cornEditor from '@/components/AdSubscription/editor/cornEditor.vue';
+    import interstitialAdsEditor from '@/components/AdSubscription/editor/interstitialAdsEditor.vue';
+    import { ElMessageBox } from 'element-plus';
     const activeApp = ref<string | number>()
     const counterStore = useCounterStore()
     const { appList } = storeToRefs(counterStore)
@@ -50,6 +57,42 @@
 
 
     ])
+
+    //新增数据
+    const showChannelEditor = ref<boolean>(false) // 新增渠道广告弹窗
+    const showCornEditor = ref<boolean>(false) // 新增定时任务弹窗
+    const showInterstitialAdsEditor = ref<boolean>(false) // 新增插屏广告弹窗
+    const addData = (type: string) => {
+        console.log('type', type);
+        if (type === '渠道广告') {
+            showChannelEditor.value = true
+        } else if (type === '定时任务') {
+            showCornEditor.value = true
+
+        }
+    }
+    //编辑数据
+    const editorData = (row: any) => {
+
+        // console.log('row', row);
+        // if (type === '渠道广告') {
+        //     showChannelEditor.value = true
+        // } else if (type === '定时任务') {
+        //     showCornEditor.value = true
+
+        // }
+    }
+    //删除数据
+    const deleteData = (row: any) => {
+
+        // console.log('row', row);
+        // ElMessageBox.confirm('确定删除吗？', '提示', {
+        //     confirmButtonText: '确定',
+        //     cancelButtonText: '取消',
+        //     type: 'warning'
+        // })
+    }
+
 </script>
 
 <style lang="scss" scoped>

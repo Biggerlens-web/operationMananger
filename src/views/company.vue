@@ -1,9 +1,9 @@
 <template>
     <div class="view">
-        <el-card class="filter-card">
+        <companyInfoEditor v-model:dialog-visible="showCompanyEditor" /> <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" @click="addCompany" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
@@ -58,7 +58,8 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="companyData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="companyData"
+                    @editor="editorCompany" @delete="deleteCompany"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -71,9 +72,11 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import companyInfoEditor from '@/components/companyInfo/companyInfoEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
     const components: any = {
@@ -82,9 +85,28 @@
     }
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
+    //新增公司
+    const showCompanyEditor = ref<boolean>(false)
+    const addCompany = () => {
+        showCompanyEditor.value = true
+    }
 
-
-
+    //编辑公司
+    const editorCompany = () => {
+        showCompanyEditor.value = true
+    }
+    //删除公司
+    const deleteCompany = (item: any) => {
+        ElMessageBox.confirm(
+            '此操作将永久删除该公司, 是否继续?',
+            '提示',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }
+        )
+    }
     //搜索参数
     interface SearchParams {
         companyNo: string

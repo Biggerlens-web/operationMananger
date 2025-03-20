@@ -1,8 +1,10 @@
 <template>
   <div class="view">
+    <RoleEditor v-model:dialog-visible="showRoleEditor" />
+    <AssginRole v-model:dialog-visible="isAssginRole" />
     <el-card class="filter-card">
       <div>
-        <el-button type="primary"> <el-icon>
+        <el-button type="primary" @click="addRole"> <el-icon>
             <Plus />
           </el-icon>新增角色</el-button>
         <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -14,7 +16,8 @@
     <el-card class="content-card">
       <Transition enter-active-class="animate__animated animate__fadeIn"
         leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-        <component :is="componentName" :filterParams="filterParams" :tableData="roleData"></component>
+        <component :is="componentName" :filterParams="filterParams" :tableData="roleData" :roleList="true"
+          @editor="editorRole" @delete="deleteRole" @assginRole="assginRole"></component>
       </Transition>
 
       <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next" :total="1000" />
@@ -26,9 +29,12 @@
   import tableAciton from '@/components/public/tableAciton.vue';
   import userTable from '@/components/user/userTable.vue';
   import userList from '@/components/user/userList.vue';
+  import RoleEditor from '@/components/role/RoleEditor.vue';
+  import AssginRole from '@/components/role/AssginRole.vue';
   import { onMounted, ref } from 'vue';
   import { useCounterStore } from '@/stores/counter';
   import { storeToRefs } from 'pinia';
+  import { ElMessageBox } from 'element-plus';
   const counterStore = useCounterStore()
   const { showPagestion } = storeToRefs(counterStore)
   const components: any = {
@@ -37,6 +43,44 @@
   }
   const componentStr = ref('userTable')
   const componentName = ref<any>(userTable)
+
+
+
+  //新增角色
+  const showRoleEditor = ref<boolean>(false)
+  const addRole = () => {
+    console.log('新增角色');
+    showRoleEditor.value = true
+  }
+
+  //编辑角色
+  const editorRole = (row: any) => {
+    console.log('编辑角色', row);
+    showRoleEditor.value = true
+  }
+  //删除角色
+  const deleteRole = (row: any) => {
+    ElMessageBox.confirm(
+      '此操作将永久删除该角色, 是否继续?',
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    ).then(res => {
+      console.log('删除角色', res);
+    }).catch(err => {
+      console.log('删除角色', err);
+    })
+  }
+
+  //分配权限
+  const isAssginRole = ref<boolean>(false)
+  const assginRole = (row: any) => {
+    console.log('分配权限', row);
+    isAssginRole.value = true
+  }
   interface Role {
     id: number        // 编号
     name: string      // 角色名

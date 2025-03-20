@@ -1,9 +1,9 @@
 <template>
     <div class="view">
-        <el-card class="filter-card">
+        <bannerEditor v-model:dialog-visible="showBannerEditor" /> <el-card class="filter-card">
             <div class="card-header">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" @click="addBanner" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
@@ -69,7 +69,8 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="carouseData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="carouseData"
+                    @editor="editorBanner" @delete="deleteBanner"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -82,9 +83,11 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import bannerEditor from '@/components/banner/bannerEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
     const components: any = {
@@ -94,8 +97,31 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+    //新增轮播点
+    const showBannerEditor = ref<boolean>(false)
+    const addBanner = () => {
+        showBannerEditor.value = true
+    }
 
 
+    //编辑轮播点
+    const editorBanner = (item: any) => {
+        showBannerEditor.value = true
+    }
+
+
+    //删除轮播点
+    const deleteBanner = (item: any) => {
+        ElMessageBox.confirm(
+            '此操作将永久删除该轮播点, 是否继续?',
+            '提示',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }
+        )
+    }
     //搜索参数
     interface SearchParams {
         appNo: string

@@ -1,9 +1,10 @@
 <template>
     <div class="view">
+        <bannerImgEditor v-model:dialog-visible="showBannerImgEditor" />
         <el-card class="filter-card">
             <div class="card-header">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" @click="addBannerImg" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
@@ -55,7 +56,8 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="bannerImgData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="bannerImgData"
+                    @editor="editorBannerImg" @delete="deleteBannerImg"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -68,9 +70,12 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import bannerImgEditor from '@/components/bannerImg/bannerImgEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { useRoute } from 'vue-router';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion } = storeToRefs(counterStore)
     const components: any = {
@@ -80,8 +85,27 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
-
-
+    //新增轮播图
+    const showBannerImgEditor = ref<boolean>(false)
+    const addBannerImg = () => {
+        showBannerImgEditor.value = true
+    }
+    //编辑轮播图
+    const editorBannerImg = (item: any) => {
+        showBannerImgEditor.value = true
+    }
+    //删除轮播图
+    const deleteBannerImg = (item: any) => {
+        ElMessageBox.confirm(
+            '此操作将永久删除该轮播图, 是否继续?',
+            '提示',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }
+        )
+    }
     //搜索参数
     interface SearchParams {
         path: string
@@ -212,7 +236,17 @@
         }
         console.log('keyItem', keyItem);
     }
+
+    const route = useRoute()
     onMounted(() => {
+        console.log('route', route.query);
+        const query = route.query
+        if (Object.keys(query).length) {
+
+        }
+
+
+
         getUserList();
         showPagestion.value = true
     })

@@ -1,10 +1,11 @@
 <template>
     <el-dialog :model-value="dialogVisible" title="第三方SDK模板" width="1000" :before-close="handleClose">
         <div class="view">
+            <SDKTemplateEditor v-model:show-editor="showEditor" />
             <el-card class="filter-card">
                 <div class="card-header" style="margin: 0;">
                     <div class="left-actions">
-                        <el-button type="primary" class="add-button">
+                        <el-button type="primary" @click="addTemplate" class="add-button">
                             <el-icon>
                                 <Plus />
                             </el-icon>
@@ -74,7 +75,7 @@
                 <Transition enter-active-class="animate__animated animate__fadeIn"
                     leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                     <component :is="componentName" :filterParams="filterParams" :tableData="roleData"
-                        :showAction="false"></component>
+                        @editor="editorTemplate" @delete="deleteTemplate"></component>
                 </Transition>
 
                 <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -97,16 +98,36 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import SDKTemplateEditor from './editor/SDKTemplateEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion } = storeToRefs(counterStore)
     const props = defineProps<{
         dialogVisible: boolean
     }>()
+    //新增模板
+    const showEditor = ref<boolean>(false)
+    const addTemplate = (item: any) => {
+        showEditor.value = true
+    }
+    const editorTemplate = (item: any) => {
+        showEditor.value = true
 
-
+    }
+    const deleteTemplate = (item: any) => {
+        ElMessageBox.confirm(
+            '确定删除该模板吗？',
+            '提示',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }
+        )
+    }
     //选择语言
     const language = ref('')
     const options = ref([

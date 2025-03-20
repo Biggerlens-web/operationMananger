@@ -1,10 +1,13 @@
 <template>
-    <el-dialog :model-value="dialogVisible" title="其他模板" width="1000" :before-close="handleClose">
+
+    <el-dialog :model-value="dialogVisible" title="其他说明模板" width="1000" :before-close="handleClose">
+
         <div class="view">
+            <otherTemplateEditor v-model:show-editor="showEditor" />
             <el-card class="filter-card">
                 <div class="card-header" style="margin: 0;">
                     <div class="left-actions">
-                        <el-button type="primary" class="add-button">
+                        <el-button type="primary" @click="addTemplate" class="add-button">
                             <el-icon>
                                 <Plus />
                             </el-icon>
@@ -73,7 +76,8 @@
             <el-card class="content-card">
                 <Transition enter-active-class="animate__animated animate__fadeIn"
                     leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                    <component :is="componentName" :filterParams="filterParams" :tableData="roleData"></component>
+                    <component :is="componentName" :filterParams="filterParams" :tableData="roleData"
+                        @editor="editorTemplate" @delete="doleteTemplate"></component>
                 </Transition>
 
                 <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -96,16 +100,45 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import otherTemplateEditor from './editor/otherTemplateEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion } = storeToRefs(counterStore)
     const props = defineProps<{
         dialogVisible: boolean
     }>()
+    //新增说明模板
+    const showEditor = ref(false)
+    const addTemplate = () => {
 
 
+
+        showEditor.value = true
+        console.log('showEditor', showEditor.value);
+    }
+    //编辑说明模板
+    const editorTemplate = (item: any) => {
+        console.log('编辑说明模板', item);
+        showEditor.value = true
+    }
+
+
+    //删除说明模板
+    const doleteTemplate = (item: any) => {
+        console.log('删除说明模板', item);
+        ElMessageBox.confirm(
+            '是否确认删除该模板？',
+            '提示',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }
+        )
+    }
     //选择语言
     const language = ref('')
     const options = ref([
@@ -203,6 +236,9 @@
         }
         console.log('keyItem', keyItem);
     }
+
+
+
     onMounted(() => {
         getUserList();
         showPagestion.value = true

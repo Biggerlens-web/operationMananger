@@ -1,9 +1,10 @@
 <template>
   <div class="view">
+    <menuEditor v-model:dialog-visible="showEditor" />
     <el-card class="filter-card">
       <div class="card-header">
         <div class="left-actions">
-          <el-button type="primary" class="add-button">
+          <el-button type="primary" class="add-button" @click="addMenu">
             <el-icon>
               <Plus />
             </el-icon>
@@ -69,7 +70,9 @@
     <el-card class="content-card">
       <Transition enter-active-class="animate__animated animate__fadeIn"
         leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-        <component :is="componentName" :filterParams="filterParams" :tableData="menuData"></component>
+        <component :is="componentName" :filterParams="filterParams" :tableData="menuData" @editor='editorMenu'
+          @delete="deleteMenu">
+        </component>
 
       </Transition>
 
@@ -85,6 +88,8 @@
   import { onMounted, ref } from 'vue';
   import { useCounterStore } from '@/stores/counter';
   import { storeToRefs } from 'pinia';
+  import menuEditor from '@/components/menu/menuEditor.vue';
+  import { ElMessageBox } from 'element-plus';
   const counterStore = useCounterStore()
   const { showPagestion } = storeToRefs(counterStore)
   const components: any = {
@@ -94,6 +99,36 @@
   const componentStr = ref('userTable')
   const componentName = ref<any>(userTable)
 
+
+  const showEditor = ref<boolean>(false)
+
+  //新增菜单
+  const addMenu = () => {
+    showEditor.value = true
+  }
+
+
+  //编辑菜单
+  const editorMenu = (item: any) => {
+    console.log('编辑菜单父组件', item)
+    showEditor.value = true
+  }
+
+
+  //删除菜单
+  const deleteMenu = (item: any) => {
+    console.log('删除菜单父组件', item);
+
+    ElMessageBox.confirm('确定删除该菜单吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(res => {
+      console.log('删除菜单', res);
+    }).catch(err => {
+      console.log('删除菜单', err);
+    })
+  }
   //搜索参数
   interface SearchParams {
     menuText: string

@@ -1,8 +1,9 @@
 <template>
     <div class="view">
+        <channelEditor v-model:dialog-visible="showChannelEditor" />
         <el-card class="filter-card">
             <div>
-                <el-button type="primary"> <el-icon>
+                <el-button type="primary" @click="addChannel"> <el-icon>
                         <Plus />
                     </el-icon>新增渠道</el-button>
                 <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -12,7 +13,8 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="channelData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="channelData"
+                    @editor="editorChannel" @delete="deleteChannel"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -25,9 +27,11 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import channelEditor from '@/components/channels/channelEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion } = storeToRefs(counterStore)
     const components: any = {
@@ -36,6 +40,28 @@
     }
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
+
+    //新增渠道
+    const showChannelEditor = ref(false)
+    const addChannel = () => {
+        showChannelEditor.value = true
+    }
+    //编辑渠道
+    const editorChannel = (item: any) => {
+        console.log('编辑渠道', item);
+        showChannelEditor.value = true
+    }
+    //删除渠道
+    const deleteChannel = (item: any) => {
+        console.log('删除渠道', item);
+        ElMessageBox.confirm('此操作将永久删除该渠道, 是否继续?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+        })
+    }
+
+
     interface ChannelItem {
         id: number;        // 编号
         channelId: string; // 渠道编号

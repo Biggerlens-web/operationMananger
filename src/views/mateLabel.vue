@@ -1,9 +1,10 @@
 <template>
     <div class="view">
+        <mateLabelEditor v-model:dialog-visible="showMateLabelEditor" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" @click="addMateLabel" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
@@ -68,7 +69,8 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="tagData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="tagData"
+                    @editor="editorMateLabel" @deletel="deleteMateLabel"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -81,9 +83,11 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import mateLabelEditor from '@/components/mateLabel/mateLabelEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
     const components: any = {
@@ -93,8 +97,30 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+    const showMateLabelEditor = ref<boolean>(false)
+    //新增标签
 
+    const addMateLabel = () => {
+        showMateLabelEditor.value = true
+    }
 
+    //编辑标签
+    const editorMateLabel = (item: any) => {
+        showMateLabelEditor.value = true
+    }
+
+    //删除标签
+    const deleteMateLabel = (item: any) => {
+        ElMessageBox.confirm(
+            '此操作将永久删除该标签, 是否继续?',
+            '提示',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }
+        )
+    }
     //搜索参数
     interface SearchParams {
         appNo: string

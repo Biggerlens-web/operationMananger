@@ -1,9 +1,9 @@
 <template>
     <div class="view">
-        <el-card class="filter-card">
+        <appEditor v-model:dialog-visible="showAppEditor" /> <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" @click="addApp" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
@@ -63,7 +63,8 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="appData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="appData" @editor="editorApp"
+                    @delete="deleteApp"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -76,9 +77,11 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import appEditor from '@/components/app/appEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
     const components: any = {
@@ -88,8 +91,27 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
-
-
+    //新增应用
+    const showAppEditor = ref<boolean>(false)
+    const addApp = () => {
+        showAppEditor.value = true
+    }
+    //编辑应用
+    const editorApp = (item: any) => {
+        showAppEditor.value = true
+    }
+    //删除应用
+    const deleteApp = (item: any) => {
+        ElMessageBox.confirm(
+            '此操作将永久删除该应用, 是否继续?',
+            '提示',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }
+        )
+    }
     //搜索参数
     interface SearchParams {
         inputText: string

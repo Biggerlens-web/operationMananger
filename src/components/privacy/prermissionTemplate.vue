@@ -1,10 +1,11 @@
 <template>
     <el-dialog :model-value="dialogVisible" title="权限模板" width="1000" :before-close="handleClose">
         <div class="view">
+            <prermissionTemplateEditor v-model:showEditor="showEditor" />
             <el-card class="filter-card">
                 <div class="card-header" style="margin: 0;">
                     <div class="left-actions">
-                        <el-button type="primary" class="add-button">
+                        <el-button type="primary" @click="addPermission" class="add-button">
                             <el-icon>
                                 <Plus />
                             </el-icon>
@@ -97,6 +98,7 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import prermissionTemplateEditor from './editor/prermissionTemplateEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
@@ -106,6 +108,12 @@
         dialogVisible: boolean
     }>()
 
+
+    //新增权限模板
+    const showEditor = ref<boolean>(false)
+    const addPermission = () => {
+        showEditor.value = true
+    }
 
     //选择语言
     const language = ref('')

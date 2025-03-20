@@ -32,12 +32,16 @@ service.interceptors.response.use(
   (response: AxiosResponse) => {
     if (typeof response.data === 'string') {
       console.log('response', decryptDes(response.data))
-      const { code, message } = JSON.parse(decryptDes(response.data))
+      const { code, msg } = JSON.parse(decryptDes(response.data))
 
       if (code === 3) {
-        ElMessage.error(message)
+        ElMessage.error(msg)
         localStorage.removeItem('token')
         router.push('/login')
+      }
+      if (code !== 200) {
+        console.log('message', msg)
+        ElMessage.error(msg)
       }
     }
 

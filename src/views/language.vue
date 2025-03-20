@@ -1,8 +1,9 @@
 <template>
     <div class="view">
+        <languageEditor v-model:dialog-visible="showLanguageEditor" />
         <el-card class="filter-card">
             <div>
-                <el-button type="primary"> <el-icon>
+                <el-button type="primary" @click="addLanguage"> <el-icon>
                         <Plus />
                     </el-icon>新增语言</el-button>
                 <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -14,7 +15,8 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="languageData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="languageData"
+                    @editor="editorLanguage" @delete="deleteLanguage"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -27,9 +29,11 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import languageEditor from '@/components/language/languageEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion } = storeToRefs(counterStore)
     const components: any = {
@@ -38,6 +42,32 @@
     }
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
+
+    //新增语言
+    const showLanguageEditor = ref<boolean>(false)
+    const addLanguage = () => {
+        console.log('新增语言');
+        showLanguageEditor.value = true
+    }
+
+    //编辑语言
+    const editorLanguage = (row: any) => {
+        console.log('编辑语言', row);
+        showLanguageEditor.value = true
+    }
+
+
+    //删除语言
+    const deleteLanguage = (row: any) => {
+        ElMessageBox.confirm('确定删除吗？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+
+        }).then(res => { }).catch(err => {
+
+        })
+    }
     // 定义用户类型
     interface LanguageItem {
         id: number;        // 编号

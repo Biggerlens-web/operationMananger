@@ -1,22 +1,21 @@
 <template>
   <div class="view">
+    <permissionEditor v-model:dialog-visible="showPermissionEditor" />
     <el-card class="filter-card">
       <div>
-        <el-button type="primary"> <el-icon>
+        <el-button type="primary" @click="addPermission"> <el-icon>
             <Plus />
           </el-icon>新增权限</el-button>
         <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
           @changeView="changeView" />
       </div>
-
-
     </el-card>
     <el-card class="content-card">
       <Transition enter-active-class="animate__animated animate__fadeIn"
         leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-        <component :is="componentName" :filterParams="filterParams" :tableData="permissionData"></component>
+        <component :is="componentName" :filterParams="filterParams" :tableData="permissionData"
+          @editor="editorPermission" @delete="deletePermission"></component>
       </Transition>
-
       <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next" :total="1000" />
     </el-card>
   </div>
@@ -26,9 +25,11 @@
   import tableAciton from '@/components/public/tableAciton.vue';
   import userTable from '@/components/user/userTable.vue';
   import userList from '@/components/user/userList.vue';
+  import permissionEditor from '@/components/permission/permissionEditor.vue';
   import { onMounted, ref } from 'vue';
   import { useCounterStore } from '@/stores/counter';
   import { storeToRefs } from 'pinia';
+  import { ElMessageBox } from 'element-plus';
   const counterStore = useCounterStore()
   const { showPagestion } = storeToRefs(counterStore)
   const components: any = {
@@ -37,6 +38,35 @@
   }
   const componentStr = ref('userTable')
   const componentName = ref<any>(userTable)
+
+
+  //新增权限
+  const showPermissionEditor = ref<boolean>(false)
+  const addPermission = () => {
+    console.log('新增权限');
+    showPermissionEditor.value = true
+  }
+
+  //编辑权限
+  const editorPermission = (row: any) => {
+    console.log('编辑权限', row);
+    showPermissionEditor.value = true
+  }
+
+  //删除权限
+  const deletePermission = (row: any) => {
+    console.log('删除权限', row);
+    ElMessageBox.confirm('是否删除该权限？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }).then((res) => {
+      console.log('删除权限', res);
+    }).catch(err => {
+      console.log('删除权限', err);
+    })
+  }
+
   // 定义权限类型
   interface Permission {
     id: number           // 编号

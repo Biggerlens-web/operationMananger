@@ -1,8 +1,9 @@
 <template>
     <div class="view">
+        <bannerPathEditor v-model:dialog-visible="showBannerPathEditor" />
         <el-card class="filter-card">
             <div>
-                <el-button type="primary"> <el-icon>
+                <el-button type="primary" @click="addBannerPath"> <el-icon>
                         <Plus />
                     </el-icon>新增路径</el-button>
                 <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -12,7 +13,9 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="bannerData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="bannerData"
+                    @editor="editorBannerPath" @delete="delelteBannerPath" :bannerPath="true" @scanImg="scanImg">
+                </component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -25,17 +28,66 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import bannerPathEditor from '@/components/bannerPath/bannerPathEditor.vue';
+
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
+    import { useRouter } from 'vue-router';
     const counterStore = useCounterStore()
-    const { showPagestion } = storeToRefs(counterStore)
+    const router = useRouter()
+    const { showPagestion, menuList } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
     }
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
+
+
+    //新增轮播图路径
+    const showBannerPathEditor = ref<boolean>(false)
+    const addBannerPath = () => {
+        showBannerPathEditor.value = true
+    }
+
+    //编辑轮播图路径
+    const editorBannerPath = (item: any) => {
+        console.log('编辑轮播图路径', item);
+        showBannerPathEditor.value = true
+    }
+    //删除轮播图路径
+    const delelteBannerPath = (item: any) => {
+        ElMessageBox.confirm('确认删除该条路径吗？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+        })
+    }
+
+    //扫描图片
+    const scanImg = (item: any) => {
+        console.log('扫描图片', item);
+        console.log('菜单', menuList.value);
+        const menuItem = menuList.value.find((item: any) => item.parentName
+            === '基础配置')
+        const bannerImgItem = menuItem.children.find((item: any) => item.menuIdentify === 'bannerImg')
+        console.log('bannerImgItem', bannerImgItem);
+        if (bannerImgItem) {
+            console.log('轮播图管理', bannerImgItem);
+
+            router.push({
+                path: bannerImgItem.menuUrl,
+                query: {
+                    id: item.id,
+                    bucket: item.bucket,
+                    path: item.path
+                }
+            })
+
+        }
+    }
     interface EndpointItem {
         id: number;        // 编号
         endpoint: string;  // 端点

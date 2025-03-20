@@ -1,9 +1,10 @@
 <template>
     <div class="view">
+        <subPageEditor v-model:show-editor="showEditor" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" @click="addConfig" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
@@ -52,7 +53,8 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="appData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="appData" @editor="editorConfig"
+                    @delete="deleteConfig"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -65,9 +67,11 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import subPageEditor from '@/components/subPage/subPageEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
     const components: any = {
@@ -77,8 +81,27 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+    //新增配置
+    const showEditor = ref<boolean>(false)
+    const addConfig = () => {
+        showEditor.value = true
+    }
 
+    //编辑配置
+    const editorConfig = (item: any) => {
+        console.log('编辑', item)
+        showEditor.value = true
+    }
+    //删除配置
 
+    const deleteConfig = (item: any) => {
+        console.log('删除', item)
+        ElMessageBox.confirm('确认删除吗？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+        })
+    }
     //搜索参数
     interface SearchParams {
         inputText: string

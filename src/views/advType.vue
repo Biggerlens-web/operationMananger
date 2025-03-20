@@ -1,10 +1,10 @@
 <template>
     <div class="view">
-        <el-card class="filter-card">
+        <advTypeEditor v-model:dialog-visible="showAdvTypeEditor" /> <el-card class="filter-card">
             <div>
-                <el-button type="primary"> <el-icon>
+                <el-button type="primary" @click="addAdvType"> <el-icon>
                         <Plus />
-                    </el-icon>新增广告</el-button>
+                    </el-icon>新增广告类型</el-button>
                 <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                     @changeView="changeView" />
             </div>
@@ -12,7 +12,8 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="advData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="advData" @editor="editorAdvType"
+                    @delete="deleteAdvType"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -25,9 +26,11 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import advTypeEditor from '@/components/advType/advTypeEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion } = storeToRefs(counterStore)
     const components: any = {
@@ -36,6 +39,30 @@
     }
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
+
+    //新增广告类型
+    const showAdvTypeEditor = ref<boolean>(false)
+    const addAdvType = () => {
+        showAdvTypeEditor.value = true
+    }
+    //编辑广告类型
+    const editorAdvType = (item: any) => {
+        console.log('编辑广告类型', item);
+        showAdvTypeEditor.value = true
+    }
+
+    //删除广告类型
+    const deleteAdvType = (item: any) => {
+        ElMessageBox.confirm(
+            '此操作将永久删除该广告类型, 是否继续?',
+            '提示',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }
+        )
+    }
     interface AdvItem {
         id: number;        // 编号
         typeId: string;    // 广告类型编号

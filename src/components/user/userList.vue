@@ -89,6 +89,22 @@
                             </el-icon>
                             编辑
                         </el-button>
+                        <el-button v-if="userList" style="margin: 0;" type="danger" size="small" plain
+                            @click="banUser(item)">
+                            禁用
+                        </el-button>
+                        <el-button v-if="userList" style="margin: 0;" type="primary" size="small" plain
+                            @click="handleRoles(item)">
+                            分配角色
+                        </el-button>
+                        <el-button v-if="roleList" style="margin: 0;" type="primary" size="small" plain
+                            @click="onAssginRole(item)">
+                            分配权限
+                        </el-button>
+                        <el-button v-if="bannerPath" style="margin: 0;" type="primary" size="small" plain
+                            @click="scannImg(item)">
+                            扫描该路径下图片
+                        </el-button>
                         <el-button style="margin: 0;" type="danger" size="small" plain @click="handleDelete(item)">
                             <el-icon>
                                 <Delete />
@@ -110,10 +126,24 @@
         filterParams: any
         tableData: any
         showAction: boolean
+        userList: boolean
+        roleList: boolean
+        bannerPath: boolean
     }>(), {
         showAction: true
+        ,
+        userList: false,
+        roleList: false,
+        bannerPath: false
     })
-
+    const emit = defineEmits<{
+        'editor': [value: any],
+        'delete': [value: any],
+        'rolesEditor': [value: any],
+        'ban': [value: any],
+        'assginRole': [value: any],
+        'scannImg': [value: any]
+    }>()
     import {
         User, Phone, Message, Calendar, Location,
         Connection, Lock, Edit, Delete
@@ -197,10 +227,36 @@
     }
 
     const handleEditor = (item: any) => {
-
+        console.log('编辑', item);
+        emit('editor', item)
     }
     const handleDelete = (item: any) => {
+        console.log('删除', item);
+        emit('delete', item)
+    }
 
+    //禁用
+    const banUser = (item: any) => {
+        console.log('禁用', item);
+        emit('ban', item)
+    }
+
+    //分配角色
+    const handleRoles = (item: any) => {
+        console.log('分配角色', item);
+        emit('rolesEditor', item)
+    }
+
+
+    //分配权限
+    const onAssginRole = (item: any) => {
+        console.log('分配权限', item)
+        emit('assginRole', item)
+    }
+    //扫描轮播图路径下图片
+    const scannImg = (item: any) => {
+        console.log('扫描轮播图路径下图片', item)
+        emit('scannImg', item)
     }
 </script>
 

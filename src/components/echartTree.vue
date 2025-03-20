@@ -1,4 +1,5 @@
 <template>
+
     <el-tree style="max-width: 600px" :data="data" @node-click="handleNodeClick">
 
         <template #default="{ node, data }">
@@ -7,20 +8,29 @@
             </div>
             <div v-else class="custom-tree-node">
                 <span>{{ node.label }}</span>
-                <el-button type="primary" link>
+                <el-button type="primary" link @click.stop="urlDetail(data)">
                     查看该应用所有url
                 </el-button>
             </div>
         </template>
     </el-tree>
+
+    <appUrlLInk v-model:dialog-visible="showapplink" />
 </template>
 
 <script lang="ts" setup>
+    import { ref } from 'vue'
+    import appUrlLInk from './privacy/appUrlLInk.vue'
     interface Tree {
         label: string
         children?: Tree[]
     }
 
+
+    const showapplink = ref(false)
+    const urlDetail = (data: Tree) => {
+        showapplink.value = true
+    }
     const handleNodeClick = (data: Tree) => {
         console.log(data)
     }

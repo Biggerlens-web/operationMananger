@@ -4,11 +4,12 @@
             <h3 class="table-title">{{ title }}</h3>
             <div class="filter-container" v-if="filter">
                 <div class="filter-item">
-                    <el-input v-model="searchParams.version" placeholder="版本" prefix-icon="el-icon-search" clearable />
+                    <el-input v-model="searchParams.version" placeholder="版本" clearable />
+
                 </div>
             </div>
         </div>
-
+        <el-button type="primary" @click="addData">新增</el-button>
         <el-table :data="viewList" border style="width: 100%" :max-height="420" highlight-current-row
             :header-cell-style="{ background: '#f5f7fa' }" :cell-style="{ padding: '8px 0' }">
             <template v-for="item in keyList" :key="item.key">
@@ -38,18 +39,32 @@
         filter: boolean
         type: string
     }>()
+    const emit = defineEmits<{
+        'add': [value: any],
+        'editor': [value: any],
+        'delete': [value: any]
+    }>()
     const searchParams = ref<any>({
         version: '',
     })
 
+    //新增
+    const addData = () => {
+        console.log('新增');
+        emit('add', props.title)
+    }
+
+
     //编辑
     const handleEditor = (row: any) => {
         console.log('编辑', row);
+        emit('editor', row)
     }
 
     //删除
     const handleDelete = (row: any) => {
         console.log('删除', row);
+        emit('delete', row)
     }
     //  渠道信息
     interface channelItem {
