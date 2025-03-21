@@ -1,11 +1,10 @@
 <template>
-
     <draggable tag="ul" v-model="catalogList" item-key="id" :animation="200" class="catalog-list"
         ghost-class="ghost-class" chosen-class="chosen-class" drag-class="dragging-class" :group="{ name: 'items' }"
         @start="onDragStart" @end="onDragEnd" handle=".moveIcon">
         <template #item="{ element, index }">
             <li :key="element.id" @mouseenter="element.isHover = true" @mouseleave="element.isHover = false"
-                class="catalog-item" @click="goTemplates(element)">
+                class="catalog-item" @click="goSubCatalog(element)">
                 <div class="item-main">
                     <div class="drageIcon">
                         <img v-show="element.isHover" class="moveIcon" src="../../assets/moveIcon.png" alt="">
@@ -15,8 +14,12 @@
                         <img :src="element.img" alt="" class="template-icon">
                     </div>
                     <div class="item-info">
-                        <span class="item-name">{{ element.name }}</span>
-                        <span class="item-date">{{ element.date }}</span>
+                        <p class="item-name">
+                            <span>{{ element.name }}</span>
+                            <span class="tag tag-test" v-if="element.isTest">测试</span>
+                            <span class="tag tag-prod" v-if="element.isProduction">正式</span>
+                        </p>
+                        <p class="item-date">{{ element.date }}</p>
                     </div>
                 </div>
                 <div class="item-action" @click.stop>
@@ -33,17 +36,19 @@
             </li>
         </template>
     </draggable>
+
 </template>
 
 <script lang="ts" setup>
     import { useTemplateStore } from '@/stores/template';
     import moreIcon from '../../assets/template/更多.png'
-    import draggable from 'vuedraggable'
-    import { ref } from 'vue'
+    import { onMounted, ref } from 'vue'
     import { storeToRefs } from 'pinia';
-    const templateStore = useTemplateStore()
-    const { subTypeTitle } = storeToRefs(templateStore)
+    import draggable from 'vuedraggable'
 
+
+    const templateStore = useTemplateStore()
+    const { typeTitle, subTypeTitle } = storeToRefs(templateStore)
     const emit = defineEmits<{
         'goDetail': [value: any],
         'editorTemplateType': [value: any]
@@ -52,96 +57,130 @@
         name: string;
         id: number;
         img: string;
-        date: string
+        date: string;
+        isTest: boolean;
+        isProduction: boolean;
         isHover?: boolean;
     }
     const catalogList = ref<CatalogItem[]>([
         {
-            name: '子模版',
+            name: '全部模板',
             id: 1,
             img: '',
-            date: '2023-07-11'
+            date: '2023-07-11',
+            isTest: true,
+            isProduction: true,
+
         },
         {
             name: '常用模板',
             id: 2,
             img: '',
-            date: '2023-08-15'
+            date: '2023-08-15',
+            isTest: true,
+            isProduction: true
         },
         {
             name: '系统模板',
             id: 3,
             img: '',
-            date: '2023-09-20'
+            date: '2023-09-20',
+            isTest: true,
+            isProduction: true
         },
         {
             name: '自定义模板',
             id: 4,
             img: '',
-            date: '2023-10-05'
+            date: '2023-10-05',
+            isTest: true,
+            isProduction: true
         },
         {
             name: '报表模板',
             id: 5,
             img: '',
-            date: '2023-11-01'
+            date: '2023-11-01',
+            isTest: true,
+            isProduction: true
         },
         {
             name: '数据分析模板',
             id: 6,
             img: '',
-            date: '2023-12-15'
+            date: '2023-12-15',
+            isTest: true,
+            isProduction: true
         },
         {
             name: '可视化模板',
             id: 7,
             img: '',
-            date: '2024-01-10'
+            date: '2024-01-10',
+            isTest: true,
+            isProduction: true
         },
         {
             name: '表单模板',
             id: 8,
             img: '',
-            date: '2024-02-01'
+            date: '2024-02-01',
+            isTest: true,
+            isProduction: true
         },
         {
             name: '工作流模板',
             id: 9,
             img: '',
-            date: '2024-02-15'
+            date: '2024-02-15',
+            isTest: true,
+            isProduction: true
         },
         {
             name: '仪表盘模板',
             id: 10,
             img: '',
-            date: '2024-03-01'
+            date: '2024-03-01',
+            isTest: true,
+            isProduction: true
         }
     ])
 
-    const onDragStart = () => {
-        console.log('开始拖动')
-    }
-    const onDragEnd = () => {
-        console.log('结束拖动')
-    }
-    const handleDelete = () => { }
-    const goTemplates = (item: any) => {
+    //子目录
+    const goSubCatalog = (item: any) => {
         const k = {
             type: 'templatesList',
             id: item.id
         }
-        subTypeTitle.value = item.name
+        typeTitle.value = item.name
         emit('goDetail', k)
     }
 
-    //编辑
-    const editor = (item: any) => {
+
+    const editor = () => {
         const k = {
-            type: 'addTemplateSubCatalog',
-            id: item.id
+            type: 'addTemplateCatalog',
+            id: 1
         }
         emit('editorTemplateType', k)
     }
+    const handleDelete = () => { }
+
+
+    //开始拖动
+    const onDragStart = () => {
+        console.log('开始拖动')
+    }
+    //结束拖动
+    const onDragEnd = () => {
+        console.log('结束拖动')
+    }
+
+    onMounted(() => {
+        for (let item of catalogList.value) {
+            item.isHover = false
+        }
+    })
 </script>
 
 <style lang="scss" scoped>
@@ -151,7 +190,7 @@
         margin: 0;
         background: #fff;
         border-radius: 8px;
-
+        // box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
     }
 
     .catalog-item {
@@ -161,6 +200,16 @@
         padding: 16px 20px;
         border-bottom: 1px solid #f0f0f0;
         transition: all 0.3s ease;
+
+        &.dragging {
+            opacity: 0.5;
+            background: #f5f7fa;
+        }
+
+        &.drag-over {
+            border: 2px dashed #409eff;
+            transform: scale(1.02);
+        }
     }
 
     .catalog-item:last-child {
@@ -214,11 +263,52 @@
         font-size: 15px;
         color: #333;
         font-weight: 500;
+        display: flex;
+        column-gap: 5px;
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 6px;
+            font-size: 12px;
+            border-radius: 4px;
+            font-weight: normal;
+            white-space: nowrap;
+            line-height: 1.2;
+            transition: all 0.2s ease;
+
+            &:hover {
+                transform: translateY(-1px);
+            }
+        }
+
+        .tag-test {
+            color: #8c6200;
+            background-color: #fff8e6;
+            border: 1px solid #ffe6a6;
+
+            &:hover {
+                background-color: #fff3d9;
+            }
+        }
+
+        .tag-prod {
+            color: #135200;
+            background-color: #f0ffe6;
+            border: 1px solid #b7eb8f;
+
+            &:hover {
+                background-color: #e4ffcc;
+            }
+        }
     }
 
     .item-date {
         font-size: 13px;
         color: #999;
+
+
     }
 
     .item-action {
@@ -241,6 +331,14 @@
 
     .more-icon:hover {
         background-color: #eee;
+    }
+
+    .item {
+        padding: 10px;
+        margin: 5px;
+        background-color: #f1f1f1;
+        border-radius: 4px;
+        transition: all 0.3s;
     }
 
     .ghost-class {

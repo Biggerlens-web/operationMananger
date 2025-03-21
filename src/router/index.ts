@@ -25,6 +25,7 @@ const getRouterList = async () => {
   try {
     const res = await service.get('/base/baseData/getBaseDatas/2')
     const menusObj = res.data.data.menus
+    console.log('menusObj', menusObj)
     let menusSub: any = []
     for (const key in menusObj) {
       menusSub = [...menusSub, ...menusObj[key]]
@@ -40,7 +41,19 @@ const getRouterList = async () => {
           title: item.menuText,
         },
       }
-      routes[0].redirect = '/appConfig/index'
+      // routes[0].redirect = '/appConfig/index'
+      routes[0].redirect = '/pptTemplate'
+      //ppt模板管理 可删除
+      const pptRoute = {
+        path: '/pptTemplate',
+        name: 'pptTemplate',
+        component: () => import('../views/pptTemplate.vue'),
+        meta: {
+          title: 'PPT模板管理',
+        },
+      }
+      parentItem?.push(pptRoute)
+
       if (parentItem) {
         parentItem.push(routeItem)
       }

@@ -9,9 +9,7 @@
             <el-button type="primary" v-show="activeCataType === 'templatesList'" :icon="Plus"
                 @click="addTemplate">新增模板</el-button>
             <span class="typeTitle">
-
-                {{ `${typeTitle}` }}{{ subTypeTitle ? `-${subTypeTitle}` : '' }}
-
+                {{ `${typeTitle}` }}
             </span>
         </div>
 
@@ -25,12 +23,27 @@
                             :value="item.appNo" />
                     </el-select>
                 </div>
+                <div class="filter-item">
+                    <span class="label">应用:</span>
+                    <el-select v-model="activeApp" placeholder="请选择应用" clearable class="filter-select">
+                        <el-option v-for="item in appList" :key="item.id"
+                            :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
+                            :value="item.appNo" />
+                    </el-select>
+                </div>
+                <div class="filter-item">
+                    <span class="label">应用:</span>
+                    <el-select v-model="activeApp" placeholder="请选择应用" clearable class="filter-select">
+                        <el-option v-for="item in appList" :key="item.id"
+                            :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
+                            :value="item.appNo" />
+                    </el-select>
+                </div>
             </div>
         </el-card>
 
 
         <el-card class="content-card">
-            <img class="backIcon" v-show="activeCataType !== 'catalogList'" @click="goback" :src="backIcon" alt="">
             <component :is="componentId" @goDetail="goDetail" @editorTemplateType="editorTemplateType"></component>
         </el-card>
 
@@ -41,9 +54,9 @@
 <script lang="ts" setup>
     import { onMounted, ref } from 'vue'
     import { Plus } from '@element-plus/icons-vue'
-    import subCatalogList from '@/components/templates/subCatalogList.vue'
-    import catalogList from '@/components/templates/catalogList.vue'
-    import templatesList from '../components/templates/templatesList.vue'
+
+    import catalogList from '@/components/pptTemplate/catalogList.vue'
+    import templatesList from '../components/pptTemplate/templatesList.vue'
     import { useTemplateStore } from '@/stores/template'
     import { storeToRefs } from 'pinia'
     import backIcon from '../assets/template/返回.png'
@@ -56,7 +69,6 @@
     const { activeCataType, activeCalaId, activeSubId, typeTitle, subTypeTitle, addTemplateMark } = storeToRefs(templateStore)
     const components: any = {
         catalogList,
-        subCatalogList,
         templatesList
     }
 
@@ -84,9 +96,7 @@
     //前进
     const goDetail = (k: any) => {
         console.log('k', k);
-        if (k.type === 'subCatalogList') {
-            activeCalaId.value = k.id
-        } else if (k.type === 'templatesList') {
+        if (k.type === 'templatesList') {
             activeSubId.value = k.id
         }
         activeCataType.value = k.type
@@ -98,15 +108,10 @@
         console.log('activeCataType', activeCataType.value);
         if (activeCataType.value === 'catalogList') return
         if (activeCataType.value === 'templatesList') {
-            activeCataType.value = 'subCatalogList'
-            subTypeTitle.value = ''
-            componentId.value = components['subCatalogList']
-        } else if (activeCataType.value === 'subCatalogList') {
             activeCataType.value = 'catalogList'
             typeTitle.value = '类目管理'
             componentId.value = components['catalogList']
         }
-
     }
 
 

@@ -1,30 +1,38 @@
 <template>
-
+    <templateView v-model:dialog-visible="showTemplateView" />
     <draggable tag="ul" v-model="list" item-key="id" :animation="200" class="template-grid" ghost-class="ghost-class"
         chosen-class="chosen-class" drag-class="dragging-class" :group="{ name: 'items' }" @start="onDragStart"
         @end="onDragEnd">
-        <templateEditor v-model:dialogEditor="dialogEditor" />
+
         <template #item="{ element, index }">
             <li :key="element.id" class="template-item" @click="editorTemplate(element.id)">
                 <div class="img-wrapper">
                     <img :src="element.img" alt="" class="template-img">
                 </div>
-                <p class="template-name">{{ element.name }}</p>
+                <p class="template-name">
+                    <el-tooltip :content="element.name" placement="top" :show-after="500" :enterable="false"
+                        popper-class="template-name-tooltip">
+                        <span class="name">
+                            {{ element.name }}
+                        </span>
+                    </el-tooltip>
+
+                    <span class="tag tag-test" v-if="!element.isTest">测试</span>
+                    <span class="tag tag-prod" v-if="!element.isProduction">正式</span>
+
+
+                </p>
             </li>
         </template>
-
     </draggable>
-
-
-
 </template>
 
 <script lang="ts" setup>
     import { ref, watch } from 'vue'
-    import templateEditor from './templateEditor.vue';
     import { useTemplateStore } from '@/stores/template';
     import draggable from 'vuedraggable'
     import { storeToRefs } from 'pinia';
+    import templateView from './templateView.vue';
     const templateStore = useTemplateStore()
     const { addTemplateMark } = storeToRefs(templateStore)
 
@@ -32,15 +40,23 @@
     watch(() => addTemplateMark.value, (newVal, oldVal) => {
         dialogEditor.value = true;
     })
+
+
+    //显示模板图
+    const showTemplateView = ref<boolean>(false);
+
     //编辑模板
     const dialogEditor = ref<boolean>(false);
     const editorTemplate = (id: string | number) => {
-        dialogEditor.value = true;
+        console.log('id', id);
+        // dialogEditor.value = true;
+        showTemplateView.value = true;
+        console.log('show', showTemplateView.value);
     }
 
     const list = ref<any>([
         {
-            name: '模板1',
+            name: '模板1模板1模板1模板1模板1模板1模板1模板1模板1模板1模板1',
             id: 1,
             img: '',
         },
@@ -91,7 +107,7 @@
 <style lang="scss" scoped>
     .template-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
         /* 每行4个项目 */
         gap: 20px;
         /* 项目之间的间距 */
@@ -109,6 +125,11 @@
         border-radius: 8px;
         transition: transform 0.2s ease;
         cursor: pointer;
+        min-width: 0;
+        /* 关键属性：允许网格项小于内容最小宽度 */
+        overflow: hidden;
+        /* 确保内容不会溢出 */
+
     }
 
     .template-item:hover {
@@ -137,7 +158,58 @@
         margin: 10px 0 0;
         font-size: 14px;
         color: #333;
-        text-align: center;
+        display: flex;
+        column-gap: 5px;
+        width: 100%;
+        /* 确保宽度占满父容器 */
+        align-items: center;
+
+        /* 垂直居中对齐 */
+        .name {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+
+
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 6px;
+            font-size: 12px;
+            border-radius: 4px;
+            font-weight: normal;
+            white-space: nowrap;
+            line-height: 1.2;
+            transition: all 0.2s ease;
+
+            &:hover {
+                transform: translateY(-1px);
+            }
+        }
+
+        .tag-test {
+            color: #8c6200;
+            background-color: #fff8e6;
+            border: 1px solid #ffe6a6;
+
+            &:hover {
+                background-color: #fff3d9;
+            }
+        }
+
+        .tag-prod {
+            color: #135200;
+            background-color: #f0ffe6;
+            border: 1px solid #b7eb8f;
+
+            &:hover {
+                background-color: #e4ffcc;
+            }
+        }
     }
 
     .ghost-class {
