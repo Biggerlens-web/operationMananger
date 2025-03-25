@@ -165,9 +165,29 @@
         emits('update:dialogEditor', false)
     }
 
-
+  //参数值url编码
+  const enCodeObj = (obj: any) => {
+    const result: any = {};
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        const value = obj[key];
+        if (typeof value === 'string') {
+          result[key] = encodeURIComponent(value);
+        } else if (typeof value === 'object' && value !== null) {
+          result[key] = enCodeObj(value);
+        } else {
+          result[key] = value;
+        }
+      }
+    }
+    return result;
+  }
     const saveConfig = async (params: any) => {
         try {
+                const config = JSON.parse(params.config)
+      const configNote = JSON.parse(params.configNote)
+      params.config = JSON.stringify(enCodeObj(config))
+      params.configNote = JSON.stringify(enCodeObj(configNote))
             const paramsObj = { ...params, timestamp: Date.now() }
             console.log('参数', paramsObj);
             const paramStr = desEncrypt(JSON.stringify(paramsObj))

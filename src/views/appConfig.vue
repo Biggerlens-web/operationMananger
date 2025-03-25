@@ -59,9 +59,19 @@
           </template>
         </el-table-column>
         <el-table-column prop="code" label="编码" />
-        <el-table-column prop="open" label="开关">
+        <el-table-column prop="open" label="开关" width="180px">
           <template #default="scope">
-            <el-switch v-model="scope.row.open" @change="changeSwitch(scope.row)" />
+
+            <p>
+              <el-switch v-model="scope.row.open" @change="changeSwitch(scope.row)" />
+            </p>
+            <el-date-picker v-if="scope.row.open" @change="changeSwitch(scope.row)"
+              style="width: 150px;margin-top: 10px;" value-format="YYYY-MM-DD HH:mmss" v-model="scope.row.startTime"
+              type="datetime" placeholder="请选择开始时间" />
+            <el-date-picker v-if="scope.row.open" style="width: 150px;margin-top: 10px;"
+              value-format="YYYY-MM-DD HH:mmss" v-model="scope.row.endTime" type="datetime" placeholder="请选择结束时间" />
+
+
           </template>
 
         </el-table-column>
@@ -164,6 +174,10 @@
   const switchFn = async (params: any) => {
     try {
       params.timestamp = Date.now()
+      const config = JSON.parse(params.config)
+      const configNote = JSON.parse(params.configNote)
+      params.config = JSON.stringify(enCodeObj(config))
+      params.configNote = JSON.stringify(enCodeObj(configNote))
       const paramStr = desEncrypt(JSON.stringify(params))
       const res = await service.post('/appConfig/json/save', {
         enData: paramStr
@@ -543,9 +557,7 @@
     margin-left: auto;
   }
 
-  .table-card {
-    /* margin-bottom: 16px; */
-  }
+
 
   .pagination-container {
     display: flex;
