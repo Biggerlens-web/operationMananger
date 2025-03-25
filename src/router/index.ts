@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import service from '@/axios'
-
 import { pinia } from '@/main'
 import { useCounterStore } from '@/stores/counter'
 const routes = [
@@ -19,6 +18,7 @@ const routes = [
     component: () => import('../views/login.vue'),
   },
 ]
+
 let menusList: any = null
 
 const getRouterList = async () => {

@@ -14,7 +14,18 @@
         </div>
 
         <el-card class="filter-card">
+            <el-dropdown class="moreAction">
+                <img src="../assets/template/更多.png" alt="">
+                <template #dropdown>
+                    <el-dropdown-menu>
+                        <el-dropdown-item>推送测试</el-dropdown-item>
+                        <el-dropdown-item>推送正式</el-dropdown-item>
+                    </el-dropdown-menu>
+
+                </template>
+            </el-dropdown>
             <div class="filter-box">
+
                 <div class="filter-item">
                     <span class="label">应用:</span>
                     <el-select v-model="activeApp" placeholder="请选择应用" clearable class="filter-select">
@@ -29,6 +40,7 @@
                         <el-option v-for="item in appList" :key="item.id"
                             :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
                             :value="item.appNo" />
+
                     </el-select>
                 </div>
                 <div class="filter-item">
@@ -44,9 +56,9 @@
 
 
         <el-card class="content-card">
+            <img class="backIcon" v-show="activeCataType !== 'catalogList'" @click="goback" :src="backIcon" alt="">
             <component :is="componentId" @goDetail="goDetail" @editorTemplateType="editorTemplateType"></component>
         </el-card>
-
 
     </div>
 </template>
@@ -132,7 +144,7 @@
             position: absolute;
             width: 20px;
             height: 20px;
-            top: 23%;
+            // top: 23%;
             left: 5px;
             cursor: pointer;
         }
@@ -161,8 +173,19 @@
 
     .filter-card {
         margin-bottom: 16px;
+        position: relative;
 
+        .moreAction {
+            position: absolute;
+            right: 0;
+            top: 26px;
 
+            img {
+                width: auto;
+                height: 20px;
+                cursor: pointer;
+            }
+        }
     }
 
     .filter-box {

@@ -1,9 +1,9 @@
 <template>
-
+    <templateEditor v-model:dialogEditor="dialogEditor" />
     <draggable tag="ul" v-model="list" item-key="id" :animation="200" class="template-grid" ghost-class="ghost-class"
         chosen-class="chosen-class" drag-class="dragging-class" :group="{ name: 'items' }" @start="onDragStart"
         @end="onDragEnd">
-        <templateEditor v-model:dialogEditor="dialogEditor" />
+
         <template #item="{ element, index }">
             <li :key="element.id" class="template-item" @click="editorTemplate(element.id)">
                 <div class="img-wrapper">
@@ -12,11 +12,7 @@
                 <p class="template-name">{{ element.name }}</p>
             </li>
         </template>
-
     </draggable>
-
-
-
 </template>
 
 <script lang="ts" setup>
@@ -27,8 +23,6 @@
     import { storeToRefs } from 'pinia';
     const templateStore = useTemplateStore()
     const { addTemplateMark } = storeToRefs(templateStore)
-
-
     watch(() => addTemplateMark.value, (newVal, oldVal) => {
         dialogEditor.value = true;
     })
@@ -37,7 +31,6 @@
     const editorTemplate = (id: string | number) => {
         dialogEditor.value = true;
     }
-
     const list = ref<any>([
         {
             name: '模板1',
@@ -91,7 +84,7 @@
 <style lang="scss" scoped>
     .template-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
         /* 每行4个项目 */
         gap: 20px;
         /* 项目之间的间距 */
@@ -99,6 +92,7 @@
         list-style: none;
         margin: 0;
     }
+
 
     .template-item {
         display: flex;

@@ -127,7 +127,7 @@
             position: absolute;
             width: 20px;
             height: 20px;
-            top: 23%;
+            // top: 23%;
             left: 5px;
             cursor: pointer;
         }

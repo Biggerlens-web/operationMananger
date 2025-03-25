@@ -133,7 +133,7 @@
   import { storeToRefs } from 'pinia'
   import configEditor from '@/components/autoJson/configEditor.vue'
   import { useAutoOpration } from '@/stores/autoOpration'
-  import { desEncrypt } from '@/utils/des'
+  import { decryptDes, desEncrypt } from '@/utils/des'
   import { ElMessage } from 'element-plus'
   const childRef = ref()
   // 调用子组件方法
@@ -245,22 +245,45 @@
     jsonData.value = {}
     dialogJSON.value = false
   }
+
+  //参数值url编码
+  const enCodeObj = (obj: any) => {
+    const result: any = {};
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        const value = obj[key];
+        if (typeof value === 'string') {
+          result[key] = encodeURIComponent(value);
+        } else if (typeof value === 'object' && value !== null) {
+          result[key] = enCodeObj(value);
+        } else {
+          result[key] = value;
+        }
+      }
+    }
+    return result;
+  }
+
   const handleComfirmJSON = async () => {
     try {
       callChildMethod()
-      console.log('JSON配置', jsonData.value);
-      configingItem.value.config = JSON.stringify(jsonData.value)
-      configingItem.value.configNote = JSON.stringify(comments.value)
+
+
+
+      configingItem.value.config = JSON.stringify(enCodeObj(jsonData.value))
+      configingItem.value.configNote = JSON.stringify(enCodeObj(comments.value))
       const params = {
         ...configingItem.value, timestamp: new Date().getTime()
       }
-      console.log('jsonData', JSON.parse(params.config));
+
+
       console.log('保存参数', params);
       const paramStr = desEncrypt(JSON.stringify(params))
       const res = await service.post('/appConfig/json/save', {
         enData: paramStr
       })
       console.log('保存结果', res);
+      // console.log('保存结果解密', decryptDes(res.data));
       if (res.data.code === 200) {
         ElMessage.success('保存成功')
         handleCloseJSON()

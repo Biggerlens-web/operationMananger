@@ -1,12 +1,12 @@
 <template>
+    <pptTemplateEditor v-model:dialog-editor="dialogEditor" />
     <templateView v-model:dialog-visible="showTemplateView" />
     <draggable tag="ul" v-model="list" item-key="id" :animation="200" class="template-grid" ghost-class="ghost-class"
         chosen-class="chosen-class" drag-class="dragging-class" :group="{ name: 'items' }" @start="onDragStart"
         @end="onDragEnd">
-
         <template #item="{ element, index }">
             <li :key="element.id" class="template-item" @click="editorTemplate(element.id)">
-                <div class="img-wrapper">
+                <div class="img-wrapper" @click.stop="templateViewDialog(element.id)">
                     <img :src="element.img" alt="" class="template-img">
                 </div>
                 <p class="template-name">
@@ -16,11 +16,8 @@
                             {{ element.name }}
                         </span>
                     </el-tooltip>
-
                     <span class="tag tag-test" v-if="!element.isTest">测试</span>
                     <span class="tag tag-prod" v-if="!element.isProduction">正式</span>
-
-
                 </p>
             </li>
         </template>
@@ -33,10 +30,9 @@
     import draggable from 'vuedraggable'
     import { storeToRefs } from 'pinia';
     import templateView from './templateView.vue';
+    import pptTemplateEditor from './pptTemplateEditor.vue';
     const templateStore = useTemplateStore()
     const { addTemplateMark } = storeToRefs(templateStore)
-
-
     watch(() => addTemplateMark.value, (newVal, oldVal) => {
         dialogEditor.value = true;
     })
@@ -44,15 +40,21 @@
 
     //显示模板图
     const showTemplateView = ref<boolean>(false);
+    const templateViewDialog = (id: string | number) => {
+        showTemplateView.value = true;
+    }
+
+
 
     //编辑模板
     const dialogEditor = ref<boolean>(false);
     const editorTemplate = (id: string | number) => {
         console.log('id', id);
-        // dialogEditor.value = true;
-        showTemplateView.value = true;
-        console.log('show', showTemplateView.value);
+        dialogEditor.value = true;
+
+
     }
+
 
     const list = ref<any>([
         {
@@ -94,7 +96,8 @@
             name: '模板8',
             id: 8,
             img: '',
-        }
+        },
+
     ])
     const onDragEnd = () => {
         console.log('结束拖动')
@@ -102,6 +105,7 @@
     const onDragStart = () => {
         console.log('开始拖动')
     }
+
 </script>
 
 <style lang="scss" scoped>
