@@ -65,13 +65,9 @@
             <p>
               <el-switch v-model="scope.row.open" @change="changeSwitch(scope.row)" />
             </p>
-            <el-date-picker v-if="scope.row.open" @change="changeSwitch(scope.row)"
-              style="width: 150px;margin-top: 10px;" value-format="YYYY-MM-DD HH:mmss" v-model="scope.row.startTime"
-              type="datetime" placeholder="请选择开始时间" />
-            <el-date-picker v-if="scope.row.open" style="width: 150px;margin-top: 10px;"
-              value-format="YYYY-MM-DD HH:mmss" v-model="scope.row.endTime" type="datetime" placeholder="请选择结束时间" />
-
-
+            <el-date-picker v-if="scope.row.open" style="width: 150px;margin-top: 10px;" v-model="scope.row.dateArr"
+              type="datetimerange" start-placeholder="开始时间" @change="changeDate(scope.row)" end-placeholder="结束时间"
+              value-format="YYYY-MM-DD HH:mm:ss" :clearable="false" />
           </template>
 
         </el-table-column>
@@ -198,7 +194,14 @@
     switchFn(item)
   }
 
+  //修改时间
+  const changeDate = (item: any) => {
+    console.log('item', item);
+    item.startTime = item.dateArr[0]
+    item.endTime = item.dateArr[1]
+    switchFn(item)
 
+  }
   //格式化渠道显示
   const initChannel = (item: any) => {
     return channelList.value.find((el: any) => el.id === parseInt(item))?.channelName
@@ -456,7 +459,10 @@
       })
       console.log('获取自动化配置列表', res);
       tableData.value = res.data.rows
+
       for (const item of tableData.value) {
+        item.dateArr = [item.startTime, item.endTime]
+
         if (!item.configNote) {
           item.configNote = JSON.stringify({})
         }

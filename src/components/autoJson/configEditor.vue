@@ -26,11 +26,11 @@
             <el-form-item label="开关" prop="open">
                 <el-switch v-model="formData.open"></el-switch>
             </el-form-item>
-            <el-form-item label="开始时间" prop="startTime">
+            <el-form-item v-if="formData.open" label="开始时间" prop="startTime">
                 <el-date-picker ref="datePicker" value-format="YYYY-MM-DD HH:mm:ss" v-model="formData.startTime"
                     type="datetime" placeholder="请选择开始时间" />
             </el-form-item>
-            <el-form-item label="结束时间" prop="endTime">
+            <el-form-item v-if="formData.open" label="结束时间" prop="endTime">
                 <el-date-picker ref="datePicker" value-format="YYYY-MM-DD HH:mm:ss" v-model="formData.endTime"
                     type="datetime" placeholder="请选择结束时间" />
             </el-form-item>
@@ -125,6 +125,16 @@
                 required: true, message: '请选择渠道', trigger: 'blur'
             }
         ],
+        startTime: [
+            {
+                required: true, message: '请选择开始时间', trigger: 'blur'
+            }
+        ],
+        endTime: [
+            {
+                required: true, message: '请选择结束时间', trigger: 'blur'
+            }
+        ],
 
     })
     watch(() => props.dialogEditor, (newV) => {
@@ -165,29 +175,31 @@
         emits('update:dialogEditor', false)
     }
 
-  //参数值url编码
-  const enCodeObj = (obj: any) => {
-    const result: any = {};
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        const value = obj[key];
-        if (typeof value === 'string') {
-          result[key] = encodeURIComponent(value);
-        } else if (typeof value === 'object' && value !== null) {
-          result[key] = enCodeObj(value);
-        } else {
-          result[key] = value;
+    //参数值url编码
+    const enCodeObj = (obj: any) => {
+        const result: any = {};
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const value = obj[key];
+                if (typeof value === 'string') {
+                    result[key] = encodeURIComponent(value);
+                } else if (typeof value === 'object' && value !== null) {
+                    result[key] = enCodeObj(value);
+                } else {
+                    result[key] = value;
+                }
+            }
         }
-      }
+        return result;
     }
-    return result;
-  }
+
     const saveConfig = async (params: any) => {
         try {
-                const config = JSON.parse(params.config)
-      const configNote = JSON.parse(params.configNote)
-      params.config = JSON.stringify(enCodeObj(config))
-      params.configNote = JSON.stringify(enCodeObj(configNote))
+            console.log('params', params);
+            // const config = JSON.parse(params.config)
+            // const configNote = JSON.parse(params.configNote)
+            // params.config = JSON.stringify(enCodeObj(config))
+            // params.configNote = JSON.stringify(enCodeObj(configNote))
             const paramsObj = { ...params, timestamp: Date.now() }
             console.log('参数', paramsObj);
             const paramStr = desEncrypt(JSON.stringify(paramsObj))
