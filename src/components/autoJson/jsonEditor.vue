@@ -318,7 +318,7 @@
 
                         // 只有当值真正发生变化时才触发更新
                         if (JSON.stringify(newValue) !== JSON.stringify(props.modelValue)) {
-                            emit('update:modelValue', newValue)
+                            // emit('update:modelValue', newValue)
                             initParamsDesc()
                         }
 

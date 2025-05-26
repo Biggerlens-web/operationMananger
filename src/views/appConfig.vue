@@ -75,7 +75,7 @@
             </p>
             <el-date-picker v-if="scope.row.open" style="width: 150px;margin-top: 10px;" v-model="scope.row.dateArr"
               type="datetimerange" start-placeholder="开始时间" @change="changeDate(scope.row)" end-placeholder="结束时间"
-              value-format="YYYY-MM-DD HH:mm:ss" :clearable="false" />
+              value-format="YYYY-MM-DD HH:mm:ss" />
           </template>
 
         </el-table-column>
@@ -187,8 +187,14 @@
   //修改时间
   const changeDate = (item: any) => {
     console.log('item', item);
-    item.startTime = item.dateArr[0]
-    item.endTime = item.dateArr[1]
+    if (item.dateArr) {
+      item.startTime = item.dateArr[0]
+      item.endTime = item.dateArr[1]
+    } else {
+      item.startTime = ''
+      item.endTime = ''
+    }
+
     switchFn(item)
 
   }
