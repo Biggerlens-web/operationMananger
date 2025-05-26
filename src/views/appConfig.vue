@@ -101,32 +101,13 @@
           </template>
 
         </el-table-column>
-        <!-- <el-table-column prop="config" label="JSON注释配置" width="250">
 
-          <template #default="scope">
-            <div style="white-space: pre">{{scope.row.configNote ?
-              (() => {
-                try {
-                  const parsed = JSON.parse(scope.row.configNote);
-                  return Object.keys(parsed).length !== 0 ?
-                    JSON.stringify(parsed, null, 2) :
-                    '';
-                } catch (e) {
-                  console.error('JSON解析错误:', e);
-                  return scope.row.configNote;
-                }
-              })()
-              : ''
-            }}</div>
-          </template>
-
-        </el-table-column> -->
         <el-table-column prop="desc" label="备注" width="250" />
         <el-table-column label="操作" width="300" fixed="right">
           <template #default="scope">
             <el-button type="primary" @click="editorConfig(scope.row)">编辑</el-button>
             <el-button type="primary" @click="editorJSON(scope.row)">JSON配置</el-button>
-            <!-- <el-button type="primary" @click="editorJSON(scope.row, 'note')">JSON注释配置</el-button> -->
+
             <el-button type="danger" @click="deleteConfig(scope.row)">删除</el-button>
           </template>
         </el-table-column>
