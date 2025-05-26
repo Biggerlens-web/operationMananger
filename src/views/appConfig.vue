@@ -257,19 +257,35 @@
   //参数值url编码
   const enCodeObj = (obj: any) => {
     const result: any = {};
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        const value = obj[key];
-        if (typeof value === 'string') {
-          result[key] = encodeURIComponent(value);
-        } else if (typeof value === 'object' && value !== null) {
-          result[key] = enCodeObj(value);
-        } else {
-          result[key] = value;
+    // Check if the input is an array
+    if (Array.isArray(obj)) {
+      // If it's an array, map over its elements and recursively encode them
+      return obj.map(item => enCodeObj(item));
+    }
+
+    // If it's an object (and not null)
+    if (typeof obj === 'object' && obj !== null) {
+      for (const key in obj) {
+        // Ensure the property belongs to the object itself
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          const value = obj[key];
+          if (typeof value === 'string') {
+            result[key] = encodeURIComponent(value);
+          } else if (typeof value === 'object' && value !== null) {
+            // Recursively call enCodeObj for nested objects or arrays
+            result[key] = enCodeObj(value);
+          } else {
+            // Handle other primitive types directly
+            result[key] = value;
+          }
         }
       }
+      return result;
     }
-    return result;
+
+    // Return primitive values directly (if not a string already handled)
+    // This handles cases where the initial input might be a non-string primitive
+    return obj;
   }
 
   const handleComfirmJSON = async () => {
@@ -279,6 +295,7 @@
 
 
       configingItem.value.config = JSON.stringify(enCodeObj(jsonData.value))
+      console.log('configingItem.value.config', configingItem.value.config);
       configingItem.value.configNote = JSON.stringify(enCodeObj(comments.value))
       const params = {
         ...configingItem.value, timestamp: new Date().getTime()
@@ -291,7 +308,8 @@
         enData: paramStr
       })
       console.log('保存结果', res);
-      // console.log('保存结果解密', decryptDes(res.data));
+
+      console.log('保存结果解密', decryptDes(res.data));
       if (res.data.code === 200) {
         ElMessage.success('保存成功')
 
