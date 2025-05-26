@@ -76,7 +76,8 @@
 
       </Transition>
 
-      <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next" :total="1000" />
+      <el-pagination v-show="showPagestion" v-model:current-page="currentPage" :page-size="pageSize" class="pagesBox"
+        background layout="prev, pager, next" :total="1000" />
     </el-card>
   </div>
 </template>
@@ -90,6 +91,8 @@
   import { storeToRefs } from 'pinia';
   import menuEditor from '@/components/menu/menuEditor.vue';
   import { ElMessageBox } from 'element-plus';
+  import service from '@/axios';
+  import { desEncrypt } from '@/utils/des';
   const counterStore = useCounterStore()
   const { showPagestion } = storeToRefs(counterStore)
   const components: any = {
@@ -101,6 +104,12 @@
 
 
   const showEditor = ref<boolean>(false)
+
+  //页码
+  const currentPage = ref<number>(1)
+  //最大条数
+  const pageSize = ref<number>(20)
+
 
   //新增菜单
   const addMenu = () => {
@@ -686,17 +695,42 @@
   }
   const filterParams = ref<filterParams[]>()
   const getUserList = async () => {
-    console.log('获取用户列表');
-    const dataItem = menuData.value[0]
-    const keys = Object.keys(dataItem)
-    filterParams.value = keys.map((item) => {
-      return {
-        note: userNote[item],
-        isShow: true,
-        key: item
+    try {
+
+      const menuInfo = await service.get('/system/menu/menuInfo')
+      console.log('获取菜单信息', menuInfo);
+
+      const params = {
+        pageNum: currentPage.value,
+        pageSize: pageSize.value,
+        menuText: searchParams.value.menuText,
+        menuUrl: searchParams.value.menuUrl,
+        menuType: searchParams.value.menuType,
+        menuUrlType: searchParams.value.menuUrlType,
+        parentId: searchParams.value.menuUrlType,
+        timestamp: Date.now()
       }
-    })
-    console.log('filterParams', filterParams.value);
+      const paramsStr = desEncrypt(JSON.stringify(params))
+      const res = await service.post('/system/menu/list', {
+
+        enData: paramsStr
+
+      })
+      console.log('菜单列表', res);
+      const dataItem = menuData.value[0]
+      const keys = Object.keys(dataItem)
+      filterParams.value = keys.map((item) => {
+        return {
+          note: userNote[item],
+          isShow: true,
+          key: item
+        }
+      })
+      console.log('filterParams', filterParams.value);
+    } catch (err) {
+
+    }
+
   }
   //参数显影
   const checkedParams = ({ key, checked }: any) => {

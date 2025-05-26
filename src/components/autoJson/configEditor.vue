@@ -17,6 +17,12 @@
                     <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
                 </el-select>
             </el-form-item>
+            <el-form-item label="地区" prop="region">
+                <el-select filterable v-model="formData.region" placeholder="请选择地区" class="filter-select">
+                    <el-option label="国内" value="domestic" />
+                    <el-option label="国外" value="foreign" />
+                </el-select>
+            </el-form-item>
             <el-form-item label="渠道" prop="channel" v-if="showChannelEditor">
                 <el-select filterable multiple v-model="formData.channel" placeholder="请选择渠道" class="filter-select">
                     <el-option v-for="item in channelList" :key="item.id" :label="item.channelName" :value="item.id" />
@@ -26,14 +32,14 @@
             <el-form-item label="开关" prop="open">
                 <el-switch v-model="formData.open"></el-switch>
             </el-form-item>
-            <el-form-item v-if="formData.open" label="开始时间" prop="startTime">
+            <!-- <el-form-item v-if="formData.open" label="开始时间" prop="startTime">
                 <el-date-picker ref="datePicker" value-format="YYYY-MM-DD HH:mm:ss" v-model="formData.startTime"
                     type="datetime" placeholder="请选择开始时间" />
             </el-form-item>
             <el-form-item v-if="formData.open" label="结束时间" prop="endTime">
                 <el-date-picker ref="datePicker" value-format="YYYY-MM-DD HH:mm:ss" v-model="formData.endTime"
                     type="datetime" placeholder="请选择结束时间" />
-            </el-form-item>
+            </el-form-item> -->
             <el-form-item label="编码" prop="code">
                 <el-input v-model="formData.code"></el-input>
             </el-form-item>
@@ -88,9 +94,9 @@
         desc: '',
         os: '',
         channel: [],
+        region: '',
         open: true,
-        startTime: '',
-        endTime: '',
+
 
     })
     const resetForm = () => {
@@ -102,8 +108,7 @@
         formData.os = ''
         formData.channel = []
         formData.open = true
-        formData.startTime = ''
-        formData.endTime = ''
+
     }
     const ruleFormRef = ref<any>(null)
     const rules = reactive<any>({

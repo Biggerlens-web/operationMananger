@@ -45,6 +45,14 @@
           </el-select>
         </div>
 
+        <div class="filter-item">
+          <span class="label">地区:</span>
+          <el-select filterable v-model="activeArea" placeholder="请选择地区" @change="getAutoConfig" clearable
+            class="filter-select">
+            <el-option :label="'国内'" :value="'domestic'" />
+            <el-option :label="'国外'" :value="'foreign'" />
+          </el-select>
+        </div>
       </div>
     </el-card>
 
@@ -156,6 +164,7 @@
   const activeApp = ref<string | number>('')
   const activeChannel = ref<string | number>('')
   const activeOS = ref<string | number>('')
+  const activeArea = ref<string>('')
   // 表格相关
   const loading = ref(false)
   interface TableItem {
@@ -256,6 +265,7 @@
     jsonData.value = JSON.parse(item.config)
     comments.value = JSON.parse(item.configNote)
     dialogJSON.value = true
+    console.log('jsonData.value', jsonData.value);
   }
 
   const handleCloseJSON = () => {
@@ -303,7 +313,10 @@
       // console.log('保存结果解密', decryptDes(res.data));
       if (res.data.code === 200) {
         ElMessage.success('保存成功')
+
         handleCloseJSON()
+
+
         getAutoConfig()
       } else {
         ElMessage.error('保存失败')
@@ -342,6 +355,7 @@
   }
   //编辑布尔值
   const inputChecked = (key: string) => {
+    console.log('jsonData.value', jsonData.value);
     // 遍历 jsonData 中的所有属性
     for (const [dataKey, value] of Object.entries(jsonData.value)) {
       // 如果是对象类型，检查其内部属性
@@ -351,6 +365,7 @@
           value[key] = !value[key];
           console.log(`修改嵌套值 ${dataKey}.${key}:`, value[key]);
           console.log('Jsondata', jsonData.value);
+
           return;
         }
       }
@@ -364,9 +379,11 @@
         }
         console.log(`修改顶层值 ${key}:`, jsonData.value[key]);
         console.log('Jsondata', jsonData.value);
+
         return;
       }
     }
+
 
   }
 
@@ -447,6 +464,7 @@
       const params = {
         os: activeOS.value,
         channel: activeChannel.value,
+        region: activeArea.value,
         timestamp: Date.now()
       }
       console.log('参数------', params);
@@ -458,6 +476,7 @@
         }
       })
       console.log('获取自动化配置列表', res);
+
       tableData.value = res.data.rows
 
       for (const item of tableData.value) {

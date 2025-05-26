@@ -118,6 +118,7 @@
                         // trArray.splice(0, 1)
                         // trArray.splice(-1, 1)
                         console.log('trArray', trArray);
+                        // const expandeItem = document.querySelector('')
                         for (let item of trArray) {
                             const tds = item.childNodes
 
@@ -158,59 +159,65 @@
                                             }
                                         })
 
-                                    } else if (
-                                        valueTd.innerHTML === 'true' ||
-                                        valueTd.innerHTML === 'false'
-                                    ) {
-                                        console.log('布尔值---------', valueTd.innerHTML);
-                                        const inputEl = contentTr?.querySelectorAll('.jsoneditor-tree')[2]
-                                        valueTd.style.display = 'none'
-                                        if (inputEl) {
-                                            const input = inputEl.querySelector('input')
-                                            if (input) {
-                                                let hasInitValue
-
-                                                if (contentTd?.length) {
-                                                    for (const item of contentTd) {
-                                                        if (item.className === 'jsoneditor-initvalue') {
-                                                            hasInitValue = true
-                                                            break
-                                                        } else {
-                                                            hasInitValue = false
-                                                        }
-                                                    }
-                                                }
-                                                if (!hasInitValue) {
-
-                                                    input.style.display = 'none'
-                                                    const initvalueTd = document.createElement('td')
-                                                    let value = valueTd.innerHTML === 'true' ? true : false
-                                                    initvalueTd.className = 'jsoneditor-initvalue'
-                                                    initvalueTd.innerHTML = `<label class="switch">
-                                                                                <input type="checkbox"  :checked="switchValue">
-                                                                                <span class="slider"></span>
-                                                                            </label>`
-                                                    const checkbox = initvalueTd.querySelector('input[type="checkbox"]');
-                                                    if (checkbox instanceof HTMLInputElement) {
-                                                        checkbox.checked = value;
-                                                        checkbox.addEventListener('change', (e) => {
-
-                                                            if (e.target instanceof HTMLInputElement) {
-                                                                console.log('switchValue', e.target.checked);
-                                                                // switchValue.value = e.target.checked;
-
-                                                                emit('inputChecked', jsonPath)
-                                                            }
-                                                        });
-                                                    }
-                                                    contentTr?.appendChild(initvalueTd)
-
-
-                                                }
-
-                                            }
-                                        }
                                     }
+                                    // else if (
+                                    //     valueTd.innerHTML === 'true' ||
+                                    //     valueTd.innerHTML === 'false'
+                                    // ) {
+                                    //     console.log('布尔值---------', valueTd.innerHTML);
+                                    //     const inputEl = contentTr?.querySelectorAll('.jsoneditor-tree')[2]
+                                    //     valueTd.style.display = 'none'
+                                    //     if (inputEl) {
+                                    //         const input = inputEl.querySelector('input')
+                                    //         if (input) {
+                                    //             let hasInitValue
+
+                                    //             if (contentTd?.length) {
+                                    //                 for (const item of contentTd) {
+                                    //                     if (item.className === 'jsoneditor-initvalue') {
+                                    //                         hasInitValue = true
+                                    //                         break
+                                    //                     } else {
+                                    //                         hasInitValue = false
+                                    //                     }
+                                    //                 }
+                                    //             }
+                                    //             if (!hasInitValue) {
+
+                                    //                 input.style.display = 'none'
+
+                                    //                 const initvalueTd = document.createElement('td')
+
+
+                                    //                 let value = valueTd.innerHTML === 'true' ? true : false
+                                    //                 initvalueTd.className = 'jsoneditor-initvalue'
+                                    //                 initvalueTd.innerHTML = `<label class="switch">
+                                    //                                             <input type="checkbox"  :checked="switchValue">
+                                    //                                             <span class="slider"></span>
+                                    //                                         </label>`
+                                    //                 const checkbox = initvalueTd.querySelector('input[type="checkbox"]');
+                                    //                 if (checkbox instanceof HTMLInputElement) {
+                                    //                     checkbox.checked = value;
+                                    //                     checkbox.addEventListener('change', (e) => {
+
+                                    //                         if (e.target instanceof HTMLInputElement) {
+                                    //                             console.log('switchValue', e.target.checked);
+
+                                    //                             // switchValue.value = e.target.checked;
+                                    //                             console.log('jsonPath', jsonPath);
+                                    //                             console.log('contentTr', contentTr);
+                                    //                             // emit('inputChecked', jsonPath)
+                                    //                         }
+                                    //                     });
+                                    //                 }
+                                    //                 contentTr?.appendChild(initvalueTd)
+
+
+                                    //             }
+
+                                    //         }
+                                    //     }
+                                    // }
                                 }
 
 
@@ -311,7 +318,7 @@
 
                         // 只有当值真正发生变化时才触发更新
                         if (JSON.stringify(newValue) !== JSON.stringify(props.modelValue)) {
-                            // emit('update:modelValue', newValue)
+                            emit('update:modelValue', newValue)
                             initParamsDesc()
                         }
 
