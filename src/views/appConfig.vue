@@ -261,7 +261,7 @@
   }
 
   //参数值url编码
-  const enCodeObj = (obj: any) => {
+  const enCodeObj = (obj: any): any => {
     const result: any = {};
     // Check if the input is an array
     if (Array.isArray(obj)) {
