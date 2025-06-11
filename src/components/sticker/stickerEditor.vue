@@ -1,5 +1,5 @@
 <template>
-    <el-dialog :model-value="showEditor" title="编辑文字模板" width="500" :before-close="handleClose">
+    <el-dialog :model-value="showEditor" title="编辑" width="500" :before-close="handleClose">
         <el-form ref="ruleFormRef" style="max-width: 600px" :model="formData" :rules="rules" label-width="auto"
             class="demo-ruleForm" status-icon>
             <el-form-item label="所属应用" prop="appNo">
