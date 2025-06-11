@@ -41,8 +41,8 @@ const getRouterList = async () => {
           title: item.menuText,
         },
       }
-      // routes[0].redirect = '/appConfig/index'
-      routes[0].redirect = '/pptTemplate'
+      routes[0].redirect = '/appConfig/index'
+      // routes[0].redirect = '/pptTemplate'
       //ppt模板管理 可删除
       const pptRoute = {
         path: '/pptTemplate',
@@ -52,7 +52,19 @@ const getRouterList = async () => {
           title: 'PPT模板管理',
         },
       }
+
+      //模板素材页面
+      const stickerRoute = {
+        path: '/templateMaterial',
+        name: 'templateMaterial',
+        component: () => import('@/views/templateMaterial.vue'),
+        meta: {
+          title: '模板素材管理',
+        },
+      }
+
       parentItem?.push(pptRoute)
+      parentItem?.push(stickerRoute)
 
       if (parentItem) {
         parentItem.push(routeItem)

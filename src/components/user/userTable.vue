@@ -46,6 +46,10 @@
                     @click="onAssginRole(scope.row)">分配权限</el-button>
                 <el-button style="margin: 0;" type="text" size="small" @click="scanImg(scope.row)"
                     v-if="bannerPath">扫描该路径下图片</el-button>
+
+                <el-button style="margin: 0;" type="text" size="small" @click="handleView(scope.row)"
+                    v-if="viewButton">查看</el-button>
+
                 <el-button style="margin: 0;" type="text" size="small" @click="handleEditor(scope.row)">编辑</el-button>
                 <el-button style="margin: 0;" type="text" size="small" @click="handleDelete(scope.row)">删除</el-button>
             </template>
@@ -62,7 +66,8 @@
         'assginRole': [value: any],
         'scanImg': [value: any],
         'AutoOpenMethod': [value: any],
-        'editorLanguage': [value: any]
+        'editorLanguage': [value: any],
+        'view': [value: any],
     }>()
 
 
@@ -73,14 +78,21 @@
         showAction: boolean
         userList: boolean
         roleList: boolean
-        bannerPath: boolean
+        bannerPath: boolean,
+        viewButton: boolean
     }>(), {
         showAction: true,
         userList: false,
+        viewButton: false,
         roleList: false,
         bannerPath: false
     })
 
+
+    const handleView = (item: any) => {
+        console.log('查看', item)
+        emit('view', item)
+    }
     const handleEditor = (item: any) => {
         console.log('编辑', item)
         emit('editor', item)

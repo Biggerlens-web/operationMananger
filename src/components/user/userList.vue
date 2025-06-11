@@ -95,6 +95,10 @@
                             </el-icon>
                             编辑
                         </el-button>
+                        <el-button v-if="viewButton" style="margin: 0;" type="primary" size="small" plain
+                            @click="handleView(item)">
+                            查看
+                        </el-button>
                         <el-button v-if="userList" style="margin: 0;" type="danger" size="small" plain
                             @click="banUser(item)">
                             禁用
@@ -135,10 +139,12 @@
         userList: boolean
         roleList: boolean
         bannerPath: boolean
+        viewButton: boolean
     }>(), {
         showAction: true
         ,
         userList: false,
+        viewButton: false,
         roleList: false,
         bannerPath: false
     })
@@ -150,6 +156,7 @@
         'assginRole': [value: any],
         'scannImg': [value: any],
         'AutoOpenMethod': [value: any],
+        'view': [value: any],
     }>()
     import {
         User, Phone, Message, Calendar, Location,
@@ -254,6 +261,12 @@
         emit('rolesEditor', item)
     }
 
+    //查看详情
+    const handleView = (item: any) => {
+        console.log('查看', item)
+        emit('view', item)
+
+    }
 
     //分配权限
     const onAssginRole = (item: any) => {

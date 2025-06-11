@@ -15,6 +15,7 @@ pinia.use(piniaPluginPersistedstate)
 const app = createApp(App)
 
 // 3. 按顺序使用插件（确保 pinia 在 router 之前）
+
 app.use(pinia)
 app.use(router)
 app.use(ElementPlus)

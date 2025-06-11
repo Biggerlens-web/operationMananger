@@ -7,6 +7,7 @@ const service: AxiosInstance = axios.create({
   // baseURL: 'http://192.168.31.110:18091',
   // baseURL: 'http://192.168.31.36:8091',
   baseURL: 'https://privacy.biggerlens.cn:18091',
+  // baseURL: 'http://192.168.31.36:8091',
 
   headers: {
     'Content-Type': 'application/json',
