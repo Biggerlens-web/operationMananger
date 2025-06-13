@@ -8,7 +8,7 @@
                 </p>
                 <el-upload class="uploader-instance" action="#" :show-file-list="false"
                     :on-change="handleBigImageChange" :before-upload="beforeImageUpload" :auto-upload="false"
-                    v-model:file-list="formData.bigFileList">
+                    v-model="formData.bigFileList">
                     <div v-if="formData.bigImg" class="image-preview-container">
                         <img :src="formData.bigImg" class="uploaded-image" />
                         <el-button class="delete-image-btn" type="danger" :icon="Delete" circle
@@ -28,7 +28,7 @@
                 </p>
                 <el-upload class="uploader-instance" action="#" :show-file-list="false"
                     :on-change="handleSmallImageChange" :before-upload="beforeImageUpload" :auto-upload="false"
-                    v-model:file-list="formData.smallFileList">
+                    v-model="formData.smallFileList">
                     <div v-if="formData.smallImg" class="image-preview-container">
                         <img :src="formData.smallImg" class="uploaded-image" />
                         <el-button class="delete-image-btn" type="danger" :icon="Delete" circle
@@ -52,7 +52,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { reactive, ref } from 'vue';
+    import { reactive, ref, watch } from 'vue';
     import type { UploadProps, UploadUserFile, UploadRawFile } from 'element-plus';
     import { ElMessage, ElButton } from 'element-plus';
     import { Delete } from '@element-plus/icons-vue';
@@ -72,39 +72,63 @@
 
 
 
-    const formData = reactive<{ bigImg: string, smallImg: string, bigFileList: UploadUserFile[], smallFileList: UploadUserFile[] }>({
+
+
+
+    interface formDataType {
+        bigImg: string,
+        smallImg: string,
+        bigFileList: any,
+        smallFileList: any
+    }
+
+    const formData = reactive<formDataType>({
         bigImg: '',
         smallImg: '',
-        bigFileList: [],
-        smallFileList: [],
+        bigFileList: '',
+        smallFileList: '',
     })
     const handleBigImageChange: UploadProps['onChange'] = (uploadFile) => {
         if (uploadFile.raw) {
-            formData.bigImg = URL.createObjectURL(uploadFile.raw);
-            // formData.bigFileList = [uploadFile]; // 如果只需要保留当前上传的文件，取消注释这行
+
+
+            const render = new FileReader()
+            render.onload = (e) => {
+                console.log('render', e.target?.result);
+                formData.bigImg = e.target?.result as string || ''
+            }
+            render.readAsDataURL(uploadFile.raw)
+
+
         }
     };
 
     const handleSmallImageChange: UploadProps['onChange'] = (uploadFile) => {
         if (uploadFile.raw) {
-            formData.smallImg = URL.createObjectURL(uploadFile.raw);
+
+
+            console.log('uploadFile', uploadFile.raw);
+
+            const render = new FileReader()
+
+            render.onload = (e) => {
+                console.log('render', e.target?.result);
+                formData.smallImg = e.target?.result as string || ''
+
+            }
+            render.readAsDataURL(uploadFile.raw)
+
+
             // formData.smallFileList = [uploadFile]; // 如果只需要保留当前上传的文件，取消注释这行
         }
     };
 
     const beforeImageUpload: UploadProps['beforeUpload'] = (rawFile: UploadRawFile) => {
-        const isIMAGE = rawFile.type === 'image/jpeg' || rawFile.type === 'image/png' || rawFile.type === 'image/gif';
-        const isLt2M = rawFile.size / 1024 / 1024 < 2;
 
-        if (!isIMAGE) {
-            ElMessage.error('上传文件只能是 JPG/PNG/GIF 格式!');
-            return false;
-        }
-        if (!isLt2M) {
-            ElMessage.error('上传文件大小不能超过 2MB!');
-            return false;
-        }
         return true;
+
+
+
     };
 
     const removeBigImage = () => {
