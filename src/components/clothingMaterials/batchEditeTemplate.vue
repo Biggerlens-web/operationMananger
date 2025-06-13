@@ -2,13 +2,23 @@
     <el-dialog :model-value="dialogBatchEdite" width="500" title="批量编辑素材" :before-close="handleClose">
 
         <div class="dialog-content">
-            <div class="dialog_input">
+            <!-- <div class="dialog_input">
                 <span>所属类</span>
                 <el-input v-model="formData.type" placeholder="请选择所属类"></el-input>
-            </div>
+            </div> -->
             <div class="dialog_input">
                 <span>是否付费</span>
                 <el-switch v-model="formData.isPaid" active-text="付费" inactive-text="免费"></el-switch>
+            </div>
+            <div class="dialog_input">
+                <span>关联运营类</span>
+                <el-checkbox-group v-model="formData.checkList">
+                    <el-checkbox label="Option A" value="Value A" />
+                    <el-checkbox label="Option B" value="Value B" />
+                    <el-checkbox label="Option C" value="Value C" />
+
+
+                </el-checkbox-group>
             </div>
         </div>
 
@@ -32,7 +42,8 @@
 
     const formData = reactive<any>({
         type: '',
-        isPaid: false
+        isPaid: false,
+        checkList: []
     })
     const handleClose = () => {
         dialogBatchEdite.value = false

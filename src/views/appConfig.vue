@@ -524,15 +524,24 @@
     }
 
   }
-  watch(() => appList.value, (newV) => {
-    if (newV.length > 0) {
-      if (appList.value.length === 0) return
+  // watch(() => appList.value, (newV) => {
+  //   console.log('刷新自动配置列表');
+  //   if (newV.length > 0) {
+  //     if (appList.value.length === 0) return
+  //     activeApp.value = appList.value[0].appNo
+
+
+
+  //     getAutoConfig()
+  //   }
+  // }, { deep: true })
+
+  onMounted(() => {
+    if (appList.value.length > 0) {
       activeApp.value = appList.value[0].appNo
       getAutoConfig()
     }
-  }, { deep: true })
-
-
+  })
 
 
 </script>

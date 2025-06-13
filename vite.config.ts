@@ -10,7 +10,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://inapp.iepose.cn/',
+        target: 'http://192.168.31.36:18097',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },

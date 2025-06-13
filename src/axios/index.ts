@@ -5,9 +5,9 @@ import router from '@/router'
 import { decryptDes } from '@/utils/des'
 const service: AxiosInstance = axios.create({
   // baseURL: 'http://192.168.31.110:18091',
-  // baseURL: 'http://192.168.31.36:8091',
-  baseURL: 'https://privacy.biggerlens.cn:18091',
-  // baseURL: 'http://192.168.31.36:8091',
+  baseURL: 'http://192.168.31.36:18097',
+  // baseURL: 'https://privacy.biggerlens.cn:18091',
+  // baseURL: '/api',
 
   headers: {
     'Content-Type': 'application/json',
@@ -37,14 +37,12 @@ service.interceptors.response.use(
       const { code, msg } = JSON.parse(decryptDes(response.data))
 
       if (code == 3) {
-        ElMessage.error(msg)
-        localStorage.removeItem('token')
-        router.push('/login')
+        if (window.location.pathname != '/login') {
+          ElMessage.error(msg)
+          localStorage.removeItem('token')
+          router.push('/login')
+        }
       }
-      // if (code != 200) {
-      //   console.log('message', msg)
-      //   ElMessage.error(msg)
-      // }
     }
 
     return response

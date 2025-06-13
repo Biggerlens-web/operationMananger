@@ -1,9 +1,20 @@
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import { defineStore } from 'pinia'
 
 export const useCounterStore = defineStore(
   'counter',
   () => {
+    const regionList = reactive<any>([
+      {
+        label: '国内',
+        value: 'domestic',
+      },
+      {
+        label: '国外',
+        value: 'foreign',
+      },
+    ]) //地域列表
+    const international = ref<any>() //国际化信息
     const userName = ref<string>('') //用户名
     const userAvatar = ref<string>('') //用户头像
     const appList = ref<any>([]) // 应用列表
@@ -20,6 +31,8 @@ export const useCounterStore = defineStore(
       showPagestion,
       channelList,
       OSlist,
+      international,
+      regionList
     }
   },
   {

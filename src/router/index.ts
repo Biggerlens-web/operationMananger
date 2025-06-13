@@ -112,6 +112,22 @@ const setMenuStore = () => {
   console.log('pinia', useCounterStore(pinia).menuList)
 }
 
+//获取国际化信息
+const getInternational = async () => {
+  try {
+    const res: any = await service.get('/clothingMaterials/getInternational')
+    console.log('获取国际化信息', res)
+    const languageArr = Object.entries(res.data.data.languages).map(([key, value]) => {
+      return {
+        language: value,
+        value: key,
+      }
+    })
+    useCounterStore().international = languageArr
+  } catch (err) {
+    console.log('获取国际化信息失败', err)
+  }
+}
 const getBaseData = async () => {
   try {
     const res = await service.get('/base/baseData/getBaseDatas/0')
@@ -130,7 +146,8 @@ router.beforeEach(async (to, from, next) => {
     if (to.path === '/login') {
       next('/')
     } else {
-      getBaseData()
+      await getBaseData()
+
       next()
     }
   } else {
@@ -140,5 +157,8 @@ router.beforeEach(async (to, from, next) => {
       next('/login')
     }
   }
+})
+router.afterEach((to, from) => {
+  getInternational()
 })
 export default router

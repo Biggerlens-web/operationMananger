@@ -49,7 +49,12 @@
 
                 <el-button style="margin: 0;" type="text" size="small" @click="handleView(scope.row)"
                     v-if="viewButton">查看</el-button>
-
+                <el-button v-if="moveIndex" style="margin: 0;" type="text" size="small"
+                    @click="goMove(scope.row, 'topMove')">置顶</el-button>
+                <el-button v-if="moveIndex" style="margin: 0;" type="text" size="small"
+                    @click="goMove(scope.row, 'upMove')">上移</el-button>
+                <el-button v-if="moveIndex" style="margin: 0;" type="text" size="small"
+                    @click="goMove(scope.row, 'downMove')">下移</el-button>
                 <el-button style="margin: 0;" type="text" size="small" @click="handleEditor(scope.row)">编辑</el-button>
                 <el-button style="margin: 0;" type="text" size="small" @click="handleDelete(scope.row)">删除</el-button>
             </template>
@@ -68,6 +73,8 @@
         'AutoOpenMethod': [value: any],
         'editorLanguage': [value: any],
         'view': [value: any],
+        'moveIndex': [value: any]
+
     }>()
 
 
@@ -80,6 +87,7 @@
         roleList: boolean
         bannerPath: boolean,
         viewButton: boolean
+        moveIndex: boolean
     }>(), {
         showAction: true,
         userList: false,
@@ -87,6 +95,13 @@
         roleList: false,
         bannerPath: false
     })
+
+
+    const goMove = (item: any, moveType: string) => {
+        const { id } = item
+        emit('moveIndex', { id, moveType })
+
+    }
 
 
     const handleView = (item: any) => {
