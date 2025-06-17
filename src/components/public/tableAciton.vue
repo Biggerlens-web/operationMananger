@@ -1,22 +1,20 @@
 <template>
     <ul class="action-list">
-        <li class="action-item" :class="{ active: activeAction === 'switch' }" @click="setActiveAction('switch')">
+        <!-- <li class="action-item" :class="{ active: activeAction === 'switch' }" @click="setActiveAction('switch')">
             <el-icon>
                 <Switch />
             </el-icon>
 
-        </li>
+        </li> -->
         <li class="action-item" :class="{ active: activeAction === 'refresh' }" @click="setActiveAction('refresh')">
             <el-icon>
                 <Refresh />
             </el-icon>
-
         </li>
         <li class="action-item" :class="{ active: activeAction === 'fold' }" @click="setActiveAction('fold')">
             <el-icon>
                 <Fold />
             </el-icon>
-
         </li>
         <li class="action-item" :class="{ active: activeAction === 'grid' }">
             <el-dropdown :hide-on-click="false">

@@ -150,7 +150,8 @@
   }
 
   .menu-container {
-    height: 100%;
+    height: calc(100vh - 60px);
+    /* 减去 logo 区域的高度 */
     /* 或者设置一个固定高度，如 100vh 或 600px */
     overflow-y: auto;
     /* 添加垂直滚动 */

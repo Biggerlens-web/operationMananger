@@ -109,7 +109,7 @@ const setMenuStore = () => {
 
   useCounterStore(pinia).menuList = menusArr
 
-  console.log('pinia', useCounterStore(pinia).menuList)
+  // console.log('pinia', useCounterStore(pinia).menuList)
 }
 
 //获取国际化信息
@@ -123,18 +123,31 @@ const getInternational = async () => {
         value: key,
       }
     })
-    useCounterStore().international = languageArr
+    useCounterStore(pinia).international = languageArr
   } catch (err) {
     console.log('获取国际化信息失败', err)
   }
 }
+
+//获取标签
+const getTagList = async () => {
+  try {
+    const res = await service.post('/clothingMaterialsDetail/bacthLabelEdit')
+
+    console.log('获取标签列表', res)
+    useCounterStore(pinia).tagList = res.data.data.mateLabels
+  } catch (err) {
+    console.log('获取标签列表失败', err)
+  }
+}
+
 const getBaseData = async () => {
   try {
     const res = await service.get('/base/baseData/getBaseDatas/0')
     console.log('基础表单数据', res)
-    useCounterStore().appList = res.data.data.apps
-    useCounterStore().channelList = res.data.data.channels
-    useCounterStore().OSlist = res.data.data.oss
+    useCounterStore(pinia).appList = res.data.data.apps
+    useCounterStore(pinia).channelList = res.data.data.channels
+    useCounterStore(pinia).OSlist = res.data.data.oss
   } catch (err) {
     console.log('获取基础数据失败')
   }
@@ -160,5 +173,6 @@ router.beforeEach(async (to, from, next) => {
 })
 router.afterEach((to, from) => {
   getInternational()
+  getTagList()
 })
 export default router

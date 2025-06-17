@@ -75,6 +75,12 @@
                                         </el-select>
                                         <el-button @click="addAutoOpenMethod(item)">添加</el-button>
                                     </div>
+                                    <div class="detail-value" v-else-if="param.key === 'international'">
+                                        <p v-for="(translatedText, langCode) in JSON.parse(item.international || '{}')"
+                                            :key="langCode">
+                                            {{ initLangText(String(langCode)) }} : {{ translatedText }}
+                                        </p>
+                                    </div>
                                     <div class="detail-value" v-else>
                                         <span>
                                             {{ formatValue(item[param.key], param.key) }}
@@ -95,10 +101,16 @@
                             </el-icon>
                             编辑
                         </el-button>
-                        <el-button v-if="viewButton" style="margin: 0;" type="primary" size="small" plain
-                            @click="handleView(item)">
+                        <el-button v-if="viewButton || isShowButton(item, 'view')" style="margin: 0;" type="primary"
+                            size="small" plain @click="handleView(item)">
                             查看
                         </el-button>
+                        <el-button v-if="moveIndex || isShowButton(item, 'topIndex')" style="margin: 0;" type="primary"
+                            size="small" plain @click="goMove(item, 'topMove')">置顶</el-button>
+                        <el-button v-if="moveIndex || isShowButton(item, 'upIndex')" style="margin: 0;" type="primary"
+                            size="small" plain @click="goMove(item, 'upMove')">上移</el-button>
+                        <el-button v-if="moveIndex || isShowButton(item, 'downIndex')" style="margin: 0;" type="primary"
+                            size="small" plain @click="goMove(item, 'downMove')">下移</el-button>
                         <el-button v-if="userList" style="margin: 0;" type="danger" size="small" plain
                             @click="banUser(item)">
                             禁用
@@ -121,6 +133,7 @@
                             </el-icon>
                             删除
                         </el-button>
+
                     </div>
                 </div>
             </li>
@@ -131,7 +144,8 @@
 <script lang="ts" setup>
     import { computed } from 'vue'
 
-
+    const stores = useCounterStore()
+    const { international } = storeToRefs(stores)
     const props = withDefaults(defineProps<{
         filterParams: any
         tableData: any
@@ -140,6 +154,7 @@
         roleList: boolean
         bannerPath: boolean
         viewButton: boolean
+        moveIndex: boolean
     }>(), {
         showAction: true
         ,
@@ -157,11 +172,14 @@
         'scannImg': [value: any],
         'AutoOpenMethod': [value: any],
         'view': [value: any],
+        'moveIndex': [value: any]
     }>()
     import {
         User, Phone, Message, Calendar, Location,
         Connection, Lock, Edit, Delete
     } from '@element-plus/icons-vue'
+    import { useCounterStore } from '@/stores/counter';
+    import { storeToRefs } from 'pinia';
 
     // 计算可见的参数（不包括头像）
     const visibleParams = computed(() => {
@@ -169,6 +187,53 @@
             param.key !== 'avatar' && param.isShow
         )
     })
+
+    //移动
+    const goMove = (item: any, moveType: string) => {
+        const { id } = item
+        emit('moveIndex', { id, moveType })
+
+    }
+
+    //编辑按钮显示控制
+    const isShowButton = (row: any, type: string) => {
+        if (type === 'view') {
+            return true
+        }
+
+
+
+
+
+
+        if (row.operationClass === 1) {
+            if (type === 'topIndex') {
+                return false
+            } else if (type === 'downIndex') {
+                return false
+            } else if (type === 'upIndex') {
+                return false
+            }
+        } else {
+            return true
+
+        }
+
+    }
+
+
+
+    //设置显示国际化文本
+    const initLangText = (key: string) => {
+
+        const langItem = international.value.find((item: any) => item.value === key)
+        if (langItem) {
+            return langItem.language
+        } else {
+            return key
+        }
+    }
+
 
     // 获取参数对应的图标
     const getIconForParam = (key: string) => {

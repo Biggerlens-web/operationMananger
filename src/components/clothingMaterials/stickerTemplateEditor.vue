@@ -159,10 +159,7 @@
     }
   }
   const handleConfirm = async () => {
-    if (!formData.style) {
-      ElMessage.warning('请选择样式')
-      return
-    }
+   
     if (!formData.bigUrl) {
       ElMessage.warning('请上传封面图')
       return
@@ -217,7 +214,7 @@
 
   // 删除封面图
   const removeCoverImage = () => {
-    formData.smallUrl = ''
+    formData.bigUrl = ''
   }
 
   // 监听对话框打开状态和编辑数据变化
@@ -275,6 +272,7 @@
     },
     { immediate: true },
   )
+
 
 
 </script>

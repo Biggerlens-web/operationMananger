@@ -32,6 +32,12 @@
 
                     <el-button @click="addAutoOpenMethod" style="width: 100%;margin-top: 10px;">添加</el-button>
                 </template>
+                <template v-if="item.key === 'international'" #default="scope">
+                    <p v-for="(value, key) in JSON.parse(scope.row.international)" :key="key">
+                        {{ initLanguage(key) }}:{{ value }}
+                    </p>
+
+                </template>
             </el-table-column>
         </template>
 
@@ -39,30 +45,35 @@
             <template #default="scope">
                 <el-button style="margin: 0;" type="text" size="small" @click="banUser(scope.row)"
                     v-if="userList">禁用</el-button>
-
                 <el-button style="margin: 0;" type="text" size="small" @click="handleRoles(scope.row)"
                     v-if="userList">分配角色</el-button>
                 <el-button v-if="roleList" style="margin: 0;" type="text" size="small"
                     @click="onAssginRole(scope.row)">分配权限</el-button>
                 <el-button style="margin: 0;" type="text" size="small" @click="scanImg(scope.row)"
                     v-if="bannerPath">扫描该路径下图片</el-button>
-
                 <el-button style="margin: 0;" type="text" size="small" @click="handleView(scope.row)"
-                    v-if="viewButton">查看</el-button>
-                <el-button v-if="moveIndex" style="margin: 0;" type="text" size="small"
-                    @click="goMove(scope.row, 'topMove')">置顶</el-button>
-                <el-button v-if="moveIndex" style="margin: 0;" type="text" size="small"
-                    @click="goMove(scope.row, 'upMove')">上移</el-button>
-                <el-button v-if="moveIndex" style="margin: 0;" type="text" size="small"
-                    @click="goMove(scope.row, 'downMove')">下移</el-button>
+                    v-if="viewButton || isShowButton(scope.row, 'view')">查看</el-button>
+                <el-button v-if="moveIndex || isShowButton(scope.row, 'topIndex')" style="margin: 0;" type="text"
+                    size="small" @click="goMove(scope.row, 'topMove')">置顶</el-button>
+                <el-button v-if="moveIndex || isShowButton(scope.row, 'upIndex')" style="margin: 0;" type="text"
+                    size="small" @click="goMove(scope.row, 'upMove')">上移</el-button>
+                <el-button v-if="moveIndex || isShowButton(scope.row, 'downIndex')" style="margin: 0;" type="text"
+                    size="small" @click="goMove(scope.row, 'downMove')">下移</el-button>
                 <el-button style="margin: 0;" type="text" size="small" @click="handleEditor(scope.row)">编辑</el-button>
                 <el-button style="margin: 0;" type="text" size="small" @click="handleDelete(scope.row)">删除</el-button>
+
             </template>
         </el-table-column>
     </el-table>
 </template>
 
 <script lang="ts" setup>
+    import { useCounterStore } from '@/stores/counter';
+    import { storeToRefs } from 'pinia';
+    import { ref, onMounted } from 'vue'
+    import { useRoute } from 'vue-router';
+
+    const route = useRoute()
     const emit = defineEmits<{
         'editor': [value: any],
         'delete': [value: any],
@@ -77,8 +88,17 @@
 
     }>()
 
+    const stores = useCounterStore()
+    const { international } = storeToRefs(stores)
+    const initLanguage = (key: string | number) => {
 
-
+        const findItem = international.value.find((item: any) => item.value === key)
+        if (findItem) {
+            return findItem.language
+        } else {
+            return key
+        }
+    }
     const props = withDefaults(defineProps<{
         tableData: any
         filterParams: any
@@ -88,6 +108,7 @@
         bannerPath: boolean,
         viewButton: boolean
         moveIndex: boolean
+        totalItems: number
     }>(), {
         showAction: true,
         userList: false,
@@ -96,6 +117,33 @@
         bannerPath: false
     })
 
+
+    const showMoveBtnPath = ['/clothingMaterials/index']
+
+    const isShowButton = (row: any, type: string) => {
+        if (type === 'view') {
+            return true
+        }
+
+        const path = route.path
+        if (!showMoveBtnPath.includes(path)) {
+            return false
+        }
+
+        if (row.operationClass === 1) {
+            if (type === 'topIndex') {
+                return false
+            } else if (type === 'downIndex') {
+                return false
+            } else if (type === 'upIndex') {
+                return false
+            }
+        } else {
+            return true
+
+        }
+
+    }
 
     const goMove = (item: any, moveType: string) => {
         const { id } = item

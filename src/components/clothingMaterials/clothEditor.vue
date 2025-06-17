@@ -3,7 +3,7 @@
         <el-form ref="ruleFormRef" style="max-width: 600px" :model="formData" :rules="rules" label-width="auto"
             class="demo-ruleForm" status-icon>
             <el-form-item label="所属应用" prop="appNo">
-                <el-select v-model="formData.appNo" @change="getParentList" placeholder="请选择应用">
+                <el-select filterable v-model="formData.appNo" @change="getParentList" placeholder="请选择应用">
                     <el-option v-for="item in appList" :key="item.appNo"
                         :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
                         :value="item.appNo" />
@@ -20,7 +20,7 @@
                 </el-select>
             </el-form-item>
 
-            <el-form-item label="服装分类名" prop="name">
+            <el-form-item label="服装子分类名" prop="name">
                 <el-input v-model="formData.name" />
             </el-form-item>
             <el-form-item label="服装访问名" prop="field">
@@ -116,7 +116,7 @@
             formData.value.name = props.editorInfo.name
             formData.value.field = props.editorInfo.field
             formData.value.international = props.editorInfo.international
-            formData.value.isOperationClass = props.editorInfo.oprerationClass
+            formData.value.isOperationClass = props.editorInfo.operationClass === 1 ? true : false
             formData.value.region = props.editorInfo.region === '国内' ? "domestic" : 'foreign'
             formData.value.tids = props.editorInfo.parentTypeIdList
             formData.value.appNo = props.editorInfo.appNo
@@ -373,6 +373,11 @@
                 enData
             })
             console.log('新增子分类', res);
+            if (res.data.code === 200) {
+                ElMessage.success('新增成功')
+            } else {
+                ElMessage.error(res.data.msg)
+            }
         } catch (err) {
             console.log('新增子分类失败', err);
         }
@@ -380,7 +385,10 @@
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate(async (valid: any) => {
             if (valid) {
-
+                if (formData.value.tids.length === 0) {
+                    ElMessage.warning('请选择父类')
+                    return
+                }
                 await addClothType()
                 handleClose()
             }

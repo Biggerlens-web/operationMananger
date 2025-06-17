@@ -2,8 +2,11 @@
     <templateView v-model:dialog-visible="showTemplateView" />
     <stickerTemplateEditor :editData="editItem" v-model:dialogEditor="dialogEditor" />
     <editorActionBox class="floating-action-box" @actionClick="handleAction" :hasUnsavedChanges="hasUnsavedChanges" />
-    <addClothTemplate v-model:dialogAdd="dialogAddCloth" />
-    <batchEditeTemplate v-model:dialog-batch-edite="dialogBatchEdite" />
+    <addClothTemplate v-model:dialogAdd="dialogAddCloth" @update="getMaterialList" />
+    <batchEditeTemplate :chosedItem="selectedList" v-model:dialog-batch-edite="dialogBatchEdite"
+        @update="getMaterialList" />
+    <batchTag v-model:dialogShow="dialogBatchTag" :chosedItem="selectedList" />
+
 
     <el-card class="stickTp_manage">
         <draggable tag="ul" v-model="list" item-key="id" :animation="200" class="template-grid"
@@ -24,16 +27,14 @@
                         <p class="p_viewNum">浏览数:{{ element.viewNum }}</p>
                     </div>
 
-                    <div class="img-wrapper" @click.stop="templateViewDialog(element.id)">
+                    <div class="img-wrapper">
                         <img :src="element.smallUrl" alt="" class="template-img" />
                     </div>
                     <p class="template-name">
-                        <el-button type="primary" style="width: 50%" @click="editorTemplate(element)">
+                        <el-button type="primary" style="width: 100%" @click="editorTemplate(element)">
                             编辑
                         </el-button>
-                        <el-button type="danger" style="width: 50%" @click="deleteTemplate(element.id)">
-                            删除
-                        </el-button>
+
                     </p>
                 </li>
             </template>
@@ -45,7 +46,7 @@
     import templateView from '@/components/pptTemplate/templateView.vue'
     import stickerTemplateEditor from '@/components/clothingMaterials/stickerTemplateEditor.vue'
     import editorActionBox from '@/components/clothingMaterials/editorActionBox.vue'
-
+    import batchTag from '@/components/clothingMaterials/batchTag.vue'
     import addClothTemplate from '@/components/clothingMaterials/addClothTemplate.vue'
     import batchEditeTemplate from '@/components/clothingMaterials/batchEditeTemplate.vue'
     import { ref, onMounted, watch } from 'vue'
@@ -54,7 +55,10 @@
     import { ElMessage } from 'element-plus'
     import { desEncrypt } from '@/utils/des'
     import service from '@/axios'
-
+    import { useCounterStore } from '@/stores/counter'
+    import { storeToRefs } from 'pinia'
+    const stores = useCounterStore()
+    const { operationClass } = storeToRefs(stores)
     const route = useRoute()
     //获取素材列表
 
@@ -179,9 +183,11 @@
 
     //批量编辑
     const dialogBatchEdite = ref<boolean>(false)
+
     const showBatchEdite = () => {
         dialogBatchEdite.value = true
     }
+
 
     //批量删除
     const batchDelete = () => {
@@ -211,8 +217,8 @@
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
-
-            const res = await service.post('/clothingMaterialsDetail/saveItem', {
+            const url = operationClass.value === 1 ? '/clothingMaterialsDetail/saveOperationItem' : '/clothingMaterialsDetail/saveItem'
+            const res = await service.post(url, {
 
                 enData
 
@@ -229,6 +235,13 @@
             console.log('保存失败err', err)
         }
     }
+
+    //批量编辑标签
+    const dialogBatchTag = ref<boolean>(false)
+    const showDialogBatchTag = () => {
+        dialogBatchTag.value = true
+    }
+
 
 
     //全局操作
@@ -250,6 +263,11 @@
                 break
             case 'tag':
                 console.log('批量标签')
+                if (selectedList.value.length === 0) {
+                    ElMessage.warning('请选择要编辑的素材')
+                    return
+                }
+                showDialogBatchTag()
                 break
             case 'upload':
                 console.log('新增素材')

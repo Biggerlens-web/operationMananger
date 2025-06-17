@@ -4,147 +4,252 @@
         <div class="upload-container">
             <div class="upload-box bigImg">
                 <p class="label">
-                    大图
+                    大图 (可多张)
                 </p>
-                <el-upload class="uploader-instance" action="#" :show-file-list="false"
-                    :on-change="handleBigImageChange" :before-upload="beforeImageUpload" :auto-upload="false"
-                    v-model="formData.bigFileList">
-                    <div v-if="formData.bigImg" class="image-preview-container">
-                        <img :src="formData.bigImg" class="uploaded-image" />
+                <!-- Big Image Upload Section -->
+                <div v-if="formData.bigImgs.length > 0" class="image-preview-grid">
+                    <div v-for="(imgSrc, index) in formData.bigImgs" :key="`big-${index}`"
+                        class="image-preview-container-item">
+                        <img :src="imgSrc" class="uploaded-image-item" />
                         <el-button class="delete-image-btn" type="danger" :icon="Delete" circle
-                            @click.stop="removeBigImage" />
+                            @click.stop="removeBigImage(index)" />
                     </div>
-                    <div v-else class="bigImg_upload upload-placeholder">
+                </div>
+                <el-upload class="uploader-instance" action="#" :show-file-list="false"
+                    v-model:file-list="formData.bigFileList" :before-upload="beforeImageUpload" :auto-upload="false"
+                    multiple>
+                    <!-- <div class="bigImg_upload upload-placeholder">
                         <el-icon>
                             <Plus />
                         </el-icon>
-                    </div>
+                        <span>添加大图</span>
+                    </div> -->
+                    <el-button type="primary">添加大图</el-button>
                 </el-upload>
-
             </div>
+
             <div class="upload-box smallImg">
                 <p class="label">
-                    小图
+                    小图 (可多张)
                 </p>
-                <el-upload class="uploader-instance" action="#" :show-file-list="false"
-                    :on-change="handleSmallImageChange" :before-upload="beforeImageUpload" :auto-upload="false"
-                    v-model="formData.smallFileList">
-                    <div v-if="formData.smallImg" class="image-preview-container">
-                        <img :src="formData.smallImg" class="uploaded-image" />
+                <!-- Small Image Upload Section -->
+                <div v-if="formData.smallImgs.length > 0" class="image-preview-grid">
+                    <div v-for="(imgSrc, index) in formData.smallImgs" :key="`small-${index}`"
+                        class="image-preview-container-item">
+                        <img :src="imgSrc" class="uploaded-image-item" />
                         <el-button class="delete-image-btn" type="danger" :icon="Delete" circle
-                            @click.stop="removeSmallImage" />
+                            @click.stop="removeSmallImage(index)" />
                     </div>
-                    <div v-else class="smallImg_upload upload-placeholder">
+                </div>
+                <el-upload class="uploader-instance" action="#" :show-file-list="false"
+                    v-model:file-list="formData.smallFileList" :before-upload="beforeImageUpload" :auto-upload="false"
+                    multiple>
+                    <!-- <div class="smallImg_upload upload-placeholder">
                         <el-icon>
                             <Plus />
                         </el-icon>
-                    </div>
+                        <span>添加小图</span>
+                    </div> -->
+                    <el-button type="primary">添加小图</el-button>
                 </el-upload>
             </div>
-
         </div>
         <div class="dialog_comfirm">
             <el-button type="primary" @click="handleComfirm">确认</el-button>
             <el-button @click="handleClose">取消</el-button>
         </div>
-
     </el-dialog>
 </template>
 
 <script lang="ts" setup>
-    import { reactive, ref, watch } from 'vue';
-    import type { UploadProps, UploadUserFile, UploadRawFile } from 'element-plus';
+    import { onMounted, reactive, ref, watch } from 'vue';
+    import type { UploadProps, UploadUserFile, UploadRawFile, UploadFile } from 'element-plus';
     import { ElMessage, ElButton } from 'element-plus';
-    import { Delete } from '@element-plus/icons-vue';
+    import { Delete, Plus } from '@element-plus/icons-vue';
+    import { useRoute } from 'vue-router';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
+
     const props = withDefaults(defineProps<{
         dialogAdd: boolean
+        editData?: any
     }>(), {
         dialogAdd: false
     })
-    const emit = defineEmits<{
 
+    const route = useRoute()
+    const emit = defineEmits<{
         'update:dialogAdd': [value: boolean]
+        'update': []
     }>()
 
+    interface FormDataType {
+        bigImgs: string[], // For preview
+        smallImgs: string[], // For preview
+        bigFileList: UploadUserFile[], // Bound to el-upload
+        smallFileList: UploadUserFile[], // Bound to el-upload
+    }
+
+    const formData = reactive<FormDataType>({
+        bigImgs: [],
+        smallImgs: [],
+        bigFileList: [],
+        smallFileList: [],
+    })
+
+    const resetFormData = () => {
+        formData.bigImgs = [];
+        formData.smallImgs = [];
+        formData.bigFileList = [];
+        formData.smallFileList = [];
+    };
+
     const handleClose = () => {
+        resetFormData();
         emit('update:dialogAdd', false)
     }
 
+    // Helper function to update previews from a file list
+    const updatePreviews = (fileList: UploadUserFile[], targetImgsArray: string[]) => {
+        targetImgsArray.splice(0, targetImgsArray.length); // Clear existing previews
+        const promises = fileList.map(file => {
+            return new Promise<string>((resolve, reject) => {
+                if (file.raw) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target?.result as string || '');
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file.raw);
+                } else if (file.url) {
+                    resolve(file.url);
+                } else {
+                    resolve('');
+                }
+            });
+        });
+        Promise.all(promises).then(results => {
+            results.forEach(src => {
 
+                if (src) targetImgsArray.push(src);
+            });
+        }).catch(error => {
+            console.error('Error generating previews:', error);
+            ElMessage.error('生成图片预览失败');
+        });
+    };
 
+    // Watch for changes in file lists and update previews accordingly
+    watch(() => formData.bigFileList, (newFileList) => {
+        updatePreviews(newFileList, formData.bigImgs);
+    }, { deep: true });
 
+    watch(() => formData.smallFileList, (newFileList) => {
+        updatePreviews(newFileList, formData.smallImgs);
+    }, { deep: true });
 
+    watch(() => props.dialogAdd, async (newV) => {
+        if (newV) {
+            resetFormData();
+            if (props.editData) {
+                const loadImageToState = async (imageUrl: string, targetFileList: UploadUserFile[], imgNamePrefix: string) => {
+                    if (!imageUrl) return;
+                    try {
+                        const res = await fetch(imageUrl);
+                        const blob = await res.blob();
+                        const fileName = `${imgNamePrefix}_edit_${Date.now()}`;
+                        const file = new File([blob], fileName, { type: blob.type });
 
-    interface formDataType {
-        bigImg: string,
-        smallImg: string,
-        bigFileList: any,
-        smallFileList: any
-    }
+                        const uploadUserFile: UploadUserFile = {
+                            name: file.name,
+                            raw: file as UploadRawFile, // Important for watcher to generate preview
+                            size: file.size,
+                            status: 'ready',
+                            uid: Date.now() + Math.random(), // Ensure unique UID
+                            url: imageUrl // Store original URL, useful if raw isn't immediately processed by watcher
+                        };
+                        targetFileList.push(uploadUserFile); // This will trigger the watcher
+                    } catch (err) {
+                        console.error(`读取编辑 ${imgNamePrefix} 失败`, err);
+                        ElMessage.error(`读取编辑 ${imgNamePrefix} 失败`);
+                    }
+                };
 
-    const formData = reactive<formDataType>({
-        bigImg: '',
-        smallImg: '',
-        bigFileList: '',
-        smallFileList: '',
+                // Assuming props.editData.bigImg and smallImg are single URLs
+                if (props.editData.bigImg) {
+                    await loadImageToState(props.editData.bigImg, formData.bigFileList, '大图');
+                }
+                if (props.editData.smallImg) {
+                    await loadImageToState(props.editData.smallImg, formData.smallFileList, '小图');
+                }
+            }
+        }
     })
-    const handleBigImageChange: UploadProps['onChange'] = (uploadFile) => {
-        if (uploadFile.raw) {
-
-
-            const render = new FileReader()
-            render.onload = (e) => {
-                console.log('render', e.target?.result);
-                formData.bigImg = e.target?.result as string || ''
-            }
-            render.readAsDataURL(uploadFile.raw)
-
-
-        }
-    };
-
-    const handleSmallImageChange: UploadProps['onChange'] = (uploadFile) => {
-        if (uploadFile.raw) {
-
-
-            console.log('uploadFile', uploadFile.raw);
-
-            const render = new FileReader()
-
-            render.onload = (e) => {
-                console.log('render', e.target?.result);
-                formData.smallImg = e.target?.result as string || ''
-
-            }
-            render.readAsDataURL(uploadFile.raw)
-
-
-            // formData.smallFileList = [uploadFile]; // 如果只需要保留当前上传的文件，取消注释这行
-        }
-    };
 
     const beforeImageUpload: UploadProps['beforeUpload'] = (rawFile: UploadRawFile) => {
 
         return true;
-
-
-
     };
 
-    const removeBigImage = () => {
-        formData.bigImg = '';
-        formData.bigFileList = [];
+    const removeBigImage = (index: number) => {
+        formData.bigFileList.splice(index, 1);
+        // Preview will be updated by the watcher
     };
 
-    const removeSmallImage = () => {
-        formData.smallImg = '';
-        formData.smallFileList = [];
+    const removeSmallImage = (index: number) => {
+        formData.smallFileList.splice(index, 1);
+        // Preview will be updated by the watcher
     };
 
-    const handleComfirm = () => {
-        console.log('Form Data:', formData);
+    const handleComfirm = async () => {
+        if (formData.bigFileList.length === 0 || formData.smallFileList.length === 0) {
+            ElMessage.warning('请至少上传一张大图和一张小图');
+            return;
+        }
 
-    }
+        try {
+            const getBase64 = (file: UploadUserFile): Promise<string> => {
+                return new Promise((resolve, reject) => {
+                    if (file.raw) {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+                        reader.onerror = error => reject(error);
+                        reader.readAsDataURL(file.raw);
+                    } else {
+                        ElMessage.error(`文件 ${file.name} 缺少原始数据，无法转换。`);
+                        reject(new Error(`Raw file not found for ${file.name}`));
+                    }
+                });
+            };
+
+            const bigImgBase64Promises = formData.bigFileList.map(file => getBase64(file));
+            const smallImgBase64Promises = formData.smallFileList.map(file => getBase64(file));
+
+            const bigImgsBase64 = await Promise.all(bigImgBase64Promises);
+            const smallImgsBase64 = await Promise.all(smallImgBase64Promises);
+
+            const params = {
+                timestamp: Date.now(),
+                big: bigImgsBase64,
+                small: smallImgsBase64,
+                clothingMaterialsId: parseInt(route.query.id as string)
+            };
+            console.log('批量保存参数', params);
+            const enData = desEncrypt(JSON.stringify(params));
+            const res = await service.post('/clothingMaterialsDetail/saveBatch', { enData });
+
+
+            if (res.data.code === 200) {
+                ElMessage.success('批量新增成功');
+                emit('update:dialogAdd', false);
+                emit('update');
+                resetFormData();
+            } else {
+                ElMessage.error(res.data?.msg || '批量新增失败，请稍后再试');
+            }
+        } catch (err: any) {
+            console.error('批量新增操作失败:', err);
+            ElMessage.error(`操作失败: ${err || '请查看控制台获取更多信息'}`);
+        }
+    };
 </script>
 
 <style lang="scss" scoped>
@@ -152,16 +257,13 @@
         display: flex;
         justify-content: space-around;
         gap: 20px;
-        /* 控制两个上传盒子之间的间距 */
     }
 
     .upload-box {
         flex: 1;
-        /* 让两个上传盒子平分空间 */
         display: flex;
         flex-direction: column;
         align-items: center;
-        /* 标签和上传区域居中对齐 */
         padding: 15px;
         border: 1px dashed #d9d9d9;
         border-radius: 6px;
@@ -172,27 +274,35 @@
         font-size: 14px;
         color: #606266;
         margin-bottom: 10px;
+        align-self: flex-start;
+        /* Align label to the start of the box */
     }
 
     .uploader-instance {
         width: 100%;
 
         :deep(.el-upload) {
+            /* Targets the root of el-upload component */
             width: 100%;
+            display: block;
+            /* Ensure it takes full width for the placeholder */
         }
     }
 
     .upload-placeholder {
         width: 100%;
         height: 150px;
-        /* 根据需要调整高度 */
         display: flex;
+        flex-direction: column;
+        /* Stack icon and text vertically */
         justify-content: center;
         align-items: center;
         border: 1px dashed #d9d9d9;
         border-radius: 6px;
         cursor: pointer;
         transition: border-color 0.3s;
+        background-color: #fff;
+        /* Placeholder background */
 
         &:hover {
             border-color: #409eff;
@@ -202,43 +312,68 @@
             font-size: 28px;
             color: #8c939d;
         }
+
+        span {
+            margin-top: 8px;
+            /* Space between icon and text */
+            font-size: 14px;
+            color: #8c939d;
+        }
     }
 
-
-
-    .uploaded-image {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        /* 图片完整显示在容器内 */
-        border-radius: 6px;
-    }
-
-    .image-preview-container {
-        position: relative;
-        width: 100%;
-        height: 100%;
+    .image-preview-grid {
         display: flex;
-        /* Ensure image and button are within this container */
+        flex-direction: column;
+        // flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 10px;
+        justify-content: flex-start;
+        width: 100%;
+        /* Ensure grid takes full width */
+    }
+
+    .image-preview-container-item {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        border: 1px solid #d9d9d9;
+        border-radius: 6px;
+        overflow: hidden;
+        display: flex;
         justify-content: center;
         align-items: center;
+        background-color: #fff;
 
-    }
+        .uploaded-image-item {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 6px;
+            /* Consistent rounding */
+        }
 
-    .delete-image-btn {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        opacity: 0.8;
-        transition: opacity 0.3s;
+        .delete-image-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            opacity: 0.7;
+            /* Slightly more transparent */
+            transform: scale(0.8);
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Darker background for better visibility */
+            color: white;
+            border: none;
 
-        &:hover {
-            opacity: 1;
+            &:hover {
+                opacity: 1;
+                background-color: rgba(0, 0, 0, 0.6);
+            }
         }
     }
 
     .dialog_comfirm {
-        margin-top: 10px;
+        margin-top: 20px;
+        /* Increased margin */
         display: flex;
         justify-content: flex-end;
     }

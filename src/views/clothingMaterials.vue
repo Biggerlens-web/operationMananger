@@ -10,12 +10,14 @@
                         </el-icon>
                         新增
                     </el-button>
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" class="add-button" @click="exportExcel">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         导出
                     </el-button>
+
+
                     <el-button type="primary" class="add-button" @click="parentManage">
                         <el-icon>
                             <Plus />
@@ -30,6 +32,15 @@
                     </el-button> -->
                 </div>
                 <div class="right-actions">
+                    <el-upload style="margin-right: 50px;" action="#" :show-file-list="false"
+                        :on-change="handleInternational" :auto-upload="false">
+                        <el-button type="primary" class="add-button">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+                            导入国际化
+                        </el-button>
+                    </el-upload>
                     <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" />
                 </div>
@@ -41,7 +52,8 @@
                 <div class="filter-row">
 
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.appNo" placeholder="应用" class="filter-select">
+                        <el-select filterable v-model="searchParams.appNo" placeholder="应用" class="filter-select"
+                            @change="getParentList">
                             <el-option v-for="item in appList" :key="item.appNo"
                                 :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
                                 :value="item.appNo" />
@@ -51,6 +63,13 @@
                         <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
                             <el-option v-for="item in regionList" :key="item.value" :label="item.label"
                                 :value="item.value" />
+                        </el-select>
+                    </div>
+                    <div class="filter-item">
+                        <el-select filterable v-model="searchParams.tid" placeholder="父类" class="filter-select"
+                            clearable>
+                            <el-option v-for="item in parentList" :key="item.id" :label="item.classType"
+                                :value="item.id" />
                         </el-select>
                     </div>
                     <div class="filter-item">
@@ -80,8 +99,8 @@
         <el-card class="content-card" v-loading="loading">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :viewButton="true" :filterParams="filterParams" :tableData="appData"
-                    :moveIndex="true" @editor="editSticker" @delete="deleteSticker" @view="viewDetail"
+                <component :is="componentName" :filterParams="filterParams" :tableData="appData"
+                    :totalItems="totalItems" @editor="editSticker" @delete="deleteSticker" @view="viewDetail"
                     @moveIndex="moveIndex"></component>
             </Transition>
 
@@ -106,7 +125,7 @@
     import { desEncrypt } from '@/utils/des';
     const counterStore = useCounterStore()
     const router = useRouter()
-    const { showPagestion, appList, OSlist, channelList, regionList } = storeToRefs(counterStore)
+    const { showPagestion, appList, OSlist, channelList, regionList, operationClass, clothFliterParams } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -163,9 +182,10 @@
         try {
             const params = {
                 appNo: searchParams.value.appNo,
-                region: searchParams.value.region, // 根据需要设置
+                region: searchParams.value.region,
                 query: searchParams.value.query,
                 pageNum: searchParams.value.pageNum,
+                tid: searchParams.value.tid,
                 pageSize: searchParams.value.pageSize,
                 timestamp: Date.now()
             }
@@ -198,9 +218,86 @@
     const parentManage = () => {
         showParentManage.value = true
     }
+    //导出excel
+    const exportExcel = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                appNo: searchParams.value.appNo,
+                region: searchParams.value.region,
+                query: searchParams.value.query,
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get('/clothingMaterials/exportExcel', {
+                params: {
+                    enData
+                },
+                responseType: 'blob',
+            })
+            console.log('导出excel', res);
+
+            const blob = new Blob([res.data], { type: res.headers['content-type'] });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            const contentDisposition = res.headers['content-disposition'];
+            let fileName = 'downloaded_file.xlsx'; // 默认文件名带后缀
+            if (contentDisposition) {
+                const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                if (fileNameMatch && fileNameMatch[1]) {
+                    fileName = fileNameMatch[1].replace(/['"]/g, '');
+
+                    if (!fileName.toLowerCase().endsWith('.xlsx')) {
+                        fileName += '.xlsx';
+                    }
+                }
+            }
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href); // 释放URL对象
+            ElMessage.success('导出成功')
+        } catch (err) {
+            ElMessage.error('导出失败')
+            console.log('导出失败', err);
+        }
+
+
+    }
+
+
+    //导入国际化
+    const fileInterNational = ref()
+
+    const handleInternational = (file: any) => {
+        console.log('file', file);
 
 
 
+        fileInterNational.value = file.raw
+        importInternation()
+    }
+    const importInternation = async () => {
+        try {
+            const formData = new FormData()
+            formData.append('appNo', searchParams.value.appNo)
+            formData.append('region', searchParams.value.region)
+            formData.append('clothingMaterialsList', fileInterNational.value)
+
+
+            const res = await service.post('/clothingMaterials/importExcelInternationalization', formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            })
+            console.log('导入成功', res);
+            if (res.data.code === 200) {
+                ElMessage.success('导入成功')
+            }
+        } catch (err) {
+            console.log('导入失败', err);
+        }
+    }
 
     //新增贴纸
     const showEditor = ref<boolean>(false)
@@ -261,7 +358,7 @@
 
     //查看详情
     const viewDetail = (row: any) => {
-
+        operationClass.value = row.operationClass
         router.push('/templateMaterial?id=' + row.id)
 
 
@@ -272,6 +369,8 @@
     interface SearchParams {
         query: string
         appNo: string//应用id
+        tid: number | string//父类
+
         pageNum: number // 新增当前页码
         pageSize: number // 新增每页显示条数
         region: string//地域
@@ -281,6 +380,7 @@
             query: '',
             appNo: '',
             region: '',
+            tid: '',
             pageNum: 1, // 默认当前页为1
             pageSize: 10 // 默认每页显示10条
         }
@@ -294,12 +394,22 @@
     // 处理当前页码变化
     const handleCurrentChange = (val: number) => {
         searchParams.value.pageNum = val;
+
+        clothFliterParams.value = {
+            ...searchParams.value,
+
+        }
         getClothList(); // 重新获取数据
     }
 
     //查询按钮点击事件 - 确保调用 getClothList
     const searching = () => {
         searchParams.value.pageNum = 1; // 点击查询时，通常重置到第一页
+        clothFliterParams.value = {
+
+            ...searchParams.value
+        }
+        console.log('clothFliterParams', clothFliterParams.value);
         getClothList();
     }
 
@@ -309,9 +419,14 @@
             query: '',
             appNo: appList.value[0].appNo,
             region: 'domestic',
+            tid: '',
             pageNum: 1,
             pageSize: 10
         };
+
+        clothFliterParams.value = {
+            ...searchParams.value
+        }
         getClothList();
     }
 
@@ -401,20 +516,60 @@
         }
         console.log('keyItem', keyItem);
     }
+
+
+    //获取父类列表
+    const parentList = ref<any>([])
+    const getParentList = async () => {
+
+        try {
+            const params = {
+                timestamp: new Date().getTime(),
+                appNo: searchParams.value.appNo,
+                region: searchParams.value.region,
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get('/clothingMaterialsType/list', {
+                params: {
+                    enData
+                }
+            })
+
+            console.log('获取父类列表', res);
+
+            parentList.value = res.data.data.list
+        } catch (err) {
+            console.log('获取父类列表失败', err);
+        }
+
+    }
+
+
     onMounted(() => {
 
-        searchParams.value = {
-            query: '',
-            appNo: appList.value[0].appNo,
-            region: 'domestic',
-            pageNum: 1,
-            pageSize: 10
+        if (Object.keys(clothFliterParams.value).length > 0) {
+            searchParams.value = {
+                ...clothFliterParams.value
+            }
+        } else {
+
+
+            searchParams.value = {
+                query: '',
+                appNo: appList.value[0].appNo,
+                region: 'domestic',
+                tid: '',
+                pageNum: 1,
+                pageSize: 10
+            }
         }
 
 
 
 
+
         getUserList();//获取服装分类数据
+        getParentList()
         showPagestion.value = true
     })
 </script>

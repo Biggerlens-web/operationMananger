@@ -22,7 +22,9 @@ export const useCounterStore = defineStore(
     const OSlist = ref<any>([]) // 系统列表
     const menuList = ref<any>([]) // 菜单列表
     const showPagestion = ref<boolean>(true) // 是否显示分页
-
+    const operationClass = ref<any>() // 操作分类
+    const tagList = ref<any>([]) // 标签列表
+    const clothFliterParams = ref<any>({}) // 服装筛选参数
     return {
       appList,
       userName,
@@ -32,7 +34,10 @@ export const useCounterStore = defineStore(
       channelList,
       OSlist,
       international,
-      regionList
+      regionList,
+      operationClass,
+      tagList,
+      clothFliterParams,
     }
   },
   {

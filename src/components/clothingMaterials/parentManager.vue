@@ -67,7 +67,7 @@
     <!-- 新增父类 -->
     <el-dialog title="新增父类" width="500" v-model="showAddParent">
         <el-form-item label="应用">
-            <el-select v-model="addParentData.appNo" placeholder="请选择应用">
+            <el-select filterable v-model="addParentData.appNo" placeholder="请选择应用">
                 <el-option v-for="item in appList" :key="item.appNo"
                     :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
                     :value="item.appNo" />

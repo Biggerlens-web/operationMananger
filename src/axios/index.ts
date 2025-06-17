@@ -7,6 +7,7 @@ const service: AxiosInstance = axios.create({
   // baseURL: 'http://192.168.31.110:18091',
   baseURL: 'http://192.168.31.36:18097',
   // baseURL: 'https://privacy.biggerlens.cn:18091',
+
   // baseURL: '/api',
 
   headers: {
@@ -42,6 +43,8 @@ service.interceptors.response.use(
           localStorage.removeItem('token')
           router.push('/login')
         }
+      } else if (code == 1046) {
+        ElMessage.error(msg)
       }
     }
 
