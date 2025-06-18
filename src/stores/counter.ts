@@ -4,6 +4,8 @@ import { defineStore } from 'pinia'
 export const useCounterStore = defineStore(
   'counter',
   () => {
+    const companyView = ref<string | number>('') //显示公司id
+    const companyList = ref<any>([]) //公司列表
     const regionList = reactive<any>([
       {
         label: '国内',
@@ -38,6 +40,8 @@ export const useCounterStore = defineStore(
       operationClass,
       tagList,
       clothFliterParams,
+      companyView,
+      companyList,
     }
   },
   {

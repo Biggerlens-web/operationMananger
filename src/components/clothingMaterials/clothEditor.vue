@@ -345,7 +345,8 @@
             }
             return acc;
         }, {} as Record<string, string>);
-
+        console.log('languageData.value', languageData.value);
+        console.log('i18nObject', i18nObject);
         formData.value.international = JSON.stringify(i18nObject);
         console.log('formData.value.international', formData.value.international);
         languageDialogVisible.value = false;

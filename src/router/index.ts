@@ -62,8 +62,8 @@ const getRouterList = async () => {
           title: '模板素材管理',
         },
       }
-
       parentItem?.push(pptRoute)
+
       parentItem?.push(stickerRoute)
 
       if (parentItem) {
@@ -140,7 +140,7 @@ const getTagList = async () => {
     console.log('获取标签列表失败', err)
   }
 }
-
+//获取基础信息
 const getBaseData = async () => {
   try {
     const res = await service.get('/base/baseData/getBaseDatas/0')
@@ -150,6 +150,20 @@ const getBaseData = async () => {
     useCounterStore(pinia).OSlist = res.data.data.oss
   } catch (err) {
     console.log('获取基础数据失败')
+  }
+}
+
+//获取公司列表
+const getCompanyList = async () => {
+  try {
+    const res = await service.get('/companyInfo/list')
+    console.log('公司列表', res)
+    useCounterStore(pinia).companyList = res.data.data.companys
+    if (!useCounterStore(pinia).companyView) {
+      // useCounterStore(pinia).companyView = res.data.data.companys[0].companyId
+    }
+  } catch (err) {
+    console.log('获取公司列表失败')
   }
 }
 router.beforeEach(async (to, from, next) => {
@@ -172,6 +186,7 @@ router.beforeEach(async (to, from, next) => {
   }
 })
 router.afterEach((to, from) => {
+  // getCompanyList()
   getInternational()
   getTagList()
 })

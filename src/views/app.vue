@@ -1,6 +1,7 @@
 <template>
     <div class="view">
-        <appEditor v-model:dialog-visible="showAppEditor" /> <el-card class="filter-card">
+        <appEditor v-model:dialog-visible="showAppEditor" />
+        <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
                     <el-button type="primary" @click="addApp" class="add-button">
@@ -9,23 +10,23 @@
                         </el-icon>
                         新增应用
                     </el-button>
-                    <el-button type="primary" class="add-button">
+                    <!-- <el-button type="primary" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         EXECEL导入
-                    </el-button>
+                    </el-button> -->
                 </div>
-                <div class="right-actions">
+                <!-- <div class="right-actions">
                     <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" />
-                </div>
+                </div> -->
 
             </div>
 
-            <el-divider class="divider" />
+            <!-- <el-divider class="divider" /> -->
 
-            <div class="filter-container">
+            <!-- <div class="filter-container">
                 <div class="filter-row">
 
                     <div class="filter-item">
@@ -59,22 +60,23 @@
                 </div>
 
 
-            </div>
+            </div> -->
         </el-card>
         <el-card class="content-card">
-            <Transition enter-active-class="animate__animated animate__fadeIn"
+            <!-- <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="appData" @editor="editorApp"
                     @delete="deleteApp"></component>
-            </Transition>
+            </Transition> -->
 
-            <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                :total="1000" />
+            <appTable :tableData="tableData" /> <el-pagination v-show="showPagestion" class="pagesBox" background
+                layout="prev, pager, next" :total="1000" />
         </el-card>
     </div>
 </template>
 
 <script setup lang="ts">
+    import appTable from '@/components/app/appTable.vue'
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
@@ -98,148 +100,373 @@
         showAppEditor.value = true
     }
     //编辑应用
-    const editorApp = (item: any) => {
-        showAppEditor.value = true
-    }
+    // const editorApp = (item: any) => {
+    //     showAppEditor.value = true
+    // }
     //删除应用
-    const deleteApp = (item: any) => {
-        ElMessageBox.confirm(
-            '此操作将永久删除该应用, 是否继续?',
-            '提示',
-            {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning',
-            }
-        )
-    }
+    // const deleteApp = (item: any) => {
+    //     ElMessageBox.confirm(
+    //         '此操作将永久删除该应用, 是否继续?',
+    //         '提示',
+    //         {
+    //             confirmButtonText: '确定',
+    //             cancelButtonText: '取消',
+    //             type: 'warning',
+    //         }
+    //     )
+    // }
     //搜索参数
-    interface SearchParams {
-        inputText: string
-        companyNo: string
+    // interface SearchParams {
+    //     inputText: string
+    //     companyNo: string
 
 
 
-    }
-    const searchParams = ref<SearchParams>(
-        {
-            inputText: '',
-            companyNo: '',
+    // }
+    // const searchParams = ref<SearchParams>(
+    //     {
+    //         inputText: '',
+    //         companyNo: '',
 
-        }
-    )
+    //     }
+    // )
     //重置搜索
-    const resetSearch = () => {
-        searchParams.value = {
-            inputText: '',
-            companyNo: '',
+    // const resetSearch = () => {
+    //     searchParams.value = {
+    //         inputText: '',
+    //         companyNo: '',
 
-        }
-        getUserList()
-    }
-    interface AppItem {
-        appId: string;        // 应用编号
-        shortName: string;    // 应用简称
-        companyName: string;  // 所属公司
-        accessName: string;   // 应用访问名
-        systemId: string;     // 系统账号id
-        developer: string;    // 开发者
-    }
+    //     }
+    //     // getUserList()
+    // }
+    // interface AppItem {
+    //     appId: string;        // 应用编号
+    //     shortName: string;    // 应用简称
+    //     companyName: string;  // 所属公司
+    //     accessName: string;   // 应用访问名
+    //     systemId: string;     // 系统账号id
+    //     developer: string;    // 开发者
+    // }
 
 
-    const appNote: any = {
-        appId: '应用编号',
-        shortName: '应用简称',
-        companyName: '所属公司',
-        accessName: '应用访问名',
-        systemId: '系统账号id',
-        developer: '开发者'
+    // const appNote: any = {
+    //     appId: '应用编号',
+    //     shortName: '应用简称',
+    //     companyName: '所属公司',
+    //     accessName: '应用访问名',
+    //     systemId: '系统账号id',
+    //     developer: '开发者'
 
-    }
+    // }
     // 生成用户数据
-    const appData = ref<AppItem[]>([
-        {
-            appId: 'APP_0001',
-            shortName: '商城系统',
-            companyName: '科技有限公司',
-            accessName: 'app1.example.com',
-            systemId: 'SYS_0001',
-            developer: '张三'
-        },
-        {
-            appId: 'APP_0002',
-            shortName: '会员系统',
-            companyName: '网络科技有限公司',
-            accessName: 'app2.example.com',
-            systemId: 'SYS_0002',
-            developer: '李四'
-        },
-        {
-            appId: 'APP_0003',
-            shortName: '支付系统',
-            companyName: '软件开发有限公司',
-            accessName: 'app3.example.com',
-            systemId: 'SYS_0003',
-            developer: '王五'
-        },
-        {
-            appId: 'APP_0004',
-            shortName: '管理系统',
-            companyName: '信息技术有限公司',
-            accessName: 'app4.example.com',
-            systemId: 'SYS_0004',
-            developer: '赵六'
-        },
-        {
-            appId: 'APP_0005',
-            shortName: '客服系统',
-            companyName: '科技有限公司',
-            accessName: 'app5.example.com',
-            systemId: 'SYS_0005',
-            developer: '钱七'
-        }
-    ])
-    interface filterParams {
-        note: string
-        isShow: boolean
-        key: string
-    }
-    const filterParams = ref<filterParams[]>()
-    const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
-            }
-        })
-        console.log('filterParams', filterParams.value);
-    }
+    // const appData = ref<AppItem[]>([
+    //     {
+    //         appId: 'APP_0001',
+    //         shortName: '商城系统',
+    //         companyName: '科技有限公司',
+    //         accessName: 'app1.example.com',
+    //         systemId: 'SYS_0001',
+    //         developer: '张三'
+    //     },
+    //     {
+    //         appId: 'APP_0002',
+    //         shortName: '会员系统',
+    //         companyName: '网络科技有限公司',
+    //         accessName: 'app2.example.com',
+    //         systemId: 'SYS_0002',
+    //         developer: '李四'
+    //     },
+    //     {
+    //         appId: 'APP_0003',
+    //         shortName: '支付系统',
+    //         companyName: '软件开发有限公司',
+    //         accessName: 'app3.example.com',
+    //         systemId: 'SYS_0003',
+    //         developer: '王五'
+    //     },
+    //     {
+    //         appId: 'APP_0004',
+    //         shortName: '管理系统',
+    //         companyName: '信息技术有限公司',
+    //         accessName: 'app4.example.com',
+    //         systemId: 'SYS_0004',
+    //         developer: '赵六'
+    //     },
+    //     {
+    //         appId: 'APP_0005',
+    //         shortName: '客服系统',
+    //         companyName: '科技有限公司',
+    //         accessName: 'app5.example.com',
+    //         systemId: 'SYS_0005',
+    //         developer: '钱七'
+    //     }
+    // ])
+    // interface filterParams {
+    //     note: string
+    //     isShow: boolean
+    //     key: string
+    // }
+    // const filterParams = ref<filterParams[]>()
+    // const getUserList = async () => {
+    //     console.log('获取用户列表');
+    //     const dataItem = appData.value[0]
+    //     const keys = Object.keys(dataItem)
+    //     filterParams.value = keys.map((item) => {
+    //         return {
+    //             note: appNote[item],
+    //             isShow: true,
+    //             key: item
+    //         }
+    //     })
+    //     console.log('filterParams', filterParams.value);
+    // }
     //参数显影
-    const checkedParams = ({ key, checked }: any) => {
-        console.log('修改参数', key, checked);
-        const item = filterParams.value?.find((item) => item.key === key)
-        if (item) {
-            item.isShow = checked
-        }
+    // const checkedParams = ({ key, checked }: any) => {
+    //     console.log('修改参数', key, checked);
+    //     const item = filterParams.value?.find((item) => item.key === key)
+    //     if (item) {
+    //         item.isShow = checked
+    //     }
 
-    }
+    // }
     //切换显示模式
-    const changeView = () => {
+    // const changeView = () => {
 
-        const keys = Object.keys(components)
-        const keyItem = keys.find((item) => item !== componentStr.value)
-        if (keyItem) {
-            componentStr.value = keyItem
-            componentName.value = components[keyItem]
-        }
-        console.log('keyItem', keyItem);
-    }
+    //     const keys = Object.keys(components)
+    //     const keyItem = keys.find((item) => item !== componentStr.value)
+    //     if (keyItem) {
+    //         componentStr.value = keyItem
+    //         componentName.value = components[keyItem]
+    //     }
+    //     console.log('keyItem', keyItem);
+    // }
+
+
+
+
+
+    const tableData = [
+        {
+            date: '2016-05-03',
+            name: 'Tom',
+            state: 'California',
+            city: 'San Francisco',
+            address: '3650 21st St, San Francisco',
+            zip: 'CA 94114',
+            family: [
+                {
+                    name: 'Jerry',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+                {
+                    name: 'Spike',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+                {
+                    name: 'Tyke',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+            ],
+        },
+        {
+            date: '2016-05-02',
+            name: 'Tom',
+            state: 'California',
+            city: 'San Francisco',
+            address: '3650 21st St, San Francisco',
+            zip: 'CA 94114',
+            family: [
+                {
+                    name: 'Jerry',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+                {
+                    name: 'Spike',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+                {
+                    name: 'Tyke',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+            ],
+        },
+        {
+            date: '2016-05-04',
+            name: 'Tom',
+            state: 'California',
+            city: 'San Francisco',
+            address: '3650 21st St, San Francisco',
+            zip: 'CA 94114',
+            family: [
+                {
+                    name: 'Jerry',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+                {
+                    name: 'Spike',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+                {
+                    name: 'Tyke',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+            ],
+        },
+        {
+            date: '2016-05-01',
+            name: 'Tom',
+            state: 'California',
+            city: 'San Francisco',
+            address: '3650 21st St, San Francisco',
+            zip: 'CA 94114',
+            family: [
+                {
+                    name: 'Jerry',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+                {
+                    name: 'Spike',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+                {
+                    name: 'Tyke',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+            ],
+        },
+        {
+            date: '2016-05-08',
+            name: 'Tom',
+            state: 'California',
+            city: 'San Francisco',
+            address: '3650 21st St, San Francisco',
+            zip: 'CA 94114',
+            family: [
+                {
+                    name: 'Jerry',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+                {
+                    name: 'Spike',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+                {
+                    name: 'Tyke',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+            ],
+        },
+        {
+            date: '2016-05-06',
+            name: 'Tom',
+            state: 'California',
+            city: 'San Francisco',
+            address: '3650 21st St, San Francisco',
+            zip: 'CA 94114',
+            family: [
+                {
+                    name: 'Jerry',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+                {
+                    name: 'Spike',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+                {
+                    name: 'Tyke',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+            ],
+        },
+        {
+            date: '2016-05-07',
+            name: 'Tom',
+            state: 'California',
+            city: 'San Francisco',
+            address: '3650 21st St, San Francisco',
+            zip: 'CA 94114',
+            family: [
+                {
+                    name: 'Jerry',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+                {
+                    name: 'Spike',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+                {
+                    name: 'Tyke',
+                    state: 'California',
+                    city: 'San Francisco',
+                    address: '3650 21st St, San Francisco',
+                    zip: 'CA 94114',
+                },
+            ],
+        },
+    ]
+
     onMounted(() => {
-        getUserList();
+        // getUserList();
         showPagestion.value = true
     })
 </script>

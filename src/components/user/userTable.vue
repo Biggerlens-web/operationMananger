@@ -3,7 +3,7 @@
         <template v-for="item in filterParams" :key="item.key">
             <el-table-column :prop="item.key" :label="item.note" v-if="item.isShow">
                 <template v-if="item.key === 'avatar' || item.key === 'thumbnail'" #default="scope">
-                    <img :src="scope.row[item.key]" alt="">
+                    <img style="width:100%" :src="scope.row[item.key]" alt="">
                 </template>
                 <template
                     v-if="item.key === 'isCharged' || item.key === 'showTaobaoPage' || item.key === 'isEnabled' || item.key === 'subscriptionLoginEnabled' || item.key === 'backButton'"
@@ -43,8 +43,8 @@
 
         <el-table-column label="操作" fixed="right" width="150" v-if="showAction">
             <template #default="scope">
-                <el-button style="margin: 0;" type="text" size="small" @click="banUser(scope.row)"
-                    v-if="userList">禁用</el-button>
+                <el-button style="margin: 0;" type="text" size="small" @click="banUser(scope.row)" v-if="userList">{{
+                    scope.row.status === 1 ? '禁用':'启用' }}</el-button>
                 <el-button style="margin: 0;" type="text" size="small" @click="handleRoles(scope.row)"
                     v-if="userList">分配角色</el-button>
                 <el-button v-if="roleList" style="margin: 0;" type="text" size="small"
@@ -121,13 +121,14 @@
     const showMoveBtnPath = ['/clothingMaterials/index']
 
     const isShowButton = (row: any, type: string) => {
-        if (type === 'view') {
-            return true
-        }
+
 
         const path = route.path
         if (!showMoveBtnPath.includes(path)) {
             return false
+        }
+        if (type === 'view') {
+            return true
         }
 
         if (row.operationClass === 1) {

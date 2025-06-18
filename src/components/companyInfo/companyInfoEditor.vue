@@ -9,14 +9,14 @@
             <el-form-item label="公司名称" prop="companyName">
                 <el-input v-model="formData.companyName" />
             </el-form-item>
-            <el-form-item label="公司简称" prop="companyabbreviation">
-                <el-input v-model="formData.companyabbreviation" />
+            <el-form-item label="公司简称" prop="companyAdd">
+                <el-input v-model="formData.companyAdd" />
             </el-form-item>
-            <el-form-item label="公司名称(英)" prop="companyName_en">
-                <el-input v-model="formData.companyName_en" />
+            <el-form-item label="公司名称(英)" prop="companyEName">
+                <el-input v-model="formData.companyEName" />
             </el-form-item>
-            <el-form-item label="邮箱" prop="email">
-                <el-input v-model="formData.email" />
+            <el-form-item label="邮箱" prop="companyEmail">
+                <el-input v-model="formData.companyEmail" />
             </el-form-item>
         </el-form>
         <template #footer>
@@ -31,25 +31,35 @@
 </template>
 
 <script lang="ts" setup>
+    import service from '@/axios';
     import { useCounterStore } from '@/stores/counter';
-    import type { FormInstance } from 'element-plus';
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage, type FormInstance } from 'element-plus';
     import { storeToRefs } from 'pinia';
-    import { ref } from 'vue'
+    import { ref, watch } from 'vue'
     const counterStore = useCounterStore()
     const { appList, OSlist, channelList } = storeToRefs(counterStore)
     const props = defineProps<{
         dialogVisible: boolean
+        companyInfo: any
     }>()
     const emit = defineEmits<{
         'update:dialogVisible': [value: boolean]
     }>()
 
+
+
+    watch(() => props.dialogVisible, (newV) => {
+        if (newV && props.companyInfo) {
+            formData.value = props.companyInfo
+        }
+    })
     const formData = ref<any>({
-        id: '',
+        companyNo: '',
         companyName: "",
-        companyabbreviation: '',
-        companyName_en: "",
-        email: ''
+        companyAdd: '',
+        companyEName: "",
+        companyEmail: ''
 
 
 
@@ -65,11 +75,11 @@
 
     const resetForm = () => {
         formData.value = {
-            id: '',
+            companyNo: '',
             companyName: "",
-            companyabbreviation: '',
-            companyName_en: "",
-            email: ''
+            companyAdd: '',
+            companyEName: "",
+            companyEmail: ''
 
         }
         ruleFormRef.value?.resetFields()
@@ -78,11 +88,42 @@
         resetForm()
         emit('update:dialogVisible', false)
     }
+
+
+    const saveCompany = async () => {
+        try {
+            const params = {
+                ...formData.value,
+                timestamp: Date.now(),
+                type: formData.value.companyNo ? 'update' : 'add'
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/companyInfo/save', {
+                enData
+            })
+
+            console.log('保存公司', res);
+            if (res.data.code === 200) {
+                ElMessage({
+                    type: 'success',
+                    message: '保存成功'
+                })
+                handleClose()
+            } else {
+                ElMessage({
+                    type: 'error',
+                    message: res.data.msg
+                })
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        }
+    }
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate((valid: any) => {
             if (valid) {
                 console.log('submit!');
-                handleClose()
+                saveCompany()
             }
         })
     }

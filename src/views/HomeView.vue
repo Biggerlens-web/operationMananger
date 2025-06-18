@@ -5,6 +5,25 @@
       <div class="logo">
         <!-- <img src="@/assets/logo.png" alt="Logo" /> -->
         <span class="logo_text" :class="{ hidden: isCollapse }">运营管理后台</span>
+
+        <!-- <el-dropdown>
+          <span class="el-dropdown-link">
+            Dropdown List
+            <el-icon class="el-icon--right">
+              <arrow-down />
+            </el-icon>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item>Action 1</el-dropdown-item>
+              <el-dropdown-item>Action 2</el-dropdown-item>
+              <el-dropdown-item>Action 3</el-dropdown-item>
+              <el-dropdown-item disabled>Action 4</el-dropdown-item>
+              <el-dropdown-item divided>Action 5</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+</el-dropdown> -->
+
       </div>
       <div class="menu-container">
         <el-menu :default-active="activeMenu" class="el-menu-vertical" :collapse="isCollapse" background-color="#304156"
@@ -38,6 +57,24 @@
             <el-breadcrumb-item>{{ currentRoute }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
+
+        <!-- <el-dropdown>
+          <span class="el-dropdown-link">
+            Dropdown List
+            <el-icon class="el-icon--right">
+              <arrow-down />
+            </el-icon>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item>Action 1</el-dropdown-item>
+              <el-dropdown-item>Action 2</el-dropdown-item>
+              <el-dropdown-item>Action 3</el-dropdown-item>
+              <el-dropdown-item disabled>Action 4</el-dropdown-item>
+              <el-dropdown-item divided>Action 5</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown> -->
         <div class="header-right">
           <el-dropdown>
             <span class="user-info">
@@ -67,15 +104,14 @@
 <script setup lang="ts">
   import { ref, computed, onMounted } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
-  import { House, User, Setting, Fold, Expand } from '@element-plus/icons-vue'
+  import { Fold, Expand } from '@element-plus/icons-vue'
 
-  import service from '@/axios'
   import { useCounterStore } from '@/stores/counter'
   import { storeToRefs } from 'pinia'
   const router = useRouter()
   const route = useRoute()
   const counterStore = useCounterStore()
-  const { userName, userAvatar, appList, menuList, channelList, OSlist } = storeToRefs(counterStore)
+  const { userName, userAvatar, appList, menuList, channelList, OSlist, companyView } = storeToRefs(counterStore)
   const isCollapse = ref(false)
   const activeMenu = computed(() => route.path)
   const currentRoute = computed(() => route.meta.title || '页面')
@@ -92,21 +128,10 @@
 
 
 
-  //获取表单数据
-  const getFormData = async () => {
-    try {
-      const res = await service.get('/base/baseData/getBaseDatas/0')
-      console.log('基础表单数据', res);
-      appList.value = res.data.data.apps
-      channelList.value = res.data.data.channels
-      OSlist.value = res.data.data.oss
-    } catch (err) {
-      console.log('获取失败', err);
-    }
-  }
+
 
   onMounted(() => {
-    // getFormData()
+
   })
 </script>
 

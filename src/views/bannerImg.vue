@@ -70,7 +70,7 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
-    import bannerImgEditor from '@/components/bannerImg/bannerImgEditor.vue';
+    import bannerImgEditor from '@/components/banner/bannerEditor.vue';
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';

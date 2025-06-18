@@ -1,6 +1,6 @@
 <template>
   <div class="view">
-    <userEditor v-model:dialog-visible="showEditor" />
+    <userEditor v-model:dialog-visible="showEditor" :userInfo="userInfo" />
     <roleEditor v-model:dialog-visible="showRole" />
     <el-card class="filter-card">
       <div>
@@ -20,7 +20,8 @@
           @delete="deleteUser" :userList="true" @rolesEditor="rolesEditor" @ban="banUser"></component>
       </Transition>
 
-      <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next" :total="1000" />
+      <el-pagination v-show="showPagestion" class="pagesBox" v-model:current-page="currentPage"
+        v-model:page-size="pageSize" background layout="prev, pager, next" :total="totalData" />
     </el-card>
   </div>
 </template>
@@ -31,10 +32,12 @@
   import userList from '@/components/user/userList.vue';
   import userEditor from '@/components/user/userEditor.vue';
   import roleEditor from '@/components/user/roleEditor.vue';
-  import { onMounted, ref } from 'vue';
+  import { onMounted, ref, watch } from 'vue';
   import { useCounterStore } from '@/stores/counter';
   import { storeToRefs } from 'pinia';
-  import { ElMessageBox } from 'element-plus';
+  import { ElMessage, ElMessageBox } from 'element-plus';
+  import { desEncrypt } from '@/utils/des';
+  import service from '@/axios';
   const counterStore = useCounterStore()
   const { showPagestion } = storeToRefs(counterStore)
   const components: any = {
@@ -45,15 +48,52 @@
   const componentName = ref<any>(userTable)
 
 
+  //当前页码
+  const currentPage = ref<number>(1)
+
+  watch(() => currentPage.value, () => {
+    getUserList()
+  })
+  //每页条数
+  const pageSize = ref<number>(10)
+  //总条数
+  const totalData = ref<number>(0)
   //编辑用户
   const showEditor = ref<boolean>(false)
+  watch(() => showEditor.value, (newV) => {
+    if (!newV) {
+      getUserList()
+      userInfo.value = ''
+    }
+  })
   const addUser = () => {
     showEditor.value = true
   }
 
+  //编辑用户
+  const userInfo = ref<any>()
   const editorUser = (item: any) => {
     console.log('父组件编辑', item);
+    userInfo.value = item
     showEditor.value = true
+  }
+
+
+  //删除用户
+  const deleteUserFn = async (item: any) => {
+    try {
+      const res = await service.post(`/system/user/del/${item.id}`)
+
+      console.log('删除用户', res);
+      if (res.data.code == 200) {
+        ElMessage.success('删除成功')
+        getUserList()
+      } else {
+        ElMessage.error(res.data.msg)
+      }
+    } catch (err) {
+      console.log('删除失败', err);
+    }
   }
   const deleteUser = (item: any) => {
     console.log('父组件删除', item);
@@ -63,6 +103,7 @@
       type: 'warning'
     }).then((res) => {
       console.log('删除', res)
+      deleteUserFn(item)
     }).catch(err => {
       console.log('取消', err)
     })
@@ -77,8 +118,28 @@
 
 
   //禁用用户
-  const banUser = (item: any) => {
+  const banUser = async (item: any) => {
     console.log('父组件禁用用户', item);
+    try {
+      const params = {
+        timestamp: Date.now(),
+        id: item.id,
+
+      }
+      const enData = desEncrypt(JSON.stringify(params))
+      const res = await service.post('/system/user/updateStatus', {
+        enData
+      })
+      if (res.data.code === 200) {
+        ElMessage.success('禁用成功')
+        getUserList()
+      } else {
+        ElMessage.error(res.data.msg)
+      }
+    } catch (err) {
+      console.log('禁用/启动失败', err);
+    }
+
   }
 
   // 定义用户类型
@@ -87,13 +148,13 @@
     name: string              // 名称
     avatar: string            // 状态头像
     username: string          // 用户名
-    gender: '男' | '女' | '保密'       // 性别
+    gender: any      // 性别
     phone: string             // 电话
     email: string             // 邮箱
-    remark: string            // 备注
-    loginCount: number        // 登录次数
-    lastLoginIp: string       // 最近一次登录ip
-    lastLoginTime: string     // 最近一次登录时间
+    description: string            // 备注
+    loginNum: number        // 登录次数
+    loginIp: string       // 最近一次登录ip
+    loginTime: string     // 最近一次登录时间
   }
   const userNote: any = {
     id: '编号',
@@ -103,208 +164,15 @@
     gender: '性别',
     phone: '电话',
     email: '邮箱',
-    remark: '备注',
-    loginCount: '登录次数',
-    lastLoginIp: '最近一次登录ip',
-    lastLoginTime: '最近一次登录时间'
+
+    description: '备注',
+    loginNum: '登录次数',
+    loginIp: '最近一次登录ip',
+    loginTime: '最近一次登录时间'
   }
   // 生成用户数据
   const userData = ref<User[]>([
-    {
-      id: 1001,
-      name: '张三',
-      avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
-      username: 'zhangsan',
-      gender: '男',
-      phone: '13812345678',
-      email: 'zhangsan@example.com',
-      remark: '系统管理员，拥有所有权限',
-      loginCount: 158,
-      lastLoginIp: '192.168.1.100',
-      lastLoginTime: '2023-06-15 14:30:45'
-    },
-    {
-      id: 1002,
-      name: '李四',
-      avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
-      username: 'lisi',
-      gender: '女',
-      phone: '13987654321',
-      email: 'lisi@example.com',
-      remark: '技术部门主管',
-      loginCount: 86,
-      lastLoginIp: '192.168.1.101',
-      lastLoginTime: '2023-06-14 09:15:22'
-    },
-    {
-      id: 1003,
-      name: '王五',
-      avatar: 'https://randomuser.me/api/portraits/men/3.jpg',
-      username: 'wangwu',
-      gender: '男',
-      phone: '13567891234',
-      email: 'wangwu@example.com',
-      remark: '产品经理，负责产品规划',
-      loginCount: 120,
-      lastLoginIp: '192.168.1.102',
-      lastLoginTime: '2023-05-30 16:42:10'
-    },
-    {
-      id: 1004,
-      name: '赵六',
-      avatar: 'https://randomuser.me/api/portraits/men/4.jpg',
-      username: 'zhaoliu',
-      gender: '男',
-      phone: '13612378945',
-      email: 'zhaoliu@example.com',
-      remark: 'UI设计师',
-      loginCount: 65,
-      lastLoginIp: '192.168.1.103',
-      lastLoginTime: '2023-06-15 11:20:35'
-    },
-    {
-      id: 1005,
-      name: '钱七',
-      avatar: 'https://randomuser.me/api/portraits/women/5.jpg',
-      username: 'qianqi',
-      gender: '女',
-      phone: '13567891234',
-      email: 'qianqi@example.com',
-      remark: '测试工程师，负责系统测试',
-      loginCount: 92,
-      lastLoginIp: '192.168.1.104',
-      lastLoginTime: '2023-06-10 13:45:50'
-    },
-    {
-      id: 1006,
-      name: '孙八',
-      avatar: 'https://randomuser.me/api/portraits/men/6.jpg',
-      username: 'sunba',
-      gender: '男',
-      phone: '13612378945',
-      email: 'sunba@example.com',
-      remark: '运维工程师，负责系统维护',
-      loginCount: 210,
-      lastLoginIp: '192.168.1.105',
-      lastLoginTime: '2023-06-14 17:30:12'
-    },
-    {
-      id: 1007,
-      name: '周九',
-      avatar: 'https://randomuser.me/api/portraits/women/7.jpg',
-      username: 'zhoujiu',
-      gender: '女',
-      phone: '13898765432',
-      email: 'zhoujiu@example.com',
-      remark: '人力资源专员',
-      loginCount: 45,
-      lastLoginIp: '192.168.1.106',
-      lastLoginTime: '2023-06-13 09:05:18'
-    },
-    {
-      id: 1008,
-      name: '吴十',
-      avatar: 'https://randomuser.me/api/portraits/men/8.jpg',
-      username: 'wushi',
-      gender: '男',
-      phone: '13898765432',
-      email: 'wushi@example.com',
-      remark: '财务主管',
-      loginCount: 78,
-      lastLoginIp: '192.168.1.107',
-      lastLoginTime: '2023-05-25 14:20:30'
-    },
-    {
-      id: 1009,
-      name: '郑十一',
-      avatar: 'https://randomuser.me/api/portraits/women/9.jpg',
-      username: 'zhengshiyi',
-      gender: '女',
-      phone: '13756781234',
-      email: 'zhengshiyi@example.com',
-      remark: '市场营销专员',
-      loginCount: 36,
-      lastLoginIp: '192.168.1.108',
-      lastLoginTime: '2023-06-15 10:15:40'
-    },
-    {
-      id: 1010,
-      name: '王十二',
-      avatar: 'https://randomuser.me/api/portraits/men/10.jpg',
-      username: 'wangshier',
-      gender: '男',
-      phone: '13756781234',
-      email: 'wangshier@example.com',
-      remark: '销售经理，负责华南区域',
-      loginCount: 145,
-      lastLoginIp: '192.168.1.109',
-      lastLoginTime: '2023-06-14 16:30:25'
-    },
-    {
-      id: 1011,
-      name: '刘十三',
-      avatar: 'https://randomuser.me/api/portraits/women/11.jpg',
-      username: 'liushisan',
-      gender: '女',
-      phone: '13923456789',
-      email: 'liushisan@example.com',
-      remark: '客户服务代表',
-      loginCount: 68,
-      lastLoginIp: '192.168.1.110',
-      lastLoginTime: '2023-06-12 11:45:30'
-    },
-    {
-      id: 1012,
-      name: '陈十四',
-      avatar: 'https://randomuser.me/api/portraits/men/12.jpg',
-      username: 'chenshisi',
-      gender: '男',
-      phone: '13834567890',
-      email: 'chenshisi@example.com',
-      remark: '前端开发工程师',
-      loginCount: 112,
-      lastLoginIp: '192.168.1.111',
-      lastLoginTime: '2023-06-15 08:20:15'
-    },
-    {
-      id: 1013,
-      name: '杨十五',
-      avatar: 'https://randomuser.me/api/portraits/women/13.jpg',
-      username: 'yangshiwu',
-      gender: '女',
-      phone: '13745678901',
-      email: 'yangshiwu@example.com',
-      remark: '后端开发工程师',
-      loginCount: 95,
-      lastLoginIp: '192.168.1.112',
-      lastLoginTime: '2023-06-14 14:10:25'
-    },
-    {
-      id: 1014,
-      name: '黄十六',
-      avatar: 'https://randomuser.me/api/portraits/men/14.jpg',
-      username: 'huangshiliu',
-      gender: '男',
-      phone: '13656789012',
-      email: 'huangshiliu@example.com',
-      remark: '数据分析师',
-      loginCount: 73,
-      lastLoginIp: '192.168.1.113',
-      lastLoginTime: '2023-06-13 16:35:40'
-    },
-    {
-      id: 1015,
-      name: '赵十七',
-      avatar: 'https://randomuser.me/api/portraits/women/15.jpg',
-      username: 'zhaoshiqi',
-      gender: '女',
-      phone: '13567890123',
-      email: 'zhaoshiqi@example.com',
-      remark: '项目协调员',
-      loginCount: 42,
-      lastLoginIp: '192.168.1.114',
-      lastLoginTime: '2023-06-11 09:50:20'
-    }
+
   ])
   interface filterParams {
     note: string
@@ -313,17 +181,63 @@
   }
   const filterParams = ref<filterParams[]>()
   const getUserList = async () => {
-    console.log('获取用户列表');
-    const dataItem = userData.value[0]
-    const keys = Object.keys(dataItem)
-    filterParams.value = keys.map((item) => {
-      return {
-        note: userNote[item],
-        isShow: true,
-        key: item
+
+
+
+    try {
+
+
+      const params = {
+        timestamp: Date.now(),
+        pageNum: currentPage.value,
+        pageSize: pageSize.value,
       }
-    })
-    console.log('filterParams', filterParams.value);
+      const enData = desEncrypt(JSON.stringify(params))
+
+      const res = await service.get('/system/user/list', {
+        params: {
+          enData
+        }
+      })
+
+      totalData.value = res.data.total
+
+
+
+
+      userData.value = res.data.rows
+      userData.value.forEach((item: Record<string, any>) => {
+
+        if (item.gender && typeof item.gender === 'object' && Object.prototype.hasOwnProperty.call(item.gender, 'note')) {
+          item.gender = item.gender.note;
+        }
+
+
+      });
+
+
+      console.log('获取用户列表', res);
+      // const dataItem = userData.value[0]
+      const keys = Object.keys(userNote)
+      filterParams.value = keys.map((item) => {
+        return {
+          note: userNote[item],
+          isShow: true,
+          key: item
+        }
+      })
+
+
+
+
+      console.log('filterParams', filterParams.value);
+    } catch (err) {
+      console.log('获取用户列表失败', err);
+    }
+
+
+
+
   }
   //参数显影
   const checkedParams = ({ key, checked }: any) => {

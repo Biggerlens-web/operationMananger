@@ -1,6 +1,6 @@
 <template>
   <div class="view">
-    <menuEditor v-model:dialog-visible="showEditor" />
+    <menuEditor v-model:dialog-visible="showEditor" :menuInfo="menuInfo" />
     <el-card class="filter-card">
       <div class="card-header">
         <div class="left-actions">
@@ -26,9 +26,9 @@
           </div>
           <div class="filter-item">
             <el-select v-model="searchParams.menuType" placeholder="请选择菜单类型" clearable>
-              <el-option label="目录" value="目录" />
-              <el-option label="菜单" value="菜单" />
-              <el-option label="按钮" value="按钮" />
+              <el-option label="文件夹" :value="0" />
+              <el-option label="链接" :value="1" />
+
             </el-select>
           </div>
           <div class="filter-item">
@@ -36,18 +36,17 @@
           </div>
           <div class="filter-item">
             <el-select v-model="searchParams.menuUrlType" placeholder="请选择菜单链接类型" clearable>
-              <el-option label="内部路由" value="内部路由" />
-              <el-option label="外部链接" value="外部链接" />
-              <el-option label="iframe" value="iframe" />
+              <el-option label="内部路由" :value="1" />
+              <el-option label="外部链接" :value="0" />
+
             </el-select>
           </div>
-          <div class="filter-item">
+          <!-- <div class="filter-item">
             <el-select v-model="searchParams.parentId" placeholder="请选择上级菜单" clearable>
-              <el-option label="顶级菜单" value="0" />
-              <el-option label="菜单1" value="1" />
-              <el-option label="菜单2" value="2" />
+
+              <el-option v-for="item in menuFolderList" :label="item.menuText" :value="item.id" />
             </el-select>
-          </div>
+          </div> -->
           <div class="filter-item filter-actions">
             <el-button type="primary" @click="getUserList">
               <el-icon>
@@ -77,7 +76,7 @@
       </Transition>
 
       <el-pagination v-show="showPagestion" v-model:current-page="currentPage" :page-size="pageSize" class="pagesBox"
-        background layout="prev, pager, next" :total="1000" />
+        background layout="prev, pager, next" :total="totalData" />
     </el-card>
   </div>
 </template>
@@ -86,11 +85,11 @@
   import tableAciton from '@/components/public/tableAciton.vue';
   import userTable from '@/components/user/userTable.vue';
   import userList from '@/components/user/userList.vue';
-  import { onMounted, ref } from 'vue';
+  import { onMounted, ref, watch } from 'vue';
   import { useCounterStore } from '@/stores/counter';
   import { storeToRefs } from 'pinia';
   import menuEditor from '@/components/menu/menuEditor.vue';
-  import { ElMessageBox } from 'element-plus';
+  import { ElMessage, ElMessageBox } from 'element-plus';
   import service from '@/axios';
   import { desEncrypt } from '@/utils/des';
   const counterStore = useCounterStore()
@@ -103,13 +102,33 @@
   const componentName = ref<any>(userTable)
 
 
+
+  // //菜单类型列表
+  // const menuTypeList = ref<any>([])
+  // //菜单链接类型列表
+  // const menuUrlTypeList = ref<any>([])
+  //父级菜单
+  const menuFolderList = ref<any>([])
   const showEditor = ref<boolean>(false)
 
+
+
+  watch(() => showEditor.value, (newV) => {
+
+    if (!newV) {
+      menuInfo.value = ''
+      getUserList()
+    }
+  })
   //页码
   const currentPage = ref<number>(1)
+  watch(() => currentPage.value, (newV) => {
+    getUserList()
+  })
   //最大条数
   const pageSize = ref<number>(20)
-
+  //数据总数
+  const totalData = ref<number>(0)
 
   //新增菜单
   const addMenu = () => {
@@ -118,13 +137,31 @@
 
 
   //编辑菜单
+  const menuInfo = ref<any>()
   const editorMenu = (item: any) => {
     console.log('编辑菜单父组件', item)
+    menuInfo.value = item
     showEditor.value = true
+
   }
 
 
   //删除菜单
+  const deleteMenuFn = async (item: any) => {
+    try {
+      const res = await service.post(`/system/menu/del/${item.id}`)
+      console.log('删除成功', res);
+      if (res.data.code === 200) {
+        ElMessage.success('删除成功')
+        getUserList()
+
+      } else {
+        ElMessage.error(res.data.msg)
+      }
+    } catch (err) {
+      console.log('删除失败', err);
+    }
+  }
   const deleteMenu = (item: any) => {
     console.log('删除菜单父组件', item);
 
@@ -133,9 +170,10 @@
       cancelButtonText: '取消',
       type: 'warning'
     }).then(res => {
-      console.log('删除菜单', res);
+
+      deleteMenuFn(item)
     }).catch(err => {
-      console.log('删除菜单', err);
+
     })
   }
   //搜索参数
@@ -206,6 +244,13 @@
 
       const menuInfo = await service.get('/system/menu/menuInfo')
       console.log('获取菜单信息', menuInfo);
+      // menuTypeList.value = menuInfo.data.data.menuTypes.map((item: any) => {
+      //   return {
+      //     label: item.menuTypeName === '',
+      //     value: item.menuType
+      //   }
+      // })
+      menuFolderList.value = menuInfo.data.data.menus
 
       const params = {
         pageNum: currentPage.value,
@@ -214,17 +259,18 @@
         menuUrl: searchParams.value.menuUrl,
         menuType: searchParams.value.menuType,
         menuUrlType: searchParams.value.menuUrlType,
-        parentId: searchParams.value.menuUrlType,
+        // parentId: searchParams.value.menuUrlType,
         timestamp: Date.now()
       }
+      console.log('搜索参数', params);
       const paramsStr = desEncrypt(JSON.stringify(params))
       const res = await service.post('/system/menu/list', {
 
         enData: paramsStr
 
       })
-      console.log('菜单列表', res.data.rows);
-
+      console.log('菜单列表', res.data);
+      totalData.value = res.data.total
       for (let item of res.data.rows) {
         if (item.menuType === 0) {
           item.menuType = '文件夹'

@@ -25,6 +25,8 @@
                                 ||
                                 item.typeName
                                 ||
+                                item.menuText
+                                ||
                                 item.channelName
                                 ||
                                 item.imageName
@@ -113,7 +115,7 @@
                             size="small" plain @click="goMove(item, 'downMove')">下移</el-button>
                         <el-button v-if="userList" style="margin: 0;" type="danger" size="small" plain
                             @click="banUser(item)">
-                            禁用
+                            {{ item.status === 1 ? '禁用' : '启用' }}
                         </el-button>
                         <el-button v-if="userList" style="margin: 0;" type="primary" size="small" plain
                             @click="handleRoles(item)">
@@ -143,7 +145,14 @@
 
 <script lang="ts" setup>
     import { computed } from 'vue'
-
+    import {
+        User, Phone, Message, Calendar, Location,
+        Connection, Lock, Edit, Delete
+    } from '@element-plus/icons-vue'
+    import { useCounterStore } from '@/stores/counter';
+    import { storeToRefs } from 'pinia';
+    import { useRoute } from 'vue-router';
+    const route = useRoute()
     const stores = useCounterStore()
     const { international } = storeToRefs(stores)
     const props = withDefaults(defineProps<{
@@ -174,12 +183,7 @@
         'view': [value: any],
         'moveIndex': [value: any]
     }>()
-    import {
-        User, Phone, Message, Calendar, Location,
-        Connection, Lock, Edit, Delete
-    } from '@element-plus/icons-vue'
-    import { useCounterStore } from '@/stores/counter';
-    import { storeToRefs } from 'pinia';
+
 
     // 计算可见的参数（不包括头像）
     const visibleParams = computed(() => {
@@ -196,6 +200,7 @@
     }
 
     //编辑按钮显示控制
+    const showMoveBtnPath = ['/clothingMaterials/index']
     const isShowButton = (row: any, type: string) => {
         if (type === 'view') {
             return true
@@ -205,6 +210,11 @@
 
 
 
+
+        const path = route.path
+        if (!showMoveBtnPath.includes(path)) {
+            return false
+        }
 
         if (row.operationClass === 1) {
             if (type === 'topIndex') {

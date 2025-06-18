@@ -36,8 +36,8 @@
 
             </template>
 
-            <el-form-item label="说明" prop="desc">
-                <el-input type="textarea" v-model="formData.menuText" />
+            <el-form-item label="说明" prop="remark">
+                <el-input type="textarea" v-model="formData.remark" />
             </el-form-item>
         </el-form>
         <template #footer>
@@ -52,19 +52,36 @@
 </template>
 
 <script lang="ts" setup>
-    import { onMounted, reactive, ref } from 'vue';
+    import { onMounted, reactive, ref, watch } from 'vue';
     import service from '@/axios';
-    import type { FormInstance } from 'element-plus';
+    import { ElMessage, type FormInstance } from 'element-plus';
+    import { desEncrypt } from '@/utils/des';
     const props = defineProps<{
-        dialogVisible: boolean
+        dialogVisible: boolean,
+        menuInfo?: any
     }>()
 
+
+    watch(() => props.dialogVisible, (newV) => {
+        if (newV) {
+            Object.assign(formData.value, props.menuInfo)
+            if (formData.value.menuType === '文件夹') {
+                formData.value.menuType = 0
+            } else if (formData.value.menuType === '链接') {
+                formData.value.menuType = 1
+            }
+            console.log('formData', formData.value);
+        }
+
+    }, {
+        deep: true
+    })
     const ruleFormRef = ref<FormInstance>()
     const formData = ref<any>({
         id: '',
         menuText: '',
         menuType: '',
-        desc: '',
+        remark: '',
         menuIdentify: '',
         menuUrl: '',
         menuUrlType: '',
@@ -76,6 +93,9 @@
 
 
     })
+
+
+
     const emit = defineEmits<{
         'update:dialogVisible': [value: boolean]
     }>()
@@ -87,7 +107,7 @@
             id: '',
             menuText: '',
             menuType: '',
-            desc: '',
+            remark: '',
             menuIdentify: '',
             menuUrl: '',
             menuUrlType: '',
@@ -99,10 +119,45 @@
         resetForm()
         emit('update:dialogVisible', false)
     }
+
+    const saveMenu = async () => {
+        try {
+            const params = {
+                timestamp: Date.now()
+                ,
+                ...formData.value
+            }
+            if (formData.value.parentName) {
+                delete params.parentName
+            }
+            if (!params.id) {
+                delete params.id
+            }
+
+
+            params.type = formData.value.id ? 'update' : 'add'
+            const enData = desEncrypt(JSON.stringify(params))
+            console.log('保存参数', params)
+            const res = await service.post('/system/menu/save', {
+                enData
+            })
+            if (res.data.code === 200) {
+
+                handleClose()
+                ElMessage.success('保存成功')
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+
+            console.log('err', err);
+            ElMessage.error('网络错误')
+        }
+    }
     const handleComfirm = (formEl: any) => {
         formEl.validate((valid: any) => {
             if (valid) {
-                handleClose()
+                saveMenu()
             }
         })
 
