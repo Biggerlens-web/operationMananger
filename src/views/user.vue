@@ -1,7 +1,7 @@
 <template>
   <div class="view">
     <userEditor v-model:dialog-visible="showEditor" :userInfo="userInfo" />
-    <roleEditor v-model:dialog-visible="showRole" />
+    <roleEditor v-model:dialog-visible="showRole" :userId="userId" />
     <el-card class="filter-card">
       <div>
         <el-button type="primary" @click="addUser"> <el-icon>
@@ -111,8 +111,13 @@
 
   //角色分配
   const showRole = ref<boolean>(false)
+  const userId = ref<number>(0)
   const rolesEditor = (item: any) => {
     console.log('父组件分配角色', item);
+    if (item.id) {
+      userId.value = item.id
+    }
+
     showRole.value = true
   }
 

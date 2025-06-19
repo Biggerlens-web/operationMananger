@@ -1,11 +1,13 @@
 <template>
-    <el-dialog :model-value="dialogVisible" title="编辑用户" width="500" :before-close="handleClose">
-        <ul class="rolesList">
-            <li v-for="item in rolesList" :key="item.id">
-                <el-checkbox v-model="item.ischecked" :label="item.id">{{ item.name }}</el-checkbox>
-            </li>
+    <el-dialog :model-value="dialogVisible" title="编辑用户角色" width="500" :before-close="handleClose">
 
-        </ul>
+
+        <el-form-item label="角色">
+            <el-select v-model="chosedRole" placeholder="请选择角色" multiple>
+                <el-option v-for="item in rolesList" :key="item.id" :label="item.name" :value="item.id"></el-option>
+            </el-select>
+        </el-form-item>
+
         <template #footer>
             <div class="dialog-footer">
                 <el-button @click="handleClose">取消</el-button>
@@ -18,148 +20,137 @@
 </template>
 
 <script lang="ts" setup>
-    import { ref } from 'vue';
+    import service from '@/axios';
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage } from 'element-plus';
+    import { onMounted, ref, toRaw, watch } from 'vue';
 
 
     const props = defineProps<{
         dialogVisible: boolean
+        userId: number
     }>()
     const emit = defineEmits<{
         'update:dialogVisible': [value: boolean]
     }>()
 
+    const getUserRoleList = async () => {
+        try {
+            const params = {
+                id: props.userId,
+                timestamp: Date.now()
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get('/system/userRole/assign', {
+                params: {
+                    enData
+                }
+            })
+            console.log('获取用户角色列表成功', res);
+            if (res.data.code === 200) {
 
-    const rolesList = ref<any>([
-        {
-            id: 1,
-            name: "超级管理员",
-            code: "SUPER_ADMIN",
-            description: "拥有系统所有操作权限，可以管理所有内容",
-            permissions: ["*"], // 所有权限
-            level: 0, // 最高级别
-            isSystem: true,
-            createdAt: "2023-01-01 00:00:00",
-            updatedAt: "2023-01-01 00:00:00",
-            ischecked: true
-        },
-        {
-            id: 2,
-            name: "系统管理员",
-            code: "SYSTEM_ADMIN",
-            description: "管理系统配置和用户账号，但无法进行业务数据的增删改",
-            permissions: ["SYSTEM_CONFIG", "USER_MANAGE", "ROLE_MANAGE", "LOG_VIEW"],
-            level: 1,
-            isSystem: true,
-            createdAt: "2023-01-01 00:00:00",
-            updatedAt: "2023-01-01 00:00:00",
-            ischecked: true
-        },
-        {
-            id: 3,
-            name: "内容管理员",
-            code: "CONTENT_ADMIN",
-            description: "管理内容和资源，可以审核、发布、编辑内容",
-            permissions: ["CONTENT_MANAGE", "CONTENT_AUDIT", "CONTENT_PUBLISH"],
-            level: 2,
-            isSystem: true,
-            createdAt: "2023-01-01 00:00:00",
-            updatedAt: "2023-01-01 00:00:00",
-            ischecked: false
-        },
-        {
-            id: 4,
-            name: "运营专员",
-            code: "OPERATION_SPECIALIST",
-            description: "负责日常运营工作，可以管理活动、广告等",
-            permissions: ["ACTIVITY_MANAGE", "AD_MANAGE", "USER_VIEW", "STATISTICS_VIEW"],
-            level: 3,
-            isSystem: true,
-            createdAt: "2023-01-01 00:00:00",
-            updatedAt: "2023-05-15 10:30:00",
-            ischecked: false
-        },
-        {
-            id: 5,
-            name: "客服专员",
-            code: "CUSTOMER_SERVICE",
-            description: "处理用户反馈和问题，有用户信息查看权限",
-            permissions: ["USER_VIEW", "FEEDBACK_MANAGE", "MESSAGE_MANAGE"],
-            level: 3,
-            isSystem: true,
-            createdAt: "2023-01-01 00:00:00",
-            updatedAt: "2023-04-10 16:45:22",
-            ischecked: false
-        },
-        {
-            id: 6,
-            name: "财务专员",
-            code: "FINANCE_SPECIALIST",
-            description: "管理财务相关数据，处理支付和退款",
-            permissions: ["ORDER_VIEW", "PAYMENT_MANAGE", "REFUND_MANAGE", "FINANCE_REPORT"],
-            level: 2,
-            isSystem: true,
-            createdAt: "2023-01-01 00:00:00",
-            updatedAt: "2023-03-22 09:15:48",
-            ischecked: false
-        },
-        {
-            id: 7,
-            name: "数据分析师",
-            code: "DATA_ANALYST",
-            description: "分析系统数据，生成统计报表",
-            permissions: ["STATISTICS_VIEW", "REPORT_MANAGE", "DATA_EXPORT"],
-            level: 2,
-            isSystem: true,
-            createdAt: "2023-01-01 00:00:00",
-            updatedAt: "2023-06-18 14:20:35",
-            ischecked: false
-        },
-        {
-            id: 8,
-            name: "测试人员",
-            code: "TESTER",
-            description: "系统测试专用账号，拥有除敏感操作外的大部分查看权限",
-            permissions: ["USER_VIEW", "CONTENT_VIEW", "SYSTEM_VIEW", "LOG_VIEW"],
-            level: 4,
-            isSystem: true,
-            createdAt: "2023-01-01 00:00:00",
-            updatedAt: "2023-02-15 11:30:00",
-            ischecked: false
-        },
-        {
-            id: 9,
-            name: "编辑",
-            code: "EDITOR",
-            description: "内容编辑人员，可以创建和编辑内容，但不能发布",
-            permissions: ["CONTENT_CREATE", "CONTENT_EDIT"],
-            level: 3,
-            isSystem: false,
-            createdAt: "2023-02-10 09:00:00",
-            updatedAt: "2023-02-10 09:00:00",
-            ischecked: false
-        },
-        {
-            id: 10,
-            name: "访客",
-            code: "VISITOR",
-            description: "临时访问账号，仅有查看权限，无操作权限",
-            permissions: ["USER_VIEW", "CONTENT_VIEW"],
-            level: 5,
-            isSystem: true,
-            createdAt: "2023-01-01 00:00:00",
-            updatedAt: "2023-01-01 00:00:00",
-            ischecked: false
+                const selectedObj = res.data.data.selectRoles
+                const arr = Object.entries(selectedObj)
+                console.log('arr', arr);
+                if (arr.length) {
+                    chosedRole.value = arr.map((item: any) => item[1].id)
+                } else {
+                    chosedRole.value = []
+                }
+
+                console.log('chosed', chosedRole.value);
+            }
+        } catch (err) {
+            console.log('获取用户角色列表失败', err);
         }
+    }
+    watch(() => props.dialogVisible, (newVal) => {
+        if (newVal) {
+            getUserRoleList()
+        }
+    })
+
+    //已选中的角色
+    const chosedRole = ref<number[]>([])
+    const rolesList = ref<any>([
+
     ])
 
     //取消
     const handleClose = () => {
+        chosedRole.value = []
         emit('update:dialogVisible', false)
     }
     //确定
-    const handleComfirm = () => {
-        handleClose()
+
+    const saveRole = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                userId: props.userId,
+                roleIds: chosedRole.value.join(',')
+            }
+            console.log('保存参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/system/userRole/save', {
+                enData
+            })
+            console.log('保存角色', res);
+
+
+            if (res.data.code === 200) {
+                ElMessage({
+                    message: '保存成功',
+                    type: 'success'
+                })
+
+                handleClose()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            ElMessage.error('网络错误')
+            console.log('保存失败', err);
+        }
     }
+    const handleComfirm = () => {
+
+        if (chosedRole.value.length === 0) {
+            ElMessage.error('请选择角色')
+            return
+        }
+        saveRole()
+
+    }
+
+
+    //获取角色列表
+    const getRoleList = async () => {
+        try {
+            const params = {
+                pageNum: 1,
+                pageSize: 999999,
+                timestamp: Date.now()
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get('/system/role/list', {
+                params: {
+                    enData
+                }
+            })
+
+            console.log('获取角色列表成功', res);
+            if (res.data.code === 200) {
+                rolesList.value = res.data.rows
+            }
+        } catch (err) {
+            console.log('获取角色列表失败', err);
+        }
+    }
+
+    onMounted(() => {
+        getRoleList()
+    })
 </script>
 
 <style lang="scss" scoped></style>

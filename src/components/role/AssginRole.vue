@@ -1,8 +1,8 @@
 <template>
     <el-dialog :model-value="dialogVisible" title="分配权限" width="500" :before-close="handleClose">
 
-        <el-tree ref="treeRef" style="max-width: 600px" :data="data" show-checkbox default-expand-all node-key="id"
-            highlight-current :props="defaultProps" @check="checkedbox" />
+        <el-tree ref="treeRef" style="max-width: 600px" :data="data" show-checkbox node-key="id" highlight-current
+            :props="defaultProps" @check="checkedbox" :default-checked-keys="defaultChecked" />
 
         <template #footer>
             <div class="dialog-footer">
@@ -16,84 +16,131 @@
 </template>
 
 <script lang="ts" setup>
-    import { ElTree } from 'element-plus'
+    import service from '@/axios';
+
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage, ElTree } from 'element-plus'
+
+    import { ref, watch, toRaw } from 'vue';
+
+
+
+
+
+
+
+
 
     const props = defineProps<{
         dialogVisible: boolean
+        roleId: number | string
     }>()
+
+    //默认选中
+    const defaultChecked = ref<number[]>([])
+    const getTreeRole = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                id: props.roleId
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get('/system/rolePermission/getTree', {
+                params: {
+                    enData
+                }
+            })
+
+
+            console.log('获取树状权限', res);
+
+            data.value = res.data.data.list
+            defaultChecked.value = []
+            data.value.forEach((item) => {
+                item.nodes?.forEach((el: any) => {
+                    if (el.state && el.state.checked === true) {
+                        defaultChecked.value.push(el.id)
+                    }
+                })
+            })
+
+        } catch (err) {
+            console.log('获取权限失败', err);
+        }
+    }
+    watch(() => props.dialogVisible, (newV) => {
+        if (newV && props.roleId) {
+            getTreeRole()
+        }
+    })
     const emit = defineEmits<{
         'update:dialogVisible': [value: boolean]
     }>()
 
     const defaultProps = {
-        children: 'children',
-        label: 'label',
+        children: 'nodes',
+        label: 'text',
     }
     interface Tree {
         id: number
-        label: string
-        children?: Tree[]
+        text: string
+        nodes?: any
+        [key: string]: any
     }
-    const data: Tree[] = [
-        {
-            id: 1,
-            label: 'Level one 1',
-            children: [
-                {
-                    id: 4,
-                    label: 'Level two 1-1',
-                    children: [
-                        {
-                            id: 9,
-                            label: 'Level three 1-1-1',
-                        },
-                        {
-                            id: 10,
-                            label: 'Level three 1-1-2',
-                        },
-                    ],
-                },
-            ],
-        },
-        {
-            id: 2,
-            label: 'Level one 2',
-            children: [
-                {
-                    id: 5,
-                    label: 'Level two 2-1',
-                },
-                {
-                    id: 6,
-                    label: 'Level two 2-2',
-                },
-            ],
-        },
-        {
-            id: 3,
-            label: 'Level one 3',
-            children: [
-                {
-                    id: 7,
-                    label: 'Level two 3-1',
-                },
-                {
-                    id: 8,
-                    label: 'Level two 3-2',
-                },
-            ],
-        },
-    ]
+    const data = ref<Tree[]>([
 
+    ])
+
+
+    const checkedList = ref<any>()
     const checkedbox = (data: any, checkedArr: any) => {
-        console.log('data', checkedArr);
+
+        console.log('checkedArr', checkedArr);
+        // 遍历 checkedNodes，并将每个节点转换为原始对象
+        checkedList.value = structuredClone(checkedArr.checkedNodes.map((node: any) => toRaw(node)));
+
+
+
+        checkedList.value.forEach((item: any) => {
+            if (item.text) {
+                delete item.text
+            }
+        })
+
     }
     const handleClose = () => {
         emit('update:dialogVisible', false)
     }
 
+
+
+
+    const saveRole = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                roleId: props.roleId,
+                perms: JSON.stringify(toRaw(checkedList.value))
+            }
+            console.log('参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/system/rolePermission/saveAssign', {
+                enData
+            })
+            console.log('保存权限分配', res);
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                handleClose()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('err', err);
+        }
+    }
     const handleComfirm = () => {
-        handleClose()
+        saveRole()
+
     }
 </script>
 

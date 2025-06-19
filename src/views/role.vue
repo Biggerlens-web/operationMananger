@@ -1,7 +1,7 @@
 <template>
   <div class="view">
-    <RoleEditor v-model:dialog-visible="showRoleEditor" />
-    <AssginRole v-model:dialog-visible="isAssginRole" />
+    <RoleEditor v-model:dialog-visible="showRoleEditor" :roleInfo="roleInfo" />
+    <AssginRole v-model:dialog-visible="isAssginRole" :roleId="roleId" />
     <el-card class="filter-card">
       <div>
         <el-button type="primary" @click="addRole"> <el-icon>
@@ -20,7 +20,8 @@
           @editor="editorRole" @delete="deleteRole" @assginRole="assginRole"></component>
       </Transition>
 
-      <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next" :total="1000" />
+      <el-pagination v-show="showPagestion" class="pagesBox" background v-model:current-page="pageNum"
+        v-model:page-size="pageSize" layout="prev, pager, next" :total="totalData" />
     </el-card>
   </div>
 </template>
@@ -31,10 +32,12 @@
   import userList from '@/components/user/userList.vue';
   import RoleEditor from '@/components/role/RoleEditor.vue';
   import AssginRole from '@/components/role/AssginRole.vue';
-  import { onMounted, ref } from 'vue';
+  import { onMounted, ref, watch } from 'vue';
   import { useCounterStore } from '@/stores/counter';
   import { storeToRefs } from 'pinia';
-  import { ElMessageBox } from 'element-plus';
+  import { ElMessage, ElMessageBox } from 'element-plus';
+  import service from '@/axios';
+  import { desEncrypt } from '@/utils/des';
   const counterStore = useCounterStore()
   const { showPagestion } = storeToRefs(counterStore)
   const components: any = {
@@ -45,20 +48,51 @@
   const componentName = ref<any>(userTable)
 
 
+  //分页数据
+  const pageSize = ref<number>(10)
+  const pageNum = ref<number>(1)
+  const totalData = ref<number>(0)
+
+  watch(() => pageNum.value, (newV) => {
+    if (newV) {
+      getUserList()
+    }
+  })
 
   //新增角色
   const showRoleEditor = ref<boolean>(false)
+  watch(() => showRoleEditor.value, (newV) => {
+    if (!newV) {
+      getUserList()
+    }
+  })
   const addRole = () => {
     console.log('新增角色');
     showRoleEditor.value = true
   }
 
   //编辑角色
+  const roleInfo = ref<any>()
   const editorRole = (row: any) => {
     console.log('编辑角色', row);
+    roleInfo.value = row
     showRoleEditor.value = true
   }
   //删除角色
+  const deleteRoleFn = async (id: number) => {
+    try {
+      const res = await service.post(`/system/role/del/${id}`)
+      console.log('删除角色', res);
+      if (res.data.code === 200) {
+        ElMessage.success('删除成功')
+        getUserList()
+      } else {
+        ElMessage.error(res.data.msg)
+      }
+    } catch (err) {
+      console.log('删除失败', err);
+    }
+  }
   const deleteRole = (row: any) => {
     ElMessageBox.confirm(
       '此操作将永久删除该角色, 是否继续?',
@@ -69,7 +103,8 @@
         type: 'warning',
       }
     ).then(res => {
-      console.log('删除角色', res);
+
+      deleteRoleFn(row.id)
     }).catch(err => {
       console.log('删除角色', err);
     })
@@ -77,115 +112,29 @@
 
   //分配权限
   const isAssginRole = ref<boolean>(false)
+  const roleId = ref<number | string>('')
   const assginRole = (row: any) => {
     console.log('分配权限', row);
+    roleId.value = row.id
     isAssginRole.value = true
   }
   interface Role {
     id: number        // 编号
     name: string      // 角色名
-    code: string      // 角色码
-    remark: string    // 备注
+    roleCode: string      // 角色码
+    mark: string    // 备注
+    [key: string]: any
   }
   const userNote: any = {
     id: '编号',
     name: '角色名',
-    code: '角色码',
-    remark: '备注',
+    roleCode: '角色码',
+    mark: '备注',
 
   }
   // 生成角色数据
   const roleData = ref<Role[]>([
-    {
-      id: 1001,
-      name: '超级管理员',
-      code: 'SUPER_ADMIN',
-      remark: '拥有系统所有权限，可以管理所有模块'
-    },
-    {
-      id: 1002,
-      name: '管理员',
-      code: 'ADMIN',
-      remark: '拥有大部分管理权限，无法管理系统配置'
-    },
-    {
-      id: 1003,
-      name: '开发人员',
-      code: 'DEVELOPER',
-      remark: '拥有开发相关模块的权限，可以访问开发工具和API文档'
-    },
-    {
-      id: 1004,
-      name: '测试人员',
-      code: 'TESTER',
-      remark: '拥有测试相关模块的权限，可以提交bug和测试报告'
-    },
-    {
-      id: 1005,
-      name: '运维人员',
-      code: 'OPS',
-      remark: '拥有系统运维权限，可以查看系统日志和性能监控'
-    },
-    {
-      id: 1006,
-      name: '普通用户',
-      code: 'USER',
-      remark: '基础用户权限，只能访问公共模块和个人信息'
-    },
-    {
-      id: 1007,
-      name: '访客',
-      code: 'GUEST',
-      remark: '最低权限，只能浏览公开内容，无法修改任何数据'
-    },
-    {
-      id: 1008,
-      name: '财务人员',
-      code: 'FINANCE',
-      remark: '拥有财务模块的操作权限，可以查看和管理财务数据'
-    },
-    {
-      id: 1009,
-      name: '人事专员',
-      code: 'HR',
-      remark: '拥有人事模块的操作权限，可以管理员工信息和组织架构'
-    },
-    {
-      id: 1010,
-      name: '销售经理',
-      code: 'SALES_MANAGER',
-      remark: '拥有销售模块的管理权限，可以查看所有销售数据和报表'
-    },
-    {
-      id: 1011,
-      name: '销售人员',
-      code: 'SALES',
-      remark: '拥有销售模块的基本权限，只能查看和管理自己的销售数据'
-    },
-    {
-      id: 1012,
-      name: '客服主管',
-      code: 'CUSTOMER_SERVICE_MANAGER',
-      remark: '拥有客服模块的管理权限，可以处理客户投诉和分配工单'
-    },
-    {
-      id: 1013,
-      name: '客服专员',
-      code: 'CUSTOMER_SERVICE',
-      remark: '拥有客服模块的基本权限，负责处理客户咨询和基础问题'
-    },
-    {
-      id: 1014,
-      name: '内容编辑',
-      code: 'CONTENT_EDITOR',
-      remark: '拥有内容管理模块的权限，可以编辑和发布内容'
-    },
-    {
-      id: 1015,
-      name: '数据分析师',
-      code: 'DATA_ANALYST',
-      remark: '拥有数据分析模块的权限，可以查看和导出各类数据报表'
-    }
+
   ])
   interface filterParams {
     note: string
@@ -194,17 +143,37 @@
   }
   const filterParams = ref<filterParams[]>()
   const getUserList = async () => {
-    console.log('获取用户列表');
-    const dataItem = roleData.value[0]
-    const keys = Object.keys(dataItem)
-    filterParams.value = keys.map((item) => {
-      return {
-        note: userNote[item],
-        isShow: true,
-        key: item
+
+    try {
+
+
+      const params = {
+        timestamp: Date.now(),
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
       }
-    })
-    console.log('filterParams', filterParams.value);
+      const enData = desEncrypt(JSON.stringify(params))
+      const res = await service.get('/system/role/list', {
+        params: {
+          enData
+        }
+      })
+      console.log('获取用户列表', res);
+      roleData.value = res.data.rows
+      totalData.value = res.data.total
+      const keys = Object.keys(userNote)
+      filterParams.value = keys.map((item) => {
+        return {
+          note: userNote[item],
+          isShow: true,
+          key: item
+        }
+      })
+      console.log('filterParams', filterParams.value);
+    } catch (err) {
+      console.log('获取用户列表失败', err);
+    }
+
   }
   //参数显影
   const checkedParams = ({ key, checked }: any) => {

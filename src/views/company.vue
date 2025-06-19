@@ -1,7 +1,9 @@
 <template>
     <div class="view">
-        <companyInfoEditor v-model:dialog-visible="showCompanyEditor" :companyInfo="companyInfo" /> <el-card
-            class="filter-card">
+        <companyInfoEditor v-model:dialog-visible="showCompanyEditor" :companyInfo="companyInfo" />
+
+
+        <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
                     <el-button type="primary" @click="addCompany" class="add-button">
@@ -10,12 +12,20 @@
                         </el-icon>
                         新增公司
                     </el-button>
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" class="add-button" @click="downloadTemplate">
                         <el-icon>
                             <Plus />
                         </el-icon>
-                        EXECEL导入
+                        下载EXECEL模板
                     </el-button>
+                    <el-upload action="#" :show-file-list='false' :http-request="importCompany">
+                        <el-button type="primary" class="add-button">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+                            EXECEL导入
+                        </el-button>
+                    </el-upload>
                 </div>
                 <div class="right-actions">
                     <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -88,6 +98,73 @@
     }
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
+    // 下载模板
+    const downloadTemplate = async () => {
+        try {
+            const response = await service.get('/companyInfo/importTemplate', {
+                responseType: 'blob'
+            });
+
+            // 尝试从Content-Disposition获取文件名，如果后端有设置的话
+            let fileName = '公司信息导入模板.xlsx'; // 设置一个默认或期望的文件名
+            const disposition = response.headers['content-disposition'];
+            if (disposition) {
+                const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                const matches = filenameRegex.exec(disposition);
+                if (matches != null && matches[1]) {
+                    fileName = matches[1].replace(/['"]/g, '');
+                    // 如果文件名是URL编码的，需要解码
+                    try {
+                        fileName = decodeURIComponent(fileName);
+                    } catch (e) {
+                        // 解码失败，使用原始匹配到的文件名
+                        console.warn('Failed to decode filename from Content-Disposition', e);
+                    }
+                }
+            }
+
+            const blob = new Blob([response.data], {
+                type: response.headers['content-type'] || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            ElMessage.success('模板下载成功');
+        } catch (err) {
+            console.error('下载模板失败', err);
+            ElMessage.error('下载模板失败，请检查网络或联系管理员。');
+        }
+    }
+
+    //导入excel
+    const importCompany = async (options: any) => {
+        try {
+            console.log('options', options);
+            const { file } = options
+            const formData = new FormData()
+            formData.append('file', file)
+            const res = await service.post('/companyInfo/importByExcel', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+
+            console.log('导入excel', res);
+            if (res.data.code === 200) {
+                ElMessage.success('导入成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('导入失败', err);
+        }
+    }
 
 
     //分页
@@ -270,6 +347,10 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+                    column-gap: 20px;
+
                     .add-button {
                         font-weight: 500;
 

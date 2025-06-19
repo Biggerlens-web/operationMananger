@@ -9,8 +9,9 @@
                 <el-input v-model="formData.name" />
             </el-form-item>
             <el-form-item label="密码" prop="password">
-                <el-input v-model="formData.password" :disabled="formData.id" type="password" />
+                <el-input v-model="formData.password" :disabled="!!formData.id" type="password" />
             </el-form-item>
+            <p>Debug: formData.id = "{{ formData.id }}" (Type: {{ typeof formData.id }})</p>
             <el-form-item label="性别" prop="gender">
                 <el-select v-model="formData.gender" placeholder="请选择性别">
                     <el-option label="男" :value="1"></el-option>
@@ -23,6 +24,9 @@
             </el-form-item>
             <el-form-item label="手机号" prop="phone">
                 <el-input v-model="formData.phone" type="phone" />
+            </el-form-item>
+            <el-form-item label="备注" prop="description">
+                <el-input v-model="formData.description" type="text" />
             </el-form-item>
             <el-form-item label="头像" prop="avatar">
                 <div class="avatar-container">
@@ -66,6 +70,7 @@
 
 
     watch(() => props.dialogVisible, async (newV) => {
+        console.log('formData.value.id', formData.value.id);
         if (newV && props.userInfo) {
             formData.value.id = props.userInfo.id
             formData.value.username = props.userInfo.username
@@ -74,6 +79,7 @@
             formData.value.email = props.userInfo.email
             formData.value.name = props.userInfo.name
             formData.value.password = props.userInfo.password
+            formData.value.description = props.userInfo.description
             switch (props.userInfo.gender) {
                 case '男':
                     formData.value.gender = 1
@@ -101,6 +107,7 @@
         phone: '',
         name: '',
         email: '',
+        description: '',
         avatar: '', // 将用于存储最终的头像 URL 或 Base64
 
     })
@@ -147,6 +154,7 @@
             phone: '',
             name: '',
             email: '',
+            description: '',
             avatar: '', // 将用于存储最终的头像 URL 或 Base64
 
         }
@@ -173,6 +181,7 @@
                 name: formData.value.name,
                 email: formData.value.email,
                 avatar: formData.value.avatar.split(',')[1],
+                description: formData.value.description,
                 type: formData.value.id ? 'update' : 'add'
             }
             if (!params.avatar) {

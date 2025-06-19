@@ -28,10 +28,10 @@
             <div class="filter-container">
                 <div class="filter-row">
                     <div class="filter-item">
-                        <el-input v-model="searchParams.menuText" placeholder="输入端点查询" clearable prefix-icon="Search" />
+                        <el-input v-model="searchParams.endpoint" placeholder="输入端点查询" clearable prefix-icon="Search" />
                     </div>
                     <div class="filter-item">
-                        <el-input v-model="searchParams.menuText" placeholder="输入域（bucket）查询" clearable
+                        <el-input v-model="searchParams.bucketName" placeholder="输入域（bucket）查询" clearable
                             prefix-icon="Search" />
                     </div>
 
@@ -63,7 +63,7 @@
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                :total="1000" />
+                v-model:current-page="pageNum" v-model:page-size="pageSize" :total="totalData" />
         </el-card>
     </div>
 </template>
@@ -77,6 +77,8 @@
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import { ElMessageBox } from 'element-plus';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
     const counterStore = useCounterStore()
     const { showPagestion } = storeToRefs(counterStore)
     const components: any = {
@@ -85,6 +87,12 @@
     }
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
+
+
+    //分页
+    const pageNum = ref<number>(1)
+    const pageSize = ref<number>(10)
+    const totalData = ref<number>(0)
 
     //新增域
     const showBucketEditor = ref<boolean>(false)
@@ -112,29 +120,23 @@
 
     //搜索参数
     interface SearchParams {
-        menuText: string
-        menuType: string
-        menuUrl: string
-        menuUrlType: string
-        parentId: number | string
+        endpoint: string
+        bucketName: string
+
     }
     const searchParams = ref<SearchParams>(
         {
-            menuText: '',
-            menuType: '',
-            menuUrl: '',
-            menuUrlType: '',
-            parentId: ''
+            endpoint: '',//端点
+            bucketName: '',//域名
+
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            menuText: '',
-            menuType: '',
-            menuUrl: '',
-            menuUrlType: '',
-            parentId: ''
+            endpoint: '',
+            bucketName: '',
+
         }
         getUserList()
     }
@@ -142,49 +144,20 @@
     interface EndpointItem {
         id: number;        // 编号
         endpoint: string;  // 端点
-        domain: string;    // 域
-        description: string; // 说明
+        bucketName: string;    // 域
+        remark: string; // 说明
     }
     const userNote: any = {
         id: '编号',
         endpoint: '端点',
-        domain: '域',
-        description: '说明',
+        bucketName: '域',
+        remark: '说明',
 
 
     }
     // 生成菜单数据
     const bucketData = ref<EndpointItem[]>([
-        {
-            id: 1,
-            endpoint: '/users',
-            domain: 'api.example.com',
-            description: '这是第 1 个端点的说明信息'
-        },
-        {
-            id: 2,
-            endpoint: '/products',
-            domain: 'test.example.com',
-            description: '这是第 2 个端点的说明信息'
-        },
-        {
-            id: 3,
-            endpoint: '/orders',
-            domain: 'dev.example.com',
-            description: '这是第 3 个端点的说明信息'
-        },
-        {
-            id: 4,
-            endpoint: '/categories',
-            domain: 'api.example.com',
-            description: '这是第 4 个端点的说明信息'
-        },
-        {
-            id: 5,
-            endpoint: '/settings',
-            domain: 'test.example.com',
-            description: '这是第 5 个端点的说明信息'
-        }
+
     ])
     interface filterParams {
         note: string
@@ -193,17 +166,44 @@
     }
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = bucketData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: userNote[item],
-                isShow: true,
-                key: item
+
+        try {
+
+
+            const params = {
+                timestamp: Date.now(),
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
+                endpoint: searchParams.value.endpoint,
+                bucketName: searchParams.value.bucketName,
             }
-        })
-        console.log('filterParams', filterParams.value);
+
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get('/base/bucket/list', {
+                params: {
+                    enData
+                }
+            })
+
+
+            console.log('获取域列表', res);
+
+            totalData.value = res.data.total
+            bucketData.value = res.data.rows
+
+            const keys = Object.keys(userNote)
+            filterParams.value = keys.map((item) => {
+                return {
+                    note: userNote[item],
+                    isShow: true,
+                    key: item
+                }
+            })
+            console.log('filterParams', filterParams.value);
+        } catch (err) {
+
+        }
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {

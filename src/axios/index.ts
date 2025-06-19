@@ -33,6 +33,10 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   (response: AxiosResponse) => {
+    const url = response.request.responseURL
+    if (url.includes('/companyInfo/importTemplate')) {
+      return response
+    }
     if (typeof response.data === 'string') {
       console.log('response', decryptDes(response.data))
       const { code, msg } = JSON.parse(decryptDes(response.data))

@@ -17,6 +17,7 @@ export const useCounterStore = defineStore(
       },
     ]) //地域列表
     const international = ref<any>() //国际化信息
+
     const userName = ref<string>('') //用户名
     const userAvatar = ref<string>('') //用户头像
     const appList = ref<any>([]) // 应用列表
