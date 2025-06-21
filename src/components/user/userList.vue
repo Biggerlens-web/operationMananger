@@ -202,6 +202,10 @@
     //编辑按钮显示控制
     const showMoveBtnPath = ['/clothingMaterials/index']
     const isShowButton = (row: any, type: string) => {
+        const path = route.path
+        if (!showMoveBtnPath.includes(path)) {
+            return false
+        }
         if (type === 'view') {
             return true
         }
@@ -211,10 +215,7 @@
 
 
 
-        const path = route.path
-        if (!showMoveBtnPath.includes(path)) {
-            return false
-        }
+
 
         if (row.operationClass === 1) {
             if (type === 'topIndex') {

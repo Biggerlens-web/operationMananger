@@ -6,8 +6,8 @@
 
 
 
-            <el-form-item label="标签" prop="tag">
-                <el-input v-model="formData.tag" />
+            <el-form-item label="标签" prop="label">
+                <el-input v-model="formData.label" />
             </el-form-item>
 
         </el-form>
@@ -23,15 +23,28 @@
 </template>
 
 <script lang="ts" setup>
+    import service from '@/axios';
     import { useCounterStore } from '@/stores/counter';
-    import type { FormInstance } from 'element-plus';
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage, type FormInstance } from 'element-plus';
     import { storeToRefs } from 'pinia';
-    import { ref } from 'vue'
+    import { ref, watch } from 'vue'
     const counterStore = useCounterStore()
     const { appList, OSlist, channelList } = storeToRefs(counterStore)
     const props = defineProps<{
         dialogVisible: boolean
+        labelInfo: any
     }>()
+
+
+    watch(() => props.dialogVisible, (newV) => {
+        if (newV && props.labelInfo) {
+            formData.value = {
+
+                ...props.labelInfo
+            }
+        }
+    })
     const emit = defineEmits<{
         'update:dialogVisible': [value: boolean]
     }>()
@@ -39,17 +52,14 @@
     const formData = ref<any>({
         id: '',
 
-        tag: ""
+        label: ""
 
 
 
     })
     const ruleFormRef = ref<FormInstance>()
     const rules = ref<any>({
-        bucket: [{ required: true, message: '请输入域', trigger: 'blur' }],
-        path: [{ required: true, message: '请选择路径', trigger: 'change' }],
-        img: [{ required: true, message: '请上传图片', trigger: 'blur' }],
-        bannerName: [{ required: true, message: '请输入轮播图名称', trigger: 'blur' }]
+        label: [{ required: true, message: '请输入标签', trigger: 'blur' }],
 
     })
 
@@ -57,7 +67,7 @@
         formData.value = {
             id: '',
 
-            tag: ""
+            label: ""
 
         }
         ruleFormRef.value?.resetFields()
@@ -66,11 +76,36 @@
         resetForm()
         emit('update:dialogVisible', false)
     }
+
+
+
+    const saveChange = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                ...formData.value,
+                type: formData.value.id ? 'update' : 'add'
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/base/mateLabel/save', {
+                enData
+            })
+            console.log('保存标签', res);
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                handleClose()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        }
+    }
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate((valid: any) => {
             if (valid) {
                 console.log('submit!');
-                handleClose()
+                saveChange()
             }
         })
     }

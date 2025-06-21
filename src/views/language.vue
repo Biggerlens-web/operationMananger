@@ -1,6 +1,6 @@
 <template>
     <div class="view">
-        <languageEditor v-model:dialog-visible="showLanguageEditor" />
+        <languageEditor v-model:dialog-visible="showLanguageEditor" :languageInfo="languageInfo" />
         <el-card class="filter-card">
             <div>
                 <el-button type="primary" @click="addLanguage"> <el-icon>
@@ -20,7 +20,7 @@
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                :total="1000" />
+                v-model:current-page="pageNum" v-model:page-size="pageSize" :total="totalData" />
         </el-card>
     </div>
 </template>
@@ -30,10 +30,12 @@
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import languageEditor from '@/components/language/languageEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { ElMessageBox } from 'element-plus';
+    import { ElMessage, ElMessageBox } from 'element-plus';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
     const counterStore = useCounterStore()
     const { showPagestion } = storeToRefs(counterStore)
     const components: any = {
@@ -43,96 +45,89 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+
+    //分页
+    const pageNum = ref<number>(1)
+    const pageSize = ref<number>(20)
+    const totalData = ref<number>(0)
+    watch(() => pageNum.value, () => {
+        getUserList()
+    })
+
+
     //新增语言
     const showLanguageEditor = ref<boolean>(false)
+    watch(() => showLanguageEditor.value, (newV) => {
+        if (!newV) {
+            getUserList()
+            languageInfo.value = {
+                id: 0,
+                languageName: '',
+                remark: '',
+            }
+        }
+    })
     const addLanguage = () => {
         console.log('新增语言');
         showLanguageEditor.value = true
     }
 
     //编辑语言
+    const languageInfo = ref<LanguageItem>()
     const editorLanguage = (row: any) => {
         console.log('编辑语言', row);
+        languageInfo.value = row
         showLanguageEditor.value = true
     }
 
 
     //删除语言
+    const delLanguageFn = async (id: number) => {
+        try {
+            const res = await service.post(`/base/language/del/${id}`)
+            console.log('删除', res);
+
+            if (res.data.code) {
+
+                ElMessage.success('删除成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+
+        }
+    }
     const deleteLanguage = (row: any) => {
         ElMessageBox.confirm('确定删除吗？', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning',
 
-        }).then(res => { }).catch(err => {
+        }).then(res => {
+            delLanguageFn(row.id)
+
+
+        }).catch(err => {
 
         })
     }
     // 定义用户类型
     interface LanguageItem {
         id: number;        // 编号
-        language: string;  // 语言
-        description: string; // 语言说明
+        languageName: string;  // 语言
+        remark: string; // 语言说明
     }
 
     const LanguageNote: any = {
         id: '编号',
-        language: '语言',
-        description: '语言说明',
+        languageName: '语言',
+        remark: '语言说明',
 
     }
     // 生成用户数据
     const languageData = ref<LanguageItem[]>([
-        {
-            id: 1,
-            language: 'JavaScript',
-            description: '用于网页交互的脚本语言'
-        },
-        {
-            id: 2,
-            language: 'TypeScript',
-            description: 'JavaScript的超集，添加了类型系统'
-        },
-        {
-            id: 3,
-            language: 'Python',
-            description: '简单易学的通用编程语言'
-        },
-        {
-            id: 4,
-            language: 'Java',
-            description: '面向对象的编程语言'
-        },
-        {
-            id: 5,
-            language: 'C++',
-            description: '系统级编程语言'
-        },
-        {
-            id: 6,
-            language: 'C#',
-            description: '微软开发的面向对象语言'
-        },
-        {
-            id: 7,
-            language: 'PHP',
-            description: '服务器端脚本语言'
-        },
-        {
-            id: 8,
-            language: 'Ruby',
-            description: '动态面向对象语言'
-        },
-        {
-            id: 9,
-            language: 'Go',
-            description: 'Google开发的系统语言'
-        },
-        {
-            id: 10,
-            language: 'Swift',
-            description: 'Apple开发的移动开发语言'
-        }
+
     ])
     interface filterParams {
         note: string
@@ -141,17 +136,39 @@
     }
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = languageData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: LanguageNote[item],
-                isShow: true,
-                key: item
+
+        try {
+
+            const params = {
+                timestamp: Date.now(),
+                pageNum: pageNum.value,
+                pageSize: pageSize.value
+
             }
-        })
-        console.log('filterParams', filterParams.value);
+
+            const enData = desEncrypt(JSON.stringify(params))
+
+            const res = await service.get('/base/language/list', {
+                params: {
+                    enData
+                }
+            })
+            console.log('获取语言列表', res);
+            languageData.value = res.data.rows
+            totalData.value = res.data.total
+            const keys = Object.keys(LanguageNote)
+            filterParams.value = keys.map((item) => {
+                return {
+                    note: LanguageNote[item],
+                    isShow: true,
+                    key: item
+                }
+            })
+            console.log('filterParams', filterParams.value);
+        } catch (err) {
+            console.log('获取语言列表失败', err);
+        }
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {

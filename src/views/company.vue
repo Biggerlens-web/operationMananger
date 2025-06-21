@@ -156,7 +156,7 @@
 
             console.log('导入excel', res);
             if (res.data.code === 200) {
-                ElMessage.success('导入成功')
+                ElMessage.success(res.data.msg)
                 getUserList()
             } else {
                 ElMessage.error(res.data.msg)

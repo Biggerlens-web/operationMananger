@@ -5,12 +5,12 @@
             class="demo-ruleForm" status-icon>
 
 
-            <el-form-item label="广告类型编号" prop="advTypeId">
-                <el-input v-model="formData.advTypeId" />
+            <el-form-item label="广告类型编号" prop="typeId">
+                <el-input v-model="formData.typeId" />
             </el-form-item>
 
-            <el-form-item label="广告类型名称" prop="advTypeName">
-                <el-input type="textarea" v-model="formData.advTypeName" />
+            <el-form-item label="广告类型名称" prop="typeName">
+                <el-input type="textarea" v-model="formData.typeName" />
             </el-form-item>
         </el-form>
         <template #footer>
@@ -25,34 +25,47 @@
 </template>
 
 <script lang="ts" setup>
-    import type { FormInstance } from 'element-plus';
-    import { ref } from 'vue'
+    import service from '@/axios';
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage, type FormInstance } from 'element-plus';
+    import { ref, watch } from 'vue'
     const props = defineProps<{
         dialogVisible: boolean
+        advTypeInfo: any
     }>()
+    watch(() => props.dialogVisible, (newV) => {
+
+        if (newV && props.advTypeInfo) {
+            formData.value = {
+                id: props.advTypeInfo.id,
+                typeId: props.advTypeInfo.typeId,
+                typeName: props.advTypeInfo.typeName,
+            }
+        }
+    })
     const emit = defineEmits<{
         'update:dialogVisible': [value: boolean]
     }>()
 
     const formData = ref<any>({
         id: '',
-        advTypeId: '',
-        advTypeName: '',
+        typeId: '',
+        typeName: '',
 
 
     })
     const ruleFormRef = ref<FormInstance>()
     const rules = ref<any>({
-        advTypeId: [{ required: true, message: '请输入广告类型编号', trigger: 'blur' }],
-        advTypeName: [{ required: true, message: '请输入广告类型名称', trigger: 'blur' }],
+        typeId: [{ required: true, message: '请输入广告类型编号', trigger: 'blur' }],
+        typeName: [{ required: true, message: '请输入广告类型名称', trigger: 'blur' }],
 
     })
 
     const resetForm = () => {
         formData.value = {
             id: '',
-            advTypeId: '',
-            advTypeName: '',
+            typeId: '',
+            typeName: '',
         }
         ruleFormRef.value?.resetFields()
     }
@@ -60,11 +73,38 @@
         resetForm()
         emit('update:dialogVisible', false)
     }
+
+
+    const saveChange = async () => {
+
+        try {
+            const params = {
+                timestamp: Date.now(),
+                ...formData.value,
+                type: formData.value.id ? 'update' : 'add',
+
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/base/advType/save', {
+                enData
+            })
+
+            console.log('保存', res);
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                handleClose()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+
+        }
+    }
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate((valid: any) => {
             if (valid) {
                 console.log('submit!');
-                handleClose()
+                saveChange()
             }
         })
     }

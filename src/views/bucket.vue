@@ -1,6 +1,6 @@
 <template>
     <div class="view">
-        <bucketEditor v-model:dialog-visible="showBucketEditor" />
+        <bucketEditor v-model:dialog-visible="showBucketEditor" :buckerInfo="buckerInfo" />
         <el-card class="filter-card">
             <div class="card-header">
                 <div class="left-actions">
@@ -10,12 +10,20 @@
                         </el-icon>
                         新增域(bucket)
                     </el-button>
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" class="add-button" @click="downloadTemplate">
                         <el-icon>
                             <Plus />
                         </el-icon>
-                        EXECL导入
+                        下载EXECEL模板
                     </el-button>
+                    <el-upload action="#" :show-file-list='false' :http-request="importBucket">
+                        <el-button type="primary" class="add-button">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+                            EXECEL导入
+                        </el-button>
+                    </el-upload>
                 </div>
                 <div class="right-actions">
                     <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -73,11 +81,12 @@
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import bucketEditor from '@/components/bucket/bucketEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { ElMessageBox } from 'element-plus';
+    import { ElMessage, ElMessageBox } from 'element-plus';
     import { desEncrypt } from '@/utils/des';
+
     import service from '@/axios';
     const counterStore = useCounterStore()
     const { showPagestion } = storeToRefs(counterStore)
@@ -93,26 +102,125 @@
     const pageNum = ref<number>(1)
     const pageSize = ref<number>(10)
     const totalData = ref<number>(0)
+    watch(() => pageNum.value, () => {
+        getUserList()
+    })
+
+
+
+    //下载模板
+    const downloadTemplate = async () => {
+        try {
+            const response = await service.get('/base/bucket/importTemplate', {
+                responseType: 'blob'
+            });
+
+            // 尝试从Content-Disposition获取文件名，如果后端有设置的话
+            let fileName = '域导入模板.xlsx'; // 设置一个默认或期望的文件名
+            const disposition = response.headers['content-disposition'];
+            if (disposition) {
+                const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                const matches = filenameRegex.exec(disposition);
+                if (matches != null && matches[1]) {
+                    fileName = matches[1].replace(/['"]/g, '');
+                    // 如果文件名是URL编码的，需要解码
+                    try {
+                        fileName = decodeURIComponent(fileName);
+                    } catch (e) {
+                        // 解码失败，使用原始匹配到的文件名
+                        console.warn('Failed to decode filename from Content-Disposition', e);
+                    }
+                }
+            }
+
+            const blob = new Blob([response.data], {
+                type: response.headers['content-type'] || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            ElMessage.success('模板下载成功');
+        } catch (err) {
+
+            console.error('下载模板失败', err);
+            ElMessage.error('下载模板失败，请检查网络或联系管理员。');
+        }
+    }
+
+    //导入excel
+    const importBucket = async (options: any) => {
+        try {
+            console.log('options', options);
+            const { file } = options
+            const formData = new FormData()
+            formData.append('file', file)
+            const res = await service.post('/base/bucket/importByExcel', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+
+            console.log('导入excel', res);
+            if (res.data.code === 200) {
+                ElMessage.success(res.data.msg)
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('导入失败', err);
+        }
+    }
+
 
     //新增域
     const showBucketEditor = ref<boolean>(false)
+    watch(() => showBucketEditor.value, (newV) => {
+        if (!newV) {
+            buckerInfo.value = {}
+            getUserList()
+
+        }
+    })
     const addBucket = () => {
         console.log('新增域');
         showBucketEditor.value = true
     }
     //编辑域
+    const buckerInfo = ref<any>({})
     const eidtorBucket = (row: any) => {
         console.log('编辑域', row);
+        buckerInfo.value = row
         showBucketEditor.value = true
     }
     //删除域
+    const delBucketFn = async (id: number) => {
+        try {
+            const res = await service.post(`/base/bucket/del/${id}`)
+            if (res.data.code === 200) {
+
+                ElMessage.success('删除成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+
+        }
+    }
     const deleteBucket = (row: any) => {
         ElMessageBox.confirm('确认删除吗？', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
         }).then(res => {
-
+            delBucketFn(row.id)
         }).catch(err => {
 
         })
@@ -244,6 +352,10 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+                    column-gap: 20px;
+
                     .add-button {
                         font-weight: 500;
 

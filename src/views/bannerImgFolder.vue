@@ -1,6 +1,6 @@
 <template>
     <div class="view">
-        <bannerPathEditor v-model:dialog-visible="showBannerPathEditor" />
+        <bannerPathEditor v-model:dialog-visible="showBannerPathEditor" :bannerPathInfo />
         <el-card class="filter-card">
             <div>
                 <el-button type="primary" @click="addBannerPath"> <el-icon>
@@ -19,7 +19,7 @@
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                :total="1000" />
+                :total="totalData" v-model:current-page="pageNum" v-model:page-size="pageSize" />
         </el-card>
     </div>
 </template>
@@ -30,11 +30,13 @@
     import userList from '@/components/user/userList.vue';
     import bannerPathEditor from '@/components/bannerPath/bannerPathEditor.vue';
 
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { ElMessageBox } from 'element-plus';
+    import { ElMessage, ElMessageBox } from 'element-plus';
     import { useRouter } from 'vue-router';
+    import service from '@/axios';
+    import { desEncrypt } from '@/utils/des';
     const counterStore = useCounterStore()
     const router = useRouter()
     const { showPagestion, menuList } = storeToRefs(counterStore)
@@ -45,24 +47,55 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+    //分页
+    const pageNum = ref<number>(1)
+    const pageSize = ref<number>(10)
+    const totalData = ref<number>(0)
+    watch(() => pageNum.value, () => {
+        getUserList()
+    })
 
     //新增轮播图路径
     const showBannerPathEditor = ref<boolean>(false)
+
+    watch(() => showBannerPathEditor.value, (newV) => {
+        if (!newV) {
+            bannerPathInfo.value = ''
+            getUserList()
+        }
+    })
     const addBannerPath = () => {
         showBannerPathEditor.value = true
     }
 
     //编辑轮播图路径
+    const bannerPathInfo = ref<any>()
     const editorBannerPath = (item: any) => {
         console.log('编辑轮播图路径', item);
         showBannerPathEditor.value = true
+        bannerPathInfo.value = item
     }
     //删除轮播图路径
+    const delBannerFolderFn = async (id: number) => {
+        try {
+            const res = await service.post(`/base/bannerImgFolder/del/${id}`)
+            if (res.data.code === 200) {
+                ElMessage.success('删除成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+
+        }
+    }
     const delelteBannerPath = (item: any) => {
         ElMessageBox.confirm('确认删除该条路径吗？', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning',
+        }).then(res => {
+            delBannerFolderFn(item.id)
         })
     }
 
@@ -81,8 +114,6 @@
                 path: bannerImgItem.menuUrl,
                 query: {
                     id: item.id,
-                    bucket: item.bucket,
-                    path: item.path
                 }
             })
 
@@ -91,49 +122,20 @@
     interface EndpointItem {
         id: number;        // 编号
         endpoint: string;  // 端点
-        domain: string;    // 域
-        path: string;      // 路径
+        bucketName: string;    // 域
+        folder: string;      // 路径
     }
 
     const bannerNote: any = {
         id: '编号',
         endpoint: '端点',
-        domain: '域',
-        path: '路径',
+        bucketName: '域',
+        folder: '路径',
 
     }
     // 生成用户数据
     const bannerData = ref<EndpointItem[]>([
-        {
-            id: 1,
-            endpoint: '/api/v1/users',
-            domain: 'api.example.com',
-            path: '/api/v1/products'
-        },
-        {
-            id: 2,
-            endpoint: '/api/v1/orders',
-            domain: 'test.example.com',
-            path: '/api/v1/categories'
-        },
-        {
-            id: 3,
-            endpoint: '/api/v1/settings',
-            domain: 'dev.example.com',
-            path: '/api/v1/auth'
-        },
-        {
-            id: 4,
-            endpoint: '/api/v1/payments',
-            domain: 'staging.example.com',
-            path: '/api/v1/inventory'
-        },
-        {
-            id: 5,
-            endpoint: '/api/v1/reports',
-            domain: 'prod.example.com',
-            path: '/api/v1/analytics'
-        }
+
     ])
     interface filterParams {
         note: string
@@ -142,17 +144,39 @@
     }
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = bannerData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: bannerNote[item],
-                isShow: true,
-                key: item
+        try {
+            const params = {
+                timestamp: Date.now(),
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
             }
-        })
-        console.log('filterParams', filterParams.value);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get('/base/bannerImgFolder/list', {
+                params: {
+                    enData
+                }
+            })
+            console.log('获取轮播图路径列表', res);
+            res.data.rows.forEach((item: any) => {
+                item.bucketName = item.parentObj.bucketName
+                item.endpoint = item.parentObj.endpoint
+            })
+            totalData.value = res.data.total
+            bannerData.value = res.data.rows
+            const keys = Object.keys(bannerNote)
+            filterParams.value = keys.map((item) => {
+                return {
+                    note: bannerNote[item],
+                    isShow: true,
+                    key: item
+                }
+            })
+            console.log('filterParams', filterParams.value);
+
+        } catch (err) {
+            console.log('获取列表失败', err);
+        }
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {

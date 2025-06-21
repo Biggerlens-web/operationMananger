@@ -3,16 +3,14 @@
 
         <el-form ref="ruleFormRef" style="max-width: 600px" :model="formData" :rules="rules" label-width="auto"
             class="demo-ruleForm" status-icon>
-
-
             <el-form-item label="端点(endpoint)" prop="endpoint">
                 <el-input v-model="formData.endpoint" />
             </el-form-item>
-            <el-form-item label="域(bucket)" prop="bucket">
-                <el-input v-model="formData.bucket" />
+            <el-form-item label="域(bucket)" prop="bucketName">
+                <el-input v-model="formData.bucketName" />
             </el-form-item>
-            <el-form-item label="说明" prop="desc">
-                <el-input type="textarea" v-model="formData.desc" />
+            <el-form-item label="说明" prop="remark">
+                <el-input type="textarea" v-model="formData.remark" />
             </el-form-item>
         </el-form>
         <template #footer>
@@ -27,11 +25,22 @@
 </template>
 
 <script lang="ts" setup>
-    import type { FormInstance } from 'element-plus';
-    import { ref } from 'vue'
+    import service from '@/axios';
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage, type FormInstance } from 'element-plus';
+    import { ref, watch } from 'vue'
     const props = defineProps<{
         dialogVisible: boolean
+        buckerInfo: any
     }>()
+    watch(() => props.dialogVisible, (newV) => {
+        if (newV && props.buckerInfo) {
+            formData.value.id = props.buckerInfo.id
+            formData.value.endpoint = props.buckerInfo.endpoint
+            formData.value.bucketName = props.buckerInfo.bucketName
+            formData.value.remark = props.buckerInfo.remark
+        }
+    })
     const emit = defineEmits<{
         'update:dialogVisible': [value: boolean]
     }>()
@@ -39,23 +48,23 @@
     const formData = ref<any>({
         id: '',
         endpoint: '',
-        bucket: '',
-        desc: '',
+        bucketName: '',
+        remark: '',
 
 
     })
     const ruleFormRef = ref<FormInstance>()
     const rules = ref<any>({
         endpoint: [{ required: true, message: '请输入端点', trigger: 'blur' }],
-        bucket: [{ required: true, message: '请输入域', trigger: 'blur' }],
+        bucketName: [{ required: true, message: '请输入域', trigger: 'blur' }],
     })
 
     const resetForm = () => {
         formData.value = {
             id: '',
             endpoint: '',
-            bucket: '',
-            desc: '',
+            bucketName: '',
+            remark: '',
         }
         ruleFormRef.value?.resetFields()
     }
@@ -63,11 +72,36 @@
         resetForm()
         emit('update:dialogVisible', false)
     }
+
+
+    const saveChange = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                type: formData.value.id ? 'update' : 'add',
+                ...formData.value
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/base/bucket/save', {
+                enData
+            })
+            console.log('保存bucket', res);
+            if (res.data.code === 200) {
+                handleClose()
+                ElMessage.success('保存成功')
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        }
+    }
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate((valid: any) => {
             if (valid) {
                 console.log('submit!');
-                handleClose()
+                saveChange()
+
             }
         })
     }

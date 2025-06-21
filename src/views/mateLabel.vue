@@ -1,6 +1,6 @@
 <template>
     <div class="view">
-        <mateLabelEditor v-model:dialog-visible="showMateLabelEditor" />
+        <mateLabelEditor v-model:dialog-visible="showMateLabelEditor" :labelInfo="labelInfo" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
@@ -17,64 +17,17 @@
                 </div>
             </div>
 
-            <!-- <el-divider class="divider" />
 
-            <div class="filter-container">
-                <div class="filter-row">
-
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.appNo" placeholder="请选择应用" clearable>
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName}`" :value="item.appNo" />
-
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.os" placeholder="请选择系统" clearable>
-                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.language" placeholder="请选择语言" clearable>
-                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.channel" placeholder="请选择渠道" clearable>
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
-                                :value="item.id" />
-                        </el-select>
-                    </div>
-
-
-                    <div class="filter-item filter-actions">
-                        <el-button type="primary" @click="getUserList">
-                            <el-icon>
-                                <Search />
-                            </el-icon>
-                            查询
-                        </el-button>
-                        <el-button @click="resetSearch">
-                            <el-icon>
-                                <Refresh />
-                            </el-icon>
-                            重置
-                        </el-button>
-                    </div>
-                </div>
-
-
-            </div> -->
         </el-card>
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="tagData"
-                    @editor="editorMateLabel" @deletel="deleteMateLabel"></component>
+                    @editor="editorMateLabel" @delete="deleteMateLabel"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                :total="1000" />
+                :total="totalData" v-model:current-page="pageNum" v-model:page-size="pageSize" />
         </el-card>
     </div>
 </template>
@@ -84,10 +37,12 @@
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import mateLabelEditor from '@/components/mateLabel/mateLabelEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { ElMessageBox } from 'element-plus';
+    import { ElMessage, ElMessageBox } from 'element-plus';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
     const counterStore = useCounterStore()
     const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
     const components: any = {
@@ -97,7 +52,28 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+
+
+
+    //分页
+    const pageNum = ref<number>(1)
+    const pageSize = ref<number>(20)
+    const totalData = ref<number>(0)
+    watch(() => pageNum.value, () => {
+        getUserList()
+    })
+
+
     const showMateLabelEditor = ref<boolean>(false)
+    watch(() => showMateLabelEditor.value, (newV) => {
+        if (!newV) {
+            labelInfo.value = {
+                id: 0,
+                label: '',
+            }
+            getUserList()
+        }
+    })
     //新增标签
 
     const addMateLabel = () => {
@@ -105,11 +81,35 @@
     }
 
     //编辑标签
+    const labelInfo = ref<{
+        id: number,
+        label: string
+    }>()
     const editorMateLabel = (item: any) => {
+        labelInfo.value = item
         showMateLabelEditor.value = true
     }
 
     //删除标签
+
+    const delLabelFn = async (id: number) => {
+        try {
+
+            const res = await service.post(`/base/mateLabel/del/${id}`)
+            console.log('删除标签', res);
+            if (res.data.code === 200) {
+                ElMessage({
+                    message: '删除成功',
+                    type: 'success',
+                })
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('删除失败', err);
+        }
+    }
     const deleteMateLabel = (item: any) => {
         ElMessageBox.confirm(
             '此操作将永久删除该标签, 是否继续?',
@@ -119,7 +119,9 @@
                 cancelButtonText: '取消',
                 type: 'warning',
             }
-        )
+        ).then(res => {
+            delLabelFn(item.id)
+        })
     }
     //搜索参数
     interface SearchParams {
@@ -151,21 +153,17 @@
     }
     interface TagItem {
         id: number | string;     // 编号
-        tag: string;    // 标签
+        label: string;    // 标签
     }
 
     const metaLabelNote: any = {
         id: '编号',
-        tag: '标签',
+        label: '标签',
 
     }
     // 生成用户数据
     const tagData = ref<TagItem[]>([
-        { id: 1, tag: '热门' },
-        { id: 2, tag: '推荐' },
-        { id: 3, tag: '新品' },
-        { id: 4, tag: '促销' },
-        { id: 5, tag: '限时' }
+
     ])
     interface filterParams {
         note: string
@@ -174,17 +172,37 @@
     }
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = tagData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: metaLabelNote[item],
-                isShow: true,
-                key: item
+        try {
+
+            const params = {
+                timestamp: Date.now(),
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
             }
-        })
-        console.log('filterParams', filterParams.value);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get('/base/mateLabel/list', {
+                params: {
+                    enData
+                }
+
+            })
+
+            console.log('获取素材标签列表', res);
+            totalData.value = res.data.total
+            tagData.value = res.data.rows
+            const keys = Object.keys(metaLabelNote)
+            filterParams.value = keys.map((item) => {
+                return {
+                    note: metaLabelNote[item],
+                    isShow: true,
+                    key: item
+                }
+            })
+            console.log('filterParams', filterParams.value);
+        } catch (err) {
+
+        }
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {

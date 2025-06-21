@@ -67,19 +67,33 @@
             </div>
         </el-card>
         <el-card class="content-card">
-            <!-- <Transition enter-active-class="animate__animated animate__fadeIn"
-                leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="appData"></component>
-            </Transition>
-
-            <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                :total="1000" /> -->
+            <draggable tag="ul" v-model="list" item-key="id" :animation="200" class="template-grid"
+                ghost-class="ghost-class" chosen-class="chosen-class" drag-class="dragging-class"
+                :group="{ name: 'items' }" @start="onDragStart" @end="onDragEnd">
+                <template #item="{ element, index }">
+                    <li :key="element.id" class="template-item" @click="editorTemplate(element.id)">
+                        <div class="img-wrapper" @click.stop="templateViewDialog(element.id)">
+                            <img :src="element.img" alt="" class="template-img">
+                        </div>
+                        <p class="template-name">
+                            <el-tooltip :content="element.name" placement="top" :show-after="500" :enterable="false"
+                                popper-class="template-name-tooltip">
+                                <span class="name">
+                                    {{ element.name }}
+                                </span>
+                            </el-tooltip>
+                            <span class="tag tag-test" v-if="!element.isTest">测试</span>
+                            <span class="tag tag-prod" v-if="!element.isProduction">正式</span>
+                        </p>
+                    </li>
+                </template>
+            </draggable>
         </el-card>
     </div>
 </template>
 
 <script setup lang="ts">
-    import tableAciton from '@/components/public/tableAciton.vue';
+    import draggable from 'vuedraggable'
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import { onMounted, ref } from 'vue';
@@ -93,7 +107,109 @@
     }
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
+    const list = ref<any>([
+        {
+            name: '模板1模板1模板1模板1模板1模板1模板1模板1模板1模板1模板1',
+            id: 1,
+            img: '',
+        },
+        {
+            name: '模板2',
+            id: 2,
+            img: '',
+        },
+        {
+            name: '模板3',
+            id: 3,
+            img: '',
+        },
+        {
+            name: '模板4',
+            id: 4,
+            img: '',
+        },
+        {
+            name: '模板5',
+            id: 5,
+            img: '',
+        },
+        {
+            name: '模板6',
+            id: 6,
+            img: '',
+        },
+        {
+            name: '模板7',
+            id: 7,
+            img: '',
+        },
+        {
+            name: '模板8',
+            id: 8,
+            img: '',
+        },
+        {
+            name: '模板1模板1模板1模板1模板1模板1模板1模板1模板1模板1模板1',
+            id: 1,
+            img: '',
+        },
+        {
+            name: '模板2',
+            id: 2,
+            img: '',
+        },
+        {
+            name: '模板3',
+            id: 3,
+            img: '',
+        },
+        {
+            name: '模板4',
+            id: 4,
+            img: '',
+        },
+        {
+            name: '模板5',
+            id: 5,
+            img: '',
+        },
+        {
+            name: '模板6',
+            id: 6,
+            img: '',
+        },
+        {
+            name: '模板7',
+            id: 7,
+            img: '',
+        },
+        {
+            name: '模板8',
+            id: 8,
+            img: '',
+        },
 
+    ])
+
+    //显示模板图
+    const showTemplateView = ref<boolean>(false);
+    const templateViewDialog = (id: string | number) => {
+        showTemplateView.value = true;
+    }
+    //编辑模板
+    const dialogEditor = ref<boolean>(false);
+    const editorTemplate = (id: string | number) => {
+        console.log('id', id);
+        dialogEditor.value = true;
+
+
+    }
+    const onDragEnd = () => {
+        console.log('结束拖动')
+    }
+    const onDragStart = () => {
+        console.log('开始拖动')
+    }
 
 
     //搜索参数
@@ -120,107 +236,15 @@
         }
         getUserList()
     }
-    interface AppItem {
-        appId: string;        // 应用编号
-        shortName: string;    // 应用简称
-        companyName: string;  // 所属公司
-        accessName: string;   // 应用访问名
-        systemId: string;     // 系统账号id
-        developer: string;    // 开发者
-    }
 
 
-    const appNote: any = {
-        appId: '应用编号',
-        shortName: '应用简称',
-        companyName: '所属公司',
-        accessName: '应用访问名',
-        systemId: '系统账号id',
-        developer: '开发者'
-
-    }
-    // 生成用户数据
-    const appData = ref<AppItem[]>([
-        {
-            appId: 'APP_0001',
-            shortName: '商城系统',
-            companyName: '科技有限公司',
-            accessName: 'app1.example.com',
-            systemId: 'SYS_0001',
-            developer: '张三'
-        },
-        {
-            appId: 'APP_0002',
-            shortName: '会员系统',
-            companyName: '网络科技有限公司',
-            accessName: 'app2.example.com',
-            systemId: 'SYS_0002',
-            developer: '李四'
-        },
-        {
-            appId: 'APP_0003',
-            shortName: '支付系统',
-            companyName: '软件开发有限公司',
-            accessName: 'app3.example.com',
-            systemId: 'SYS_0003',
-            developer: '王五'
-        },
-        {
-            appId: 'APP_0004',
-            shortName: '管理系统',
-            companyName: '信息技术有限公司',
-            accessName: 'app4.example.com',
-            systemId: 'SYS_0004',
-            developer: '赵六'
-        },
-        {
-            appId: 'APP_0005',
-            shortName: '客服系统',
-            companyName: '科技有限公司',
-            accessName: 'app5.example.com',
-            systemId: 'SYS_0005',
-            developer: '钱七'
-        }
-    ])
-    interface filterParams {
-        note: string
-        isShow: boolean
-        key: string
-    }
-    const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
         console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
-            }
-        })
-        console.log('filterParams', filterParams.value);
-    }
-    //参数显影
-    const checkedParams = ({ key, checked }: any) => {
-        console.log('修改参数', key, checked);
-        const item = filterParams.value?.find((item) => item.key === key)
-        if (item) {
-            item.isShow = checked
-        }
+
 
     }
-    //切换显示模式
-    const changeView = () => {
 
-        const keys = Object.keys(components)
-        const keyItem = keys.find((item) => item !== componentStr.value)
-        if (keyItem) {
-            componentStr.value = keyItem
-            componentName.value = components[keyItem]
-        }
-        console.log('keyItem', keyItem);
-    }
+
     onMounted(() => {
         getUserList();
         showPagestion.value = true
@@ -287,9 +311,133 @@
 
         .content-card {
             height: calc(100vh - 220px);
+            overflow-y: scroll;
 
             .pagesBox {
                 margin-top: 30px;
+            }
+
+            .template-grid {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                /* 每行4个项目 */
+                gap: 20px;
+                /* 项目之间的间距 */
+                padding: 0;
+                list-style: none;
+                margin: 0;
+            }
+
+            .template-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 15px;
+                border: 1px solid #eee;
+                border-radius: 8px;
+                transition: transform 0.2s ease;
+                cursor: pointer;
+                min-width: 0;
+                /* 关键属性：允许网格项小于内容最小宽度 */
+                overflow: hidden;
+                /* 确保内容不会溢出 */
+
+            }
+
+            .template-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            .img-wrapper {
+                width: 100%;
+                aspect-ratio: 1;
+
+                overflow: hidden;
+                border-radius: 4px;
+                background-color: #f5f5f5;
+
+            }
+
+            .template-img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                /* 确保图片填充整个容器且不变形 */
+            }
+
+            .template-name {
+                margin: 10px 0 0;
+                font-size: 14px;
+                color: #333;
+                display: flex;
+                column-gap: 5px;
+                width: 100%;
+                /* 确保宽度占满父容器 */
+                align-items: center;
+
+                /* 垂直居中对齐 */
+                .name {
+                    max-width: 200px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+
+
+                }
+
+                .tag {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 2px 6px;
+                    font-size: 12px;
+                    border-radius: 4px;
+                    font-weight: normal;
+                    white-space: nowrap;
+                    line-height: 1.2;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        transform: translateY(-1px);
+                    }
+                }
+
+                .tag-test {
+                    color: #8c6200;
+                    background-color: #fff8e6;
+                    border: 1px solid #ffe6a6;
+
+                    &:hover {
+                        background-color: #fff3d9;
+                    }
+                }
+
+                .tag-prod {
+                    color: #135200;
+                    background-color: #f0ffe6;
+                    border: 1px solid #b7eb8f;
+
+                    &:hover {
+                        background-color: #e4ffcc;
+                    }
+                }
+            }
+
+            .ghost-class {
+                background-color: #f8f8f8;
+                border: 1px dashed #ccc;
+                opacity: 0.6;
+            }
+
+            .chosen-class {
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            }
+
+            .drag-class {
+                opacity: 0.8;
+                transform: rotate(3deg);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             }
         }
     }

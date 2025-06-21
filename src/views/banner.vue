@@ -1,6 +1,8 @@
 <template>
     <div class="view">
-        <bannerEditor v-model:dialog-visible="showBannerEditor" /> <el-card class="filter-card">
+        <copyBanner v-model:dialog-visible="showBannerCopy" :copyInfo="copyInfo" />
+        <bannerPointEditor v-model:dialog-visible="showBannerEditor" :bannerPointInfo="bannerPointInfo" />
+        <el-card class="filter-card">
             <div class="card-header">
                 <div class="left-actions">
                     <el-button type="primary" @click="addBanner" class="add-button">
@@ -36,11 +38,12 @@
                     </div>
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.language" placeholder="请选择语言" clearable>
-                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
+                            <el-option v-for="item in international" :key="item.value" :label="item.language"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.channel" placeholder="请选择渠道" clearable>
+                        <el-select filterable v-model="searchParams.channelId" placeholder="请选择渠道" clearable>
                             <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
                                 :value="item.id" />
                         </el-select>
@@ -69,12 +72,14 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="carouseData"
-                    @editor="editorBanner" @delete="deleteBanner"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="carouseData" :copy="true"
+                    :banner="true" @editor="editorBanner" @delete="deleteBanner" @copyItem="copyItem"
+                    @setBannerImg="setBannerImg">
+                </component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                :total="1000" />
+                :total="totalData" v-model:page-size="pageSize" v-model:current-page="pageNum" />
         </el-card>
     </div>
 </template>
@@ -83,13 +88,17 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
-    import bannerEditor from '@/components/banner/bannerEditor.vue';
-    import { onMounted, ref } from 'vue';
+
+    import bannerPointEditor from '@/components/banner/bannerPointEditor.vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { ElMessageBox } from 'element-plus';
+    import { ElMessage, ElMessageBox } from 'element-plus';
+    import { desEncrypt } from '@/utils/des';
+    import copyBanner from '@/components/banner/copyBanner.vue';
+    import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, appList, OSlist, channelList, international } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -97,20 +106,72 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+
+    //复制
+    const copyInfo = ref<any>()
+    const showBannerCopy = ref<boolean>(false)
+    watch(() => showBannerCopy.value, (newV) => {
+        if (!newV) {
+            getUserList()
+        }
+    })
+    const copyItem = (item: any) => {
+        copyInfo.value = item.id
+        console.log('复制', item);
+        showBannerCopy.value = true
+    }
+
+    //配置轮播图
+    const setBannerImg = (item: any) => {
+
+
+        console.log('配置轮播图', item);
+
+    }
+    //分页
+    const pageNum = ref<number>(1)
+    const pageSize = ref<number>(20)
+    const totalData = ref<number>(0)
+    watch(() => pageNum.value, () => {
+        getUserList()
+    })
+
     //新增轮播点
     const showBannerEditor = ref<boolean>(false)
+    watch(() => showBannerEditor.value, () => {
+        if (!showBannerEditor.value) {
+            bannerPointInfo.value = ''
+            getUserList()
+        }
+    })
     const addBanner = () => {
         showBannerEditor.value = true
     }
 
 
     //编辑轮播点
+    const bannerPointInfo = ref<any>()
     const editorBanner = (item: any) => {
+        bannerPointInfo.value = item
         showBannerEditor.value = true
     }
 
 
     //删除轮播点
+    const delBannerFn = async (id: number) => {
+        try {
+            const res = await service.post(`/base/banner/del/${id}`)
+            console.log('删除', res);
+            if (res.data.code === 200) {
+                ElMessage.success('删除成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('删除失败', err);
+        }
+    }
     const deleteBanner = (item: any) => {
         ElMessageBox.confirm(
             '此操作将永久删除该轮播点, 是否继续?',
@@ -120,15 +181,17 @@
                 cancelButtonText: '取消',
                 type: 'warning',
             }
-        )
+        ).then(res => {
+            delBannerFn(item.id)
+        })
+
     }
     //搜索参数
     interface SearchParams {
         appNo: string
         os: string
+        channelId: string | number
         language: string
-        channel: string
-
 
     }
     const searchParams = ref<SearchParams>(
@@ -136,7 +199,7 @@
             appNo: '',
             os: '',
             language: '',
-            channel: '',
+            channelId: '',
 
         }
     )
@@ -146,78 +209,34 @@
             appNo: '',
             os: '',
             language: '',
-            channel: '',
+            channelId: '',
         }
         getUserList()
     }
     interface CarouselItem {
         id: number;           // 编号
         appName: string;      // 所属应用
-        system: string;       // 系统
+        os: string;       // 系统
         language: string;     // 语言
-        channel: string;      // 渠道
-        carouselName: string; // 轮播点名称
-        carouselCode: string; // 轮播点编码
+        channelName: string;      // 渠道
+        bannerName: string; // 轮播点名称
+        bannerCode: string; // 轮播点编码
     }
 
     const carouseNote: any = {
         id: '编号',
         appName: '所属应用',
-        system: '系统',
+        os: '系统',
         language: '语言',
-        channel: '渠道',
-        carouselName: '轮播点名称',
-        carouselCode: '轮播点编码',
+        channelName: '渠道',
+        bannerName: '轮播点名称',
+        bannerCode: '轮播点编码',
 
 
     }
     // 生成用户数据
     const carouseData = ref<CarouselItem[]>([
-        {
-            id: 1,
-            appName: '商城APP',
-            system: 'iOS',
-            language: '中文',
-            channel: '微信',
-            carouselName: '首页轮播',
-            carouselCode: 'CAR_0001'
-        },
-        {
-            id: 2,
-            appName: '会员APP',
-            system: 'Android',
-            language: '英文',
-            channel: '支付宝',
-            carouselName: '商品轮播',
-            carouselCode: 'CAR_0002'
-        },
-        {
-            id: 3,
-            appName: '支付APP',
-            system: 'Web',
-            language: '日文',
-            channel: 'APP',
-            carouselName: '活动轮播',
-            carouselCode: 'CAR_0003'
-        },
-        {
-            id: 4,
-            appName: '管理后台',
-            system: 'iOS',
-            language: '韩文',
-            channel: 'H5',
-            carouselName: '广告轮播',
-            carouselCode: 'CAR_0004'
-        },
-        {
-            id: 5,
-            appName: '商城APP',
-            system: 'Android',
-            language: '中文',
-            channel: 'PC',
-            carouselName: '首页轮播',
-            carouselCode: 'CAR_0005'
-        }
+
     ])
     interface filterParams {
         note: string
@@ -226,9 +245,43 @@
     }
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
+
+
+        try {
+            const params: any = {
+                timestamp: Date.now(),
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
+                ...searchParams.value
+            }
+            for (let key in params) {
+                if (params[key] === undefined) {
+                    params[key] = ''
+                }
+            }
+            console.log('参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/base/banner/list', {
+
+                enData
+
+            })
+
+            console.log('获取录播点列表', res);
+            res.data.rows.forEach((item: any) => {
+
+                item.channelName = item.channels ? item.channels.channelName : ''
+                item.language = item.languageVo ? item.languageVo.remark : ''
+                item.appName = item.parentObj.appAbbreviation
+            })
+            carouseData.value = res.data.rows
+            totalData.value = res.data.total
+        } catch (err) {
+            console.log('获取轮播点列表失败', err);
+        }
         console.log('获取用户列表');
-        const dataItem = carouseData.value[0]
-        const keys = Object.keys(dataItem)
+
+        const keys = Object.keys(carouseNote)
         filterParams.value = keys.map((item) => {
             return {
                 note: carouseNote[item],
@@ -260,6 +313,7 @@
     }
     onMounted(() => {
         getUserList();
+        console.log('international', international.value);
         showPagestion.value = true
     })
 </script>

@@ -167,7 +167,6 @@
         <el-table-column label="AppKey" prop="appKey" />
         <el-table-column label="" prop="appMemberId" />
         <el-table-column label="操作">
-
             <template #default="scope">
                 <el-button type="primary" size="small">获取隐私协议</el-button>
                 <el-button type="" size="small">进入</el-button>

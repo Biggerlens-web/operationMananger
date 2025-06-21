@@ -2,7 +2,8 @@
     <el-table :data="tableData" border style="width: 100%" height="600px">
         <template v-for="item in filterParams" :key="item.key">
             <el-table-column :prop="item.key" :label="item.note" v-if="item.isShow">
-                <template v-if="item.key === 'avatar' || item.key === 'thumbnail'" #default="scope">
+                <template v-if="item.key === 'avatar' || item.key === 'thumbnail' || item.key === 'image'"
+                    #default="scope">
                     <img style="width:100%" :src="scope.row[item.key]" alt="">
                 </template>
                 <template
@@ -44,13 +45,18 @@
         <el-table-column label="操作" fixed="right" width="150" v-if="showAction">
             <template #default="scope">
                 <el-button style="margin: 0;" type="text" size="small" @click="banUser(scope.row)" v-if="userList">{{
-                    scope.row.status === 1 ? '禁用':'启用' }}</el-button>
+                    scope.row.status === 1 ? '禁用' : '启用' }}</el-button>
                 <el-button style="margin: 0;" type="text" size="small" @click="handleRoles(scope.row)"
                     v-if="userList">分配角色</el-button>
                 <el-button v-if="roleList" style="margin: 0;" type="text" size="small"
                     @click="onAssginRole(scope.row)">分配权限</el-button>
                 <el-button style="margin: 0;" type="text" size="small" @click="scanImg(scope.row)"
                     v-if="bannerPath">扫描该路径下图片</el-button>
+                <el-button style="margin: 0;" type="text" size="small" v-if="banner"
+                    @click="setBannerImg(scope.row)">配置轮播图</el-button>
+                <el-button style="margin: 0;" type="text" size="small" v-if="copy"
+                    @click="copyInfo(scope.row)">复制</el-button>
+
                 <el-button style="margin: 0;" type="text" size="small" @click="handleView(scope.row)"
                     v-if="viewButton || isShowButton(scope.row, 'view')">查看</el-button>
                 <el-button v-if="moveIndex || isShowButton(scope.row, 'topIndex')" style="margin: 0;" type="text"
@@ -81,10 +87,12 @@
         'ban': [value: any],
         'assginRole': [value: any],
         'scanImg': [value: any],
+        'copyItem': [value: any]
         'AutoOpenMethod': [value: any],
         'editorLanguage': [value: any],
         'view': [value: any],
         'moveIndex': [value: any]
+        'setBannerImg': [value: any]
 
     }>()
 
@@ -109,6 +117,8 @@
         viewButton: boolean
         moveIndex: boolean
         totalItems: number
+        copy: boolean
+        banner: boolean
     }>(), {
         showAction: true,
         userList: false,
@@ -188,6 +198,20 @@
     const scanImg = (item: any) => {
         console.log('扫描轮播图路径下的图片', item)
         emit('scanImg', item)
+    }
+
+    //复制
+    const copyInfo = (item: any) => {
+        console.log('复制', item);
+        emit('copyItem', item)
+    }
+
+
+
+    //配置轮播图
+    const setBannerImg = (item: any) => {
+        console.log('配置轮播图', item)
+        emit('setBannerImg', item)
     }
 
     //添加自动打开方案

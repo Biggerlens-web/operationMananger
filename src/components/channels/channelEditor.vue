@@ -5,14 +5,14 @@
             class="demo-ruleForm" status-icon>
 
 
-            <el-form-item label="渠道编号" prop="channelNo">
-                <el-input v-model="formData.channelNo" />
+            <el-form-item label="渠道编号" prop="channelId">
+                <el-input v-model="formData.channelId" />
             </el-form-item>
             <el-form-item label="渠道名称" prop="channelName">
                 <el-input v-model="formData.channelName" />
             </el-form-item>
-            <el-form-item label="渠道说明" prop="desc">
-                <el-input type="textarea" v-model="formData.desc" />
+            <el-form-item label="渠道说明" prop="channelRemark">
+                <el-input type="textarea" v-model="formData.channelRemark" />
             </el-form-item>
         </el-form>
         <template #footer>
@@ -27,26 +27,36 @@
 </template>
 
 <script lang="ts" setup>
-    import type { FormInstance } from 'element-plus';
-    import { ref } from 'vue'
+    import service from '@/axios';
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage, type FormInstance } from 'element-plus';
+    import { ref, watch } from 'vue'
     const props = defineProps<{
         dialogVisible: boolean
+        channelInfo: any
     }>()
+    watch(() => props.dialogVisible, (newV) => {
+        if (newV && props.channelInfo) {
+            formData.value = {
+                ...props.channelInfo
+            }
+        }
+    })
     const emit = defineEmits<{
         'update:dialogVisible': [value: boolean]
     }>()
 
     const formData = ref<any>({
         id: '',
-        channelNo: '',
+        channelId: '',
         channelName: '',
-        desc: ''
+        channelRemark: ''
 
 
     })
     const ruleFormRef = ref<FormInstance>()
     const rules = ref<any>({
-        channelNo: [{ required: true, message: '请输入渠道编号', trigger: 'blur' }],
+        channelId: [{ required: true, message: '请输入渠道编号', trigger: 'blur' }],
         channelName: [{ required: true, message: '请输入渠道名称', trigger: 'blur' }],
 
     })
@@ -54,9 +64,9 @@
     const resetForm = () => {
         formData.value = {
             id: '',
-            channelNo: '',
+            channelId: '',
             channelName: '',
-            desc: ''
+            channelRemark: ''
         }
         ruleFormRef.value?.resetFields()
     }
@@ -64,11 +74,36 @@
         resetForm()
         emit('update:dialogVisible', false)
     }
+
+
+    const saveChange = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                ...formData.value,
+                type: formData.value.id ? 'update' : 'add'
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/base/channels/save', {
+                enData
+            })
+            console.log('保存', res);
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                handleClose()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        }
+    }
+
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate((valid: any) => {
             if (valid) {
                 console.log('submit!');
-                handleClose()
+                saveChange()
             }
         })
     }
