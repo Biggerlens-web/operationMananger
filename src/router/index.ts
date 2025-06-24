@@ -147,6 +147,10 @@ const getBaseData = async () => {
     console.log('基础表单数据', res)
     useCounterStore(pinia).appList = res.data.data.apps
     useCounterStore(pinia).channelList = res.data.data.channels
+    const allIndex = res.data.data.oss.findIndex((item: any) => item == 'ALL')
+    if (allIndex != -1) {
+      res.data.data.oss.splice(allIndex, 1)
+    }
     useCounterStore(pinia).OSlist = res.data.data.oss
   } catch (err) {
     console.log('获取基础数据失败')
@@ -156,14 +160,14 @@ const getBaseData = async () => {
 //获取公司列表
 const getCompanyList = async () => {
   try {
-    const res = await service.get('/companyInfo/list')
+    const res = await service.get('/companyInfo/getAllCompanyInfo')
     console.log('公司列表', res)
-    useCounterStore(pinia).companyList = res.data.data.companys
-    if (!useCounterStore(pinia).companyView) {
-      // useCounterStore(pinia).companyView = res.data.data.companys[0].companyId
-    }
+    useCounterStore(pinia).companyList = res.data.rows
+    // if (!useCounterStore(pinia).companyView) {
+    //   // useCounterStore(pinia).companyView = res.data.data.companys[0].companyId
+    // }
   } catch (err) {
-    console.log('获取公司列表失败')
+    console.log('获取公司列表失败', err)
   }
 }
 router.beforeEach(async (to, from, next) => {
@@ -174,7 +178,7 @@ router.beforeEach(async (to, from, next) => {
       next('/')
     } else {
       await getBaseData()
-
+      await getCompanyList()
       next()
     }
   } else {
@@ -186,7 +190,6 @@ router.beforeEach(async (to, from, next) => {
   }
 })
 router.afterEach((to, from) => {
-  // getCompanyList()
   getInternational()
   getTagList()
 })

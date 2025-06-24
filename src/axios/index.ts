@@ -34,6 +34,7 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   (response: AxiosResponse) => {
     const url = response.request.responseURL
+    // console.log('response', response)
     if (url.includes('/companyInfo/importTemplate')) {
       return response
     }

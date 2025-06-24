@@ -1,6 +1,7 @@
 <template>
     <div class="view">
-        <languageEditor v-model:dialog-visable="showLanguageEditor" />
+        <listEdit v-model:dialog-visable="showListEdit" :listInfo='listInfo' @confirm="confirmList" />
+        <languageEditor v-model:dialog-visable="showLanguageEditor" :configId="configId" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
@@ -28,31 +29,25 @@
             <div class="filter-container">
                 <div class="filter-row">
 
+
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="请选择应用"
-                            class="filter-select">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="请选择系统"
-                            class="filter-select">
+                        <el-select filterable v-model="searchParams.os" placeholder="请选择系统" class="filter-select"
+                            clearable>
                             <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="是否收费" class="filter-select">
-                            <el-option label="是" :value="1" />
-                            <el-option label="否" :value="0" />
+                        <el-select filterable v-model="searchParams.isCanPay" placeholder="是否收费" class="filter-select"
+                            clearable>
+                            <el-option label="是" :value="'true'" />
+                            <el-option label="否" :value="'false'" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="是否开启淘宝"
-                            class="filter-select">
-                            <el-option label="是" :value="1" />
-                            <el-option label="否" :value="0" />
+                        <el-select filterable v-model="searchParams.isShowTaobao" placeholder="是否开启淘宝"
+                            class="filter-select" clearable>
+                            <el-option label="是" :value="'true'" />
+                            <el-option label="否" :value="'false'" />
                         </el-select>
                     </div>
                     <div class="filter-item filter-actions">
@@ -78,26 +73,31 @@
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="appData" :showAction="false"
-                    @editorLanguage="editorLanguage">
+                    @editorLanguage="editorLanguage" @addListData="addListData" @handleInput="handleInput"
+                    @switchChange="switchChange" @handleNumInput="handleNumInput">
                 </component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                :total="1000" />
+                :total="totalData" v-model:current-page="pageNum" :page-size="pageSize" />
         </el-card>
     </div>
 </template>
 
 <script setup lang="ts">
     import tableAciton from '@/components/public/tableAciton.vue';
+    import listEdit from '@/components/public/listEdit.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import languageEditor from '@/components/public/languageEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
+    import { ElMessage } from 'element-plus';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, appList, OSlist, defaultAppNo } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -105,40 +105,197 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+
+
+
+    //分页
+    const pageNum = ref<number>(1)
+    const pageSize = ref<number>(10)
+    const totalData = ref<number>(0)
+    watch(() => pageNum.value, () => {
+        getUserList()
+    })
+
+
+    //配置列表数据
+    const showListEdit = ref<boolean>(false)
+    const listInfo = ref<any>([])
+    const editKey = ref<string>('')
+    const editListId = ref<number>(0)
+    //添加列表数据
+    const addListData = (item: any) => {
+        const { key } = item
+        listInfo.value = item[key]
+        editKey.value = key
+        editListId.value = item.id
+        showListEdit.value = true
+    }
+    const confirmList = async (item: any) => {
+        try {
+            const arr = item.map((el: any) => el.name)
+            const params = {
+                timestamp: Date.now(),
+                [editKey.value]: arr.join(','),
+                id: editListId.value
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/helpMeRetouch/save', {
+                enData
+            })
+            console.log('保存', res);
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        }
+
+    }
+
+
+
     //配置国际化
     const showLanguageEditor = ref<boolean>(false)
+    const configId = ref<number | string>()
     const editorLanguage = (item: any) => {
+        configId.value = item.id
         showLanguageEditor.value = true
+
+    }
+
+    //确定输入框
+    const handleInput = async (item: any) => {
+        console.log(item);
+
+        try {
+            const params = {
+                timestamp: Date.now(),
+                id: item.id,
+                helpMeTitle: item.helpMeTitle,
+                isCanPay: String(item.isCanPay),
+                price: item.price,
+                isShowTaobao: String(item.isShowTaobao),
+                helpMeWxCustomerServiceUri: item.helpMeWxCustomerServiceUri,
+                helpMeTaobaoUri: item.helpMeTaobaoUri,
+                version: item.version,
+                noPayTimes: JSON.parse(item.noPayTimes).join(','),
+                bannerImgs: JSON.parse(item.bannerImgs).join(','),
+            }
+            console.log('参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/helpMeRetouch/save', {
+
+                enData
+
+            })
+
+            console.log('保存输入框', res);
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('修改输入框失败', err);
+        }
+
+    }
+
+
+    //修改数字输入框
+    const handleNumInput = async (item: any) => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                id: item.id,
+                [item.key]: item[item.key],
+
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/helpMeRetouch/save', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('修改数字输入框失败', err);
+        }
+    }
+
+
+    //切换开关
+    const switchChange = async (item: any) => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                id: item.id,
+                isCanPay: String(item.isCanPay),
+                isShowTaobao: String(item.isShowTaobao),
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/helpMeRetouch/save', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        }
     }
 
     //搜索参数
     interface SearchParams {
-        inputText: string
-        companyNo: string
+        appNo: string | number
+        os: string
+        isCanPay: string
+        isShowTaobao: string
 
 
 
     }
     const searchParams = ref<SearchParams>(
         {
-            inputText: '',
-            companyNo: '',
+            appNo: defaultAppNo.value,
+            os: '',
+            isCanPay: '',
+            isShowTaobao: ''
 
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            inputText: '',
-            companyNo: '',
+            appNo: defaultAppNo.value,
+            os: '',
+            isCanPay: '',
+            isShowTaobao: ''
 
         }
         getUserList()
     }
+
+    //监听app变化
+    watch(() => defaultAppNo.value, () => {
+        searchParams.value.appNo = defaultAppNo.value
+        getUserList()
+    })
     interface PhotoEditingAppData {
-        appName: string;                 // 所属应用
-        system: string;                  // 系统
-        photoEditTitle: string;          // 帮我修图标题
+        appAbbreviation: string;                 // 所属应用
+        os: string;                  // 系统
+        helpMeTitle: string;          // 帮我修图标题
         isCharged: boolean;              // 是否收费
         price: number;                   // 价格
         showTaobaoPage: boolean;         // 是否显示淘宝页面
@@ -155,192 +312,23 @@
 
 
     const appNote: any = {
-        appName: '所属应用',
-        system: '系统',
-        photoEditTitle: '帮我修图标题',
-        isCharged: '是否收费',
+        appAbbreviation: '所属应用',
+        os: '系统',
+        helpMeTitle: '帮我修图标题',
+        isCanPay: '是否收费',
         price: '价格',
-        showTaobaoPage: '是否显示淘宝页面',
-        taobaoPageLink: '淘宝页面链接',
-        wechatServiceLink: '帮我修图微信客服链接',
-        versionNumber: '版本号',
-        nonPaymentTime: '不支付时间',
-        channelPhotoUrl: '渠道照片',
+        isShowTaobao: '是否显示淘宝页面',
+        helpMeTaobaoUri: '淘宝页面链接',
+        helpMeWxCustomerServiceUri: '帮我修图微信客服链接',
+        version: '版本号',
+        noPayTimes: '不支付时间',
+        bannerImgs: '渠道照片',
         i18nConfig: '国际化配置'
 
     }
     // 生成用户数据
     const appData = ref<PhotoEditingAppData[]>([
-        {
-            appName: "美图秀秀",
-            system: "Android",
-            photoEditTitle: "一键美化",
-            isCharged: true,
-            price: 19.9,
-            showTaobaoPage: true,
-            taobaoPageLink: "https://item.taobao.com/item.htm?id=12345",
-            wechatServiceLink: "https://wx.meitu.com/customer-service",
-            versionNumber: "9.2.1",
-            nonPaymentTime: 72,
-            channelPhotoUrl: "https://cdn.meitu.com/channel/android.jpg",
-            i18nConfig: {
-                languages: ["zh-CN", "en-US", "ja-JP"],
-                defaultLanguage: "zh-CN"
-            }
-        },
-        {
-            appName: "美图秀秀",
-            system: "iOS",
-            photoEditTitle: "一键美化Pro",
-            isCharged: true,
-            price: 25.9,
-            showTaobaoPage: false,
-            taobaoPageLink: "",
-            wechatServiceLink: "https://wx.meitu.com/customer-service",
-            versionNumber: "9.3.0",
-            nonPaymentTime: 48,
-            channelPhotoUrl: "https://cdn.meitu.com/channel/ios.jpg",
-            i18nConfig: {
-                languages: ["zh-CN", "en-US", "ja-JP", "ko-KR"],
-                defaultLanguage: "zh-CN"
-            }
-        },
-        {
-            appName: "轻颜相机",
-            system: "Android",
-            photoEditTitle: "智能修图",
-            isCharged: false,
-            price: 0,
-            showTaobaoPage: false,
-            taobaoPageLink: "",
-            wechatServiceLink: "https://wx.qingyan.com/service",
-            versionNumber: "5.1.2",
-            nonPaymentTime: 0,
-            channelPhotoUrl: "https://cdn.qingyan.com/channel/android.jpg",
-            i18nConfig: {
-                languages: ["zh-CN", "en-US"],
-                defaultLanguage: "zh-CN"
-            }
-        },
-        {
-            appName: "轻颜相机",
-            system: "iOS",
-            photoEditTitle: "智能修图Pro",
-            isCharged: true,
-            price: 15.9,
-            showTaobaoPage: true,
-            taobaoPageLink: "https://item.taobao.com/item.htm?id=67890",
-            wechatServiceLink: "https://wx.qingyan.com/service",
-            versionNumber: "5.2.0",
-            nonPaymentTime: 24,
-            channelPhotoUrl: "https://cdn.qingyan.com/channel/ios.jpg",
-            i18nConfig: {
-                languages: ["zh-CN", "en-US", "zh-TW"],
-                defaultLanguage: "zh-CN"
-            }
-        },
-        {
-            appName: "Faceu激萌",
-            system: "Android",
-            photoEditTitle: "一键修图",
-            isCharged: true,
-            price: 12.9,
-            showTaobaoPage: true,
-            taobaoPageLink: "https://item.taobao.com/item.htm?id=23456",
-            wechatServiceLink: "https://wx.faceu.com/customer",
-            versionNumber: "7.0.1",
-            nonPaymentTime: 36,
-            channelPhotoUrl: "https://cdn.faceu.com/channel/android.jpg",
-            i18nConfig: {
-                languages: ["zh-CN"],
-                defaultLanguage: "zh-CN"
-            }
-        },
-        {
-            appName: "Faceu激萌",
-            system: "iOS",
-            photoEditTitle: "一键修图专业版",
-            isCharged: true,
-            price: 18.9,
-            showTaobaoPage: false,
-            taobaoPageLink: "",
-            wechatServiceLink: "https://wx.faceu.com/customer",
-            versionNumber: "7.1.0",
-            nonPaymentTime: 48,
-            channelPhotoUrl: "https://cdn.faceu.com/channel/ios.jpg",
-            i18nConfig: {
-                languages: ["zh-CN", "en-US"],
-                defaultLanguage: "zh-CN"
-            }
-        },
-        {
-            appName: "B612咔叽",
-            system: "Android",
-            photoEditTitle: "智能美颜",
-            isCharged: false,
-            price: 0,
-            showTaobaoPage: false,
-            taobaoPageLink: "",
-            wechatServiceLink: "https://wx.b612.com/service",
-            versionNumber: "10.2.3",
-            nonPaymentTime: 0,
-            channelPhotoUrl: "https://cdn.b612.com/channel/android.jpg",
-            i18nConfig: {
-                languages: ["zh-CN", "en-US", "ja-JP", "ko-KR"],
-                defaultLanguage: "zh-CN"
-            }
-        },
-        {
-            appName: "B612咔叽",
-            system: "iOS",
-            photoEditTitle: "智能美颜高级版",
-            isCharged: true,
-            price: 22.9,
-            showTaobaoPage: true,
-            taobaoPageLink: "https://item.taobao.com/item.htm?id=78901",
-            wechatServiceLink: "https://wx.b612.com/service",
-            versionNumber: "10.3.0",
-            nonPaymentTime: 72,
-            channelPhotoUrl: "https://cdn.b612.com/channel/ios.jpg",
-            i18nConfig: {
-                languages: ["zh-CN", "en-US", "ja-JP", "ko-KR", "th-TH"],
-                defaultLanguage: "zh-CN"
-            }
-        },
-        {
-            appName: "无他相机",
-            system: "Android",
-            photoEditTitle: "专业修图",
-            isCharged: true,
-            price: 9.9,
-            showTaobaoPage: true,
-            taobaoPageLink: "https://item.taobao.com/item.htm?id=34567",
-            wechatServiceLink: "https://wx.wuta.com/customer",
-            versionNumber: "4.5.6",
-            nonPaymentTime: 24,
-            channelPhotoUrl: "https://cdn.wuta.com/channel/android.jpg",
-            i18nConfig: {
-                languages: ["zh-CN", "en-US"],
-                defaultLanguage: "zh-CN"
-            }
-        },
-        {
-            appName: "无他相机",
-            system: "iOS",
-            photoEditTitle: "专业修图大师",
-            isCharged: true,
-            price: 16.9,
-            showTaobaoPage: false,
-            taobaoPageLink: "",
-            wechatServiceLink: "https://wx.wuta.com/customer",
-            versionNumber: "4.6.0",
-            nonPaymentTime: 48,
-            channelPhotoUrl: "https://cdn.wuta.com/channel/ios.jpg",
-            i18nConfig: {
-                languages: ["zh-CN", "en-US", "zh-TW"],
-                defaultLanguage: "zh-CN"
-            }
-        }
+
     ])
     interface filterParams {
         note: string
@@ -349,17 +337,40 @@
     }
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
+        try {
+            const params = {
+                timestamp: Date.now(),
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
+                appNo: searchParams.value.appNo,
+                os: searchParams.value.os,
+                isCanPay: searchParams.value.isCanPay,
+                isShowTaobao: searchParams.value.isShowTaobao
             }
-        })
-        console.log('filterParams', filterParams.value);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/helpMeRetouch/list', {
+                enData
+            })
+            console.log('获取帮我修图列表', res);
+            res.data.rows.forEach((item: any) => {
+                item.isCanPay = item.isCanPay === 'true' ? true : false
+                item.isShowTaobao = item.isShowTaobao === 'true' ? true : false
+            })
+            totalData.value = res.data.total
+            appData.value = res.data.rows
+            const keys = Object.keys(appNote)
+            filterParams.value = keys.map((item) => {
+                return {
+                    note: appNote[item],
+                    isShow: true,
+                    key: item
+                }
+            })
+            console.log('filterParams', filterParams.value);
+        } catch (err) {
+            console.log('获取帮我修图列表失败', err);
+        }
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {
@@ -381,6 +392,10 @@
         }
         console.log('keyItem', keyItem);
     }
+
+
+
+
     onMounted(() => {
         getUserList();
         showPagestion.value = true

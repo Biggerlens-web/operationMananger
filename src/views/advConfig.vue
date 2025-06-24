@@ -3,7 +3,7 @@
         <channelAdvEditor v-model:show-editor="showChannelEditor" />
         <cornEditor v-model:show-editor="showCornEditor" />
         <interstitialAdsEditor v-model:show-editor="showInterstitialAdsEditor" />
-        <el-card class="filter-card">
+        <!-- <el-card class="filter-card">
             <div class="card-head">
                 <el-select filterable v-model="activeApp" placeholder="请选择应用" class="filter-select">
                     <el-option v-for="item in appList" :key="item.appNo"
@@ -11,7 +11,7 @@
                         :value="item.appNo" />
                 </el-select>
             </div>
-        </el-card>
+        </el-card> -->
         <el-card class="content-card">
             <adTable v-for="item in tableELArray" :key="item.type" :title="item.title" :filter="item.filter"
                 :type="item.type" class="ad-table" @add="addData" @editor="editorData" @delete="deleteData" />
@@ -42,7 +42,6 @@
             type: 'channel',
             title: "渠道广告",
             filter: true,
-
         },
         {
             type: 'corn',
@@ -57,6 +56,20 @@
 
 
     ])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     //新增数据
     const showChannelEditor = ref<boolean>(false) // 新增渠道广告弹窗

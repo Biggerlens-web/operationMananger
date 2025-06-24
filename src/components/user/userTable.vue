@@ -7,19 +7,23 @@
                     <img style="width:100%" :src="scope.row[item.key]" alt="">
                 </template>
                 <template
-                    v-if="item.key === 'isCharged' || item.key === 'showTaobaoPage' || item.key === 'isEnabled' || item.key === 'subscriptionLoginEnabled' || item.key === 'backButton'"
+                    v-if="item.key === 'isCanPay' || item.key === 'isShowTaobao' || item.key === 'open' || item.key === 'subscriptionLoginEnabled' || item.key === 'backButton' || item.key === 'rightEnterVipUI' || item.key === 'showUpdateVip' || item.key === 'rightShowAdsUnlock'"
                     #default="scope">
-                    <el-switch v-model="scope.row[item.key]" :active-value="true" :inactive-value="false" />
+                    <el-switch v-model="scope.row[item.key]" :active-value="true" :inactive-value="false"
+                        @change="switchChange(scope.row)" />
                 </template>
 
                 <template
-                    v-if="item.key === 'photoEditTitle' || item.key === 'versionNumber' || item.key === 'taobaoPageLink'"
+                    v-if="item.key === 'photoEditTitle' || item.key === 'version' || item.key === 'taobaoPageLink' || item.key === 'helpMeTitle' || item.key === 'taobaoPageLink' || item.key === 'wechatServiceLink'"
                     #default="scope">
-                    <el-input v-model="scope.row[item.key]" />
+                    <el-input v-model="scope.row[item.key]" @blur="handleInput(scope.row, item.key)" />
                 </template>
 
-                <template v-if="item.key === 'price'" #default="scope">
-                    <el-input-number style="width: 100px;" size="small" v-model="scope.row[item.key]" />
+                <template
+                    v-if="item.key === 'price' || item.key === 'functionStartNum' || item.key === 'timeOn' || item.key === 'adsVideoUnlockCount' || item.key === 'adsVideoUseCount' || item.key === 'freeCount' || item.key === 'paymentAmount' || item.key === 'paymentUnlockCount' || item.key === 'paymentUseCount' || item.key === 'questionnaireUseCount' || item.key === 'questionnaireUnlockCount' || item.key === 'shareAppUnlockCount' || item.key === 'shareAppUseCount'"
+                    #default="scope">
+                    <el-input-number @change="handleNumInput(scope.row, item.key)" style="width: 100px;" size="small"
+                        v-model="scope.row[item.key]" />
                 </template>
 
                 <template v-if="item.key === 'i18nConfig'" #default="scope">
@@ -39,6 +43,22 @@
                     </p>
 
                 </template>
+                <template v-if="item.key === 'probability'" #default="scope">
+                    <el-select v-model="scope.row[item.key]" @change="saveChangeProbability(scope.row)">
+                        <el-option v-for="value in initProbabilitys(scope.row.probabilitys)" :key="value" :label="value"
+                            :value="value" />
+                    </el-select>
+                </template>
+                <template v-if="item.key === 'bannerImgs' || item.key === 'noPayTimes'" #default="scope">
+
+                    <p v-for="el in JSON.parse(scope.row[item.key])" :key="item">
+                        {{ el }}
+                    </p>
+                    <p>
+                        <el-button type="primary" size="small" @click="addListData(scope.row, item.key)">添加</el-button>
+                    </p>
+
+                </template>
             </el-table-column>
         </template>
 
@@ -46,10 +66,13 @@
             <template #default="scope">
                 <el-button style="margin: 0;" type="text" size="small" @click="banUser(scope.row)" v-if="userList">{{
                     scope.row.status === 1 ? '禁用' : '启用' }}</el-button>
+                <el-button v-if="isUpdate" style="margin: 0;" type="text" size="small" @click="updateInfo(scope.row)">{{
+                    '提交修改' }}</el-button>
                 <el-button style="margin: 0;" type="text" size="small" @click="handleRoles(scope.row)"
                     v-if="userList">分配角色</el-button>
                 <el-button v-if="roleList" style="margin: 0;" type="text" size="small"
                     @click="onAssginRole(scope.row)">分配权限</el-button>
+
                 <el-button style="margin: 0;" type="text" size="small" @click="scanImg(scope.row)"
                     v-if="bannerPath">扫描该路径下图片</el-button>
                 <el-button style="margin: 0;" type="text" size="small" v-if="banner"
@@ -65,7 +88,13 @@
                     size="small" @click="goMove(scope.row, 'upMove')">上移</el-button>
                 <el-button v-if="moveIndex || isShowButton(scope.row, 'downIndex')" style="margin: 0;" type="text"
                     size="small" @click="goMove(scope.row, 'downMove')">下移</el-button>
-                <el-button style="margin: 0;" type="text" size="small" @click="handleEditor(scope.row)">编辑</el-button>
+                <el-button v-if="isEditJSON" style="margin: 0;" type="text"
+                    @click="editorJSON(scope.row)">JSON配置</el-button>
+                <el-button v-if="isDownload" style="margin: 0;" type="text"
+                    @click="downloadOSS(scope.row)">下载OSS文件</el-button>
+                <el-button style="margin: 0;" type="text" size="small" @click="handleEditor(scope.row)"
+                    v-if="!ishideEdit">编辑</el-button>
+
                 <el-button style="margin: 0;" type="text" size="small" @click="handleDelete(scope.row)">删除</el-button>
 
             </template>
@@ -93,7 +122,14 @@
         'view': [value: any],
         'moveIndex': [value: any]
         'setBannerImg': [value: any]
-
+        'saveChangeProbability': [value: any]
+        'switchChange': [value: any]
+        'updateInfo': [value: any]
+        'editorJSON': [value: any]
+        'download': [value: any]
+        'addListData': [value: any]
+        'handleInput': [value: any]
+        'handleNumInput': [value: any]
     }>()
 
     const stores = useCounterStore()
@@ -119,6 +155,10 @@
         totalItems: number
         copy: boolean
         banner: boolean
+        isUpdate: boolean
+        isEditJSON: boolean
+        isDownload: boolean
+        ishideEdit: boolean
     }>(), {
         showAction: true,
         userList: false,
@@ -128,7 +168,20 @@
     })
 
 
-    const showMoveBtnPath = ['/clothingMaterials/index']
+
+
+
+
+    //格式化概率选择
+    const initProbabilitys = (item: any) => {
+        if (typeof item === 'string' && item !== 'undefined') {
+            return JSON.parse(item)
+        } else {
+            return item
+        }
+    }
+
+    const showMoveBtnPath = ['/clothingMaterials/index', '/sticker/index']
 
     const isShowButton = (row: any, type: string) => {
 
@@ -177,10 +230,58 @@
         emit('delete', item)
     }
 
+
+
+    //添加列表数据
+    const addListData = (item: any, key: string) => {
+        console.log('添加列表数据', item, key)
+        const obj = {
+            key,
+            ...item
+        }
+        emit('addListData', obj)
+    }
+
+
+
+    //编辑json
+    const editorJSON = (item: any) => {
+        console.log('编辑json', item)
+        emit('editorJSON', item)
+    }
+
+    //下载oss文件
+    const downloadOSS = (item: any) => {
+        console.log('下载oss', item)
+        emit('download', item)
+    }
+
     //分配角色
     const handleRoles = (item: any) => {
         console.log('分配角色', item)
         emit('rolesEditor', item)
+    }
+
+
+    //修改数字输入框
+    const handleNumInput = (item: any, key: string) => {
+        console.log('修改数字输入框', item, key);
+        const obj = {
+            ...item,
+            key
+        }
+        emit('handleNumInput', obj)
+    }
+    //switch切换
+    const switchChange = (item: any) => {
+        console.log('切换', item);
+        emit('switchChange', item)
+    }
+
+    //选择概率
+    const saveChangeProbability = (item: any) => {
+        console.log('概率', item.probability);
+        emit('saveChangeProbability', item)
     }
 
     //禁用用户
@@ -189,6 +290,12 @@
         emit('ban', item)
     }
 
+
+
+    //提交修改
+    const updateInfo = (item: any) => {
+        emit('updateInfo', item)
+    }
     //分配权限
     const onAssginRole = (item: any) => {
         console.log('分配权限', item)
@@ -224,6 +331,15 @@
     const eidtorLanguage = (item: any) => {
         console.log('配置国际化', item)
         emit('editorLanguage', item)
+    }
+
+    //修改输入框
+    const handleInput = (item: any, key: string) => {
+        const obj = {
+            key,
+            ...item
+        }
+        emit('handleInput', obj)
     }
 </script>
 

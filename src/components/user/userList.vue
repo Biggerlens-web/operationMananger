@@ -97,7 +97,7 @@
 
                     <!-- 右侧：操作按钮 -->
                     <div class="user-actions" v-if="showAction">
-                        <el-button type="primary" size="small" plain @click="handleEditor(item)">
+                        <el-button type="primary" size="small" plain @click="handleEditor(item)" v-if="!ishideEdit">
                             <el-icon>
                                 <Edit />
                             </el-icon>
@@ -164,6 +164,7 @@
         bannerPath: boolean
         viewButton: boolean
         moveIndex: boolean
+        ishideEdit: boolean
     }>(), {
         showAction: true
         ,

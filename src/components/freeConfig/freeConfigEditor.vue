@@ -14,14 +14,15 @@
                     <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
                 </el-select>
             </el-form-item>
-            <el-form-item label="字段名" prop="fieldName">
-                <el-input v-model="formData.fieldName" />
+            <el-form-item label="字段名" prop="feePointField">
+                <el-input v-model="formData.feePointField" />
             </el-form-item>
-            <el-form-item label="字段说明" prop="fieldDesc">
-                <el-input v-model="formData.fieldDesc" />
+            <el-form-item label="字段说明" prop="feePointName">
+                <el-input v-model="formData.feePointName" />
             </el-form-item>
-            <el-form-item label="在线配置文案" prop="desc">
-                <el-input type="textarea" v-model="formData.desc" placeholder='"*"代表输入框,通过英文状态下","隔开多条文本,例：每日*次,每月*次' />
+            <el-form-item label="在线配置文案" prop="configTextDefault">
+                <el-input type="textarea" v-model="formData.configTextDefault"
+                    placeholder='"*"代表输入框,通过英文状态下","隔开多条文本,例：每日*次,每月*次' />
             </el-form-item>
 
 
@@ -40,51 +41,47 @@
 
 <script lang="ts" setup>
 
+    import service from '@/axios';
     import { useCounterStore } from '@/stores/counter';
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage } from 'element-plus';
     import { storeToRefs } from 'pinia';
-    import { ref } from 'vue'
+    import { ref, watch } from 'vue'
     const props = defineProps<{
         showEditor: boolean
     }>()
 
     const counterStore = useCounterStore()
-    const { appList, OSlist } = storeToRefs(counterStore)
+    const { appList, OSlist, defaultAppNo } = storeToRefs(counterStore)
     const emit = defineEmits<{
         'update:showEditor': [value: boolean]
     }>()
     const formData = ref<any>({
         id: '',
         os: '',
-        fieldName: '',
-        fileName: "",
-        desc: '',
-        appNo: ''
+        feePointField: '',
+        feePointName: "",
+        configTextDefault: '',
+        appNo: defaultAppNo.value
     })
-    const languageList = ref([
-        {
-            value: '1',
-            label: '中文'
-        },
-        {
-            value: '2',
-            label: '英文'
-        }
-    ])
+    //监听应用变化
+    watch(() => defaultAppNo.value, () => {
+        formData.value.appNo = defaultAppNo.value
+    })
 
     const ruleFormRef = ref<any>(null)
     const rules = ref({
-        channelGroupName: [{ required: true, message: '请输入渠道组名称', trigger: 'blur' }],
-        channelList: [{ required: true, message: '请选择渠道', trigger: 'blur' }]
+
     })
 
     const resetForm = () => {
         formData.value = {
             id: '',
-            bucket: '',
-            file: '',
-            fileName: "",
-            fileNoteName: '',
-            appNo: ''
+            os: '',
+            feePointField: '',
+            feePointName: "",
+            configTextDefault: '',
+            appNo: defaultAppNo.value
         }
         ruleFormRef.value?.resetFields()
     }
@@ -92,10 +89,32 @@
         resetForm()
         emit('update:showEditor', false)
     }
+
+    const saveChange = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                ...formData.value
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/feeConfig/save', {
+                enData
+            })
+
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                handleClose()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        }
+    }
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate((valid: any) => {
             if (valid) {
-                handleClose()
+                saveChange()
             }
         })
     }

@@ -20,18 +20,10 @@
             <el-divider class="divider" />
             <div class="filter-container">
                 <div class="filter-row">
+
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="请选择应用"
-                            class="filter-select">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="请选择系统"
-                            class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
+                        <el-select filterable v-model="searchParams.os" placeholder="请选择系统" class="filter-select">
+                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
                         </el-select>
                     </div>
 
@@ -59,11 +51,11 @@
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="appData" @editor="editorConfig"
-                    @delete="deleteConfig"></component>
+                    @delete="deleteConfig" :ishideEdit="true" @handleNumInput="handleNumInput"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                :total="1000" />
+                :total="totalData" v-model:current-page="pageNum" :page-size="pageSize" />
         </el-card>
     </div>
 </template>
@@ -74,12 +66,14 @@
     import userList from '@/components/user/userList.vue';
 
     import freeConfigEditor from '@/components/freeConfig/freeConfigEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { ElMessageBox } from 'element-plus';
+    import { ElMessage, ElMessageBox } from 'element-plus';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, OSlist, defaultAppNo } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -88,8 +82,21 @@
     const componentName = ref<any>(userTable)
 
 
+    //分页
+    const pageNum = ref<number>(1)
+    const pageSize = ref<number>(10)
+    const totalData = ref<number>(0)
+    watch(() => pageNum.value, () => {
+        getUserList()
+    })
+
     //新增配置
     const showEditor = ref<boolean>(false)
+    watch(() => showEditor.value, (newV) => {
+        if (!newV) {
+            getUserList()
+        }
+    })
     const addConfig = () => {
         showEditor.value = true
     }
@@ -98,6 +105,19 @@
         showEditor.value = true
     }
     //删除配置
+    const delConfigFn = async (id: number) => {
+        try {
+            const res = await service.post(`/feeConfig/del/${id}`)
+            if (res.data.code === 200) {
+                ElMessage.success('删除成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+
+        }
+    }
     const deleteConfig = (item: any) => {
         console.log('删除', item)
         ElMessageBox.confirm(
@@ -108,21 +128,48 @@
                 cancelButtonText: '取消',
                 type: 'warning'
             }
-        )
+        ).then(async () => {
+            await delConfigFn(item.id)
+        })
     }
 
+
+    //修改数字输入框
+    const handleNumInput = async (item: any) => {
+        try {
+            const { key } = item
+            const params = {
+                timestamp: Date.now(),
+                id: item.id,
+                [key]: item[key]
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/feeConfig/save', {
+                enData
+            })
+            console.log('保存成功', res);
+            if (res.data.code === 200) {
+                ElMessage.success('修改成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('修改失败', err);
+        }
+    }
     //搜索参数
     interface SearchParams {
-        inputText: string
-        companyNo: string
+
+        os: string
 
 
 
     }
     const searchParams = ref<SearchParams>(
         {
-            inputText: '',
-            companyNo: '',
+
+            os: '',
 
         }
     )
@@ -131,288 +178,110 @@
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            inputText: '',
-            companyNo: '',
+
+            os: '',
 
         }
         getUserList()
     }
     interface FeatureConfig {
         appName: string;                // 所属应用
-        fieldName: string;              // 字段名
-        fieldDescription: string;       // 字段说明
-        system: string;                 // 系统
-        directOpenVipPage: boolean;     // 是否直接打开vip界面
-        showUpgradeVipPage: boolean;    // 是否显示升级vip界面
-        showUpgradeVip: boolean;        // 是否显示升级vip
-        freeUsageCount: number;         // 免费次数
+        feePointField: string;              // 字段名
+        feePointName: string;       // 字段说明
+        os: string;                 // 系统
+        rightEnterVipUI: boolean;     // 是否直接打开vip界面
+
+        showUpdateVip: boolean;        // 是否显示升级vip
+        freeCount: number;         // 免费次数
         paymentAmount: number;          // 支付金额
-        paidUnlockCount: number;        // 可付费解锁次数
-        unlockCountByPayment: number;   // 付费可解锁次数
-        directShowAd: boolean;          // 是否直接显示广告
-        adUnlockCount: number;          // 可广告解锁次数
-        unlockCountByAd: number;        // 广告可解锁次数
-        shareUnlockCount: number;       // 可分享解锁次数
-        unlockCountByShare: number;     // 分享可解锁次数
-        surveyUnlockCount: number;      // 可使用调查问卷解说次数
-        unlockCountBySurvey: number;    // 调查问卷可解锁次数
-        onlineConfigText: string;       // 在线配置文案
+        paymentUseCount: number;        // 可付费解锁次数
+        paymentUnlockCount: number;   // 付费可解锁次数
+        rightShowAdsUnlock: boolean;          // 是否直接显示广告
+        adsVideoUnlockCount: number;          // 可广告解锁次数
+        adsVideoUseCount: number;        // 广告可解锁次数
+        shareAppUseCount: number;       // 可分享解锁次数
+        shareAppUnlockCount: number;     // 分享可解锁次数
+        questionnaireUseCount: number;      // 可使用调查问卷解说次数
+        questionnaireUnlockCount: number;    // 调查问卷可解锁次数
+        configTextDefault: string;       // 在线配置文案
     }
 
 
     const appNote: any = {
         appName: '所属应用',
-        fieldName: '字段名',
-        fieldDescription: '字段说明',
-        system: '系统',
-        directOpenVipPage: '是否直接打开vip界面',
-        showUpgradeVipPage: '是否显示升级vip界面',
-        showUpgradeVip: '是否显示升级vip',
-        freeUsageCount: '免费次数',
+        feePointField: '字段名',
+        feePointName: '字段说明',
+        os: '系统',
+        rightEnterVipUI: '是否直接打开vip界面',
+
+        showUpdateVip: '是否显示升级vip',
+        freeCount: '免费次数',
         paymentAmount: '支付金额',
-        paidUnlockCount: '可付费解锁次数',
-        unlockCountByPayment: '付费可解锁次数',
-        directShowAd: '是否直接显示广告',
-        adUnlockCount: '可广告解锁次数',
-        unlockCountByAd: '广告可解锁次数',
-        shareUnlockCount: '可分享解锁次数',
-        unlockCountByShare: '分享可解锁次数',
-        surveyUnlockCount: '可使用调查问卷解说次数',
-        unlockCountBySurvey: '调查问卷可解锁次数',
-        onlineConfigText: '在线配置文案'
+        paymentUseCount: '可付费解锁次数',
+        paymentUnlockCount: '付费可解锁次数',
+        rightShowAdsUnlock: '是否直接显示广告',
+        adsVideoUnlockCount: '可广告解锁次数',
+        adsVideoUseCount: '广告可解锁次数',
+        shareAppUseCount: '可分享解锁次数',
+        shareAppUnlockCount: '分享可解锁次数',
+        questionnaireUseCount: '可使用调查问卷解锁次数',
+        questionnaireUnlockCount: '调查问卷可解锁次数',
+        configTextDefault: '在线配置文案'
 
     }
     // 生成用户数据
     const appData = ref<FeatureConfig[]>([
-        {
-            appName: "美图秀秀",
-            fieldName: "aiBeauty",
-            fieldDescription: "AI一键美颜",
-            system: "Android",
-            directOpenVipPage: false,
-            showUpgradeVipPage: true,
-            showUpgradeVip: true,
-            freeUsageCount: 3,
-            paymentAmount: 18.8,
-            paidUnlockCount: 50,
-            unlockCountByPayment: 50,
-            directShowAd: true,
-            adUnlockCount: 5,
-            unlockCountByAd: 1,
-            shareUnlockCount: 3,
-            unlockCountByShare: 1,
-            surveyUnlockCount: 2,
-            unlockCountBySurvey: 1,
-            onlineConfigText: "使用AI一键美颜，让你的照片更加精致"
-        },
-        {
-            appName: "美图秀秀",
-            fieldName: "faceSwap",
-            fieldDescription: "AI换脸",
-            system: "iOS",
-            directOpenVipPage: true,
-            showUpgradeVipPage: true,
-            showUpgradeVip: true,
-            freeUsageCount: 1,
-            paymentAmount: 28.8,
-            paidUnlockCount: 100,
-            unlockCountByPayment: 100,
-            directShowAd: false,
-            adUnlockCount: 3,
-            unlockCountByAd: 1,
-            shareUnlockCount: 2,
-            unlockCountByShare: 1,
-            surveyUnlockCount: 0,
-            unlockCountBySurvey: 0,
-            onlineConfigText: "AI换脸，一键变身你喜欢的明星"
-        },
-        {
-            appName: "轻颜相机",
-            fieldName: "bodySlim",
-            fieldDescription: "AI瘦身",
-            system: "Android",
-            directOpenVipPage: false,
-            showUpgradeVipPage: true,
-            showUpgradeVip: false,
-            freeUsageCount: 5,
-            paymentAmount: 15.8,
-            paidUnlockCount: 30,
-            unlockCountByPayment: 30,
-            directShowAd: true,
-            adUnlockCount: 10,
-            unlockCountByAd: 2,
-            shareUnlockCount: 5,
-            unlockCountByShare: 1,
-            surveyUnlockCount: 3,
-            unlockCountBySurvey: 1,
-            onlineConfigText: "AI智能瘦身，一键让你更苗条"
-        },
-        {
-            appName: "轻颜相机",
-            fieldName: "skinSmooth",
-            fieldDescription: "AI磨皮",
-            system: "iOS",
-            directOpenVipPage: false,
-            showUpgradeVipPage: false,
-            showUpgradeVip: true,
-            freeUsageCount: 10,
-            paymentAmount: 12.8,
-            paidUnlockCount: 50,
-            unlockCountByPayment: 50,
-            directShowAd: true,
-            adUnlockCount: 8,
-            unlockCountByAd: 2,
-            shareUnlockCount: 4,
-            unlockCountByShare: 1,
-            surveyUnlockCount: 2,
-            unlockCountBySurvey: 1,
-            onlineConfigText: "AI智能磨皮，让肌肤更加细腻"
-        },
-        {
-            appName: "B612咔叽",
-            fieldName: "backgroundRemove",
-            fieldDescription: "AI抠图",
-            system: "Android",
-            directOpenVipPage: true,
-            showUpgradeVipPage: true,
-            showUpgradeVip: true,
-            freeUsageCount: 2,
-            paymentAmount: 19.9,
-            paidUnlockCount: 40,
-            unlockCountByPayment: 40,
-            directShowAd: false,
-            adUnlockCount: 4,
-            unlockCountByAd: 1,
-            shareUnlockCount: 3,
-            unlockCountByShare: 1,
-            surveyUnlockCount: 1,
-            unlockCountBySurvey: 1,
-            onlineConfigText: "AI一键抠图，轻松更换背景"
-        },
-        {
-            appName: "B612咔叽",
-            fieldName: "styleTransfer",
-            fieldDescription: "AI风格迁移",
-            system: "iOS",
-            directOpenVipPage: false,
-            showUpgradeVipPage: true,
-            showUpgradeVip: true,
-            freeUsageCount: 3,
-            paymentAmount: 25.9,
-            paidUnlockCount: 60,
-            unlockCountByPayment: 60,
-            directShowAd: true,
-            adUnlockCount: 6,
-            unlockCountByAd: 1,
-            shareUnlockCount: 3,
-            unlockCountByShare: 1,
-            surveyUnlockCount: 2,
-            unlockCountBySurvey: 1,
-            onlineConfigText: "AI风格迁移，一键变身艺术大师"
-        },
-        {
-            appName: "无他相机",
-            fieldName: "aiPortrait",
-            fieldDescription: "AI人像修饰",
-            system: "Android",
-            directOpenVipPage: false,
-            showUpgradeVipPage: true,
-            showUpgradeVip: false,
-            freeUsageCount: 5,
-            paymentAmount: 16.8,
-            paidUnlockCount: 35,
-            unlockCountByPayment: 35,
-            directShowAd: true,
-            adUnlockCount: 7,
-            unlockCountByAd: 1,
-            shareUnlockCount: 4,
-            unlockCountByShare: 1,
-            surveyUnlockCount: 2,
-            unlockCountBySurvey: 1,
-            onlineConfigText: "AI人像修饰，让你的照片更加出彩"
-        },
-        {
-            appName: "无他相机",
-            fieldName: "hdEnhance",
-            fieldDescription: "AI高清增强",
-            system: "iOS",
-            directOpenVipPage: true,
-            showUpgradeVipPage: false,
-            showUpgradeVip: true,
-            freeUsageCount: 2,
-            paymentAmount: 22.8,
-            paidUnlockCount: 45,
-            unlockCountByPayment: 45,
-            directShowAd: false,
-            adUnlockCount: 5,
-            unlockCountByAd: 1,
-            shareUnlockCount: 3,
-            unlockCountByShare: 1,
-            surveyUnlockCount: 0,
-            unlockCountBySurvey: 0,
-            onlineConfigText: "AI高清增强，让照片更加清晰"
-        },
-        {
-            appName: "Faceu激萌",
-            fieldName: "ageTransform",
-            fieldDescription: "AI变老变小",
-            system: "Android",
-            directOpenVipPage: false,
-            showUpgradeVipPage: true,
-            showUpgradeVip: true,
-            freeUsageCount: 1,
-            paymentAmount: 18.8,
-            paidUnlockCount: 30,
-            unlockCountByPayment: 30,
-            directShowAd: true,
-            adUnlockCount: 3,
-            unlockCountByAd: 1,
-            shareUnlockCount: 2,
-            unlockCountByShare: 1,
-            surveyUnlockCount: 1,
-            unlockCountBySurvey: 1,
-            onlineConfigText: "AI变老变小，看看未来的你"
-        },
-        {
-            appName: "Faceu激萌",
-            fieldName: "cartoonTransform",
-            fieldDescription: "AI卡通化",
-            system: "iOS",
-            directOpenVipPage: true,
-            showUpgradeVipPage: true,
-            showUpgradeVip: true,
-            freeUsageCount: 2,
-            paymentAmount: 26.8,
-            paidUnlockCount: 50,
-            unlockCountByPayment: 50,
-            directShowAd: false,
-            adUnlockCount: 4,
-            unlockCountByAd: 1,
-            shareUnlockCount: 3,
-            unlockCountByShare: 1,
-            surveyUnlockCount: 2,
-            unlockCountBySurvey: 1,
-            onlineConfigText: "AI卡通化，一键变身动漫角色"
-        }
+
     ])
     interface filterParams {
         note: string
         isShow: boolean
         key: string
     }
+
+    //监听应用变化
+    watch(() => defaultAppNo.value, () => {
+        getUserList()
+    })
+
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
+        try {
+            const params = {
+                timestamp: Date.now(),
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
+                appNo: defaultAppNo.value,
+                os: searchParams.value.os
             }
-        })
-        console.log('filterParams', filterParams.value);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/feeConfig/list', {
+                enData
+            })
+            console.log('获取付费弹窗列表', res);
+
+            res.data.rows.forEach((item: any) => {
+                item.rightEnterVipUI = item.rightEnterVipUI === 'true' ? true : false
+                item.showUpdateVip = item.showUpdateVip === 'true' ? true : false
+                item.rightShowAdsUnlock = item.rightShowAdsUnlock === 'true' ? true : false
+
+            })
+            totalData.value = res.data.total
+            appData.value = res.data.rows
+            const keys = Object.keys(appNote)
+            filterParams.value = keys.map((item) => {
+                return {
+                    note: appNote[item],
+                    isShow: true,
+                    key: item
+                }
+            })
+            console.log('filterParams', filterParams.value);
+        } catch (err) {
+            console.log('获取列表失败', err);
+        }
+
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {

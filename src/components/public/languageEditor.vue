@@ -1,13 +1,11 @@
 <template>
     <el-dialog :model-value="dialogVisable" title="国际化配置" width="1000" :before-close="handleClose">
-        <addLanguage v-model:show-editor="showAddLanguage" />
+        <addLanguage v-model:show-editor="showAddLanguage" :languageArr="languageArr" @comfirm="comfirmLanguage" />
         <el-table :data="tableData" border style="width: 100%" height="600px">
             <el-table-column prop="field" label="字段名" width="180" />
-            <el-table-column prop="description" label="字段说明" width="180">
-
-
+            <el-table-column prop="name" label="字段说明" width="180">
                 <template #default="scope">
-                    <el-input v-model="scope.row.description" placeholder="请输入字段说明" />
+                    <el-input v-model="scope.row.name" @blur="handleName(scope.row)" placeholder="请输入字段说明" />
                 </template>
             </el-table-column>
             <el-table-column prop="address" label="语言文案配置">
@@ -15,8 +13,8 @@
 
                 <template #default="scope">
                     <ul>
-                        <li v-for="item in scope.row.i18n">
-                            <span>{{ item.language + ':' }}</span><span>
+                        <li v-for="item in scope.row.config" :key="item.language">
+                            <span style="font-weight: bolder;">{{ item.language + ':' }}</span><span>
                                 {{ item.value }}
                             </span>
                         </li>
@@ -36,23 +34,130 @@
 </template>
 
 <script lang="ts" setup>
+    import { desEncrypt } from '@/utils/des';
     import addLanguage from './addLanguage.vue';
-    import { ref } from 'vue';
+    import { ref, watch } from 'vue';
+    import service from '@/axios';
+    import { ElMessage } from 'element-plus';
     const props = defineProps<{
         dialogVisable: boolean
+        configId: any
     }>()
+    watch(() => props.dialogVisable, (newV) => {
+        if (newV && props.configId) {
+            getConfigList()
+        }
+    })
     const emit = defineEmits<{
         'update:dialogVisable': [value: boolean]
     }>()
 
 
+    //获取明细列表
+    const getConfigList = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                id: props.configId
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/helpMeRetouchDetail/list', {
+                enData
+            })
+            console.log('获取明细列表', res);
+            res.data.rows.forEach((item: any) => {
+                const configObj = JSON.parse(item.config)
+                const arr = Object.entries(configObj)
+
+                const config: any = []
+                arr.forEach((item: any) => {
+                    config.push({
+                        language: item[0],
+                        value: item[1]
+                    })
+                })
+                item.config = config
+            })
+            tableData.value = res.data.rows
+
+        } catch (err) {
+            console.log('获取明细列表失败', err);
+        }
+    }
+
+
     //配置国际化
     const showAddLanguage = ref<boolean>(false)
+    const languageArr = ref<any>([])
+    const configName = ref<string>('')
+    const configId = ref<number>(0)
     const handleEditor = (item: any) => {
         console.log('配置国际化', item)
+        languageArr.value = item.config
+        configName.value = item.name
+        configId.value = item.id
         showAddLanguage.value = true
     }
 
+
+    //修改字段说明
+    const handleName = async (item: any) => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                id: item.id,
+                name: item.name,
+                config: JSON.stringify(item.config)
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/helpMeRetouchDetail/save', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('修改成功')
+                getConfigList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('修改字段说明失败', err);
+        }
+    }
+
+
+    //确定语言配置
+    const comfirmLanguage = async (arr: any) => {
+
+
+        try {
+            const obj = arr.reduce((pre: any, cur: any) => {
+                pre[cur.language] = cur.value
+                return pre
+            }, {})
+
+            const params = {
+                timestamp: Date.now(),
+                id: configId.value,
+                name: configName.value,
+                config: JSON.stringify(obj)
+            }
+            console.log('保存国际化参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/helpMeRetouchDetail/save', {
+                enData
+            })
+            console.log('保存国际化', res);
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                showAddLanguage.value = false
+                getConfigList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存国际化失败', err);
+        }
+    }
 
 
 
@@ -61,11 +166,8 @@
 
     interface LanguageConfigItem {
         field: string;           // 字段名
-        description: string;     // 字段说明
-        i18n: {
-            language: string
-            value: string
-        }[]
+        name: string;     // 字段说明
+        config: any
 
     };
 
@@ -74,86 +176,7 @@
 
 
     const tableData = ref<LanguageConfigItem[]>([
-        {
-            field: 'name',
-            description: '用户名称',
-            i18n: [
-                { language: 'zh_CN', value: '姓名' },
-                { language: 'en_US', value: 'Name' }
-            ]
-        },
-        {
-            field: 'age',
-            description: '用户年龄',
-            i18n: [
-                { language: 'zh_CN', value: '年龄' },
-                { language: 'en_US', value: 'Age' }
-            ]
-        },
-        {
-            field: 'email',
-            description: '电子邮箱',
-            i18n: [
-                { language: 'zh_CN', value: '邮箱' },
-                { language: 'en_US', value: 'Email' }
-            ]
-        },
-        {
-            field: 'phone',
-            description: '联系电话',
-            i18n: [
-                { language: 'zh_CN', value: '电话' },
-                { language: 'en_US', value: 'Phone' }
-            ]
-        },
-        {
-            field: 'address',
-            description: '居住地址',
-            i18n: [
-                { language: 'zh_CN', value: '地址' },
-                { language: 'en_US', value: 'Address' }
-            ]
-        },
-        {
-            field: 'gender',
-            description: '性别',
-            i18n: [
-                { language: 'zh_CN', value: '性别' },
-                { language: 'en_US', value: 'Gender' }
-            ]
-        },
-        {
-            field: 'birthday',
-            description: '出生日期',
-            i18n: [
-                { language: 'zh_CN', value: '生日' },
-                { language: 'en_US', value: 'Birthday' }
-            ]
-        },
-        {
-            field: 'status',
-            description: '用户状态',
-            i18n: [
-                { language: 'zh_CN', value: '状态' },
-                { language: 'en_US', value: 'Status' }
-            ]
-        },
-        {
-            field: 'role',
-            description: '用户角色',
-            i18n: [
-                { language: 'zh_CN', value: '角色' },
-                { language: 'en_US', value: 'Role' }
-            ]
-        },
-        {
-            field: 'createTime',
-            description: '创建时间',
-            i18n: [
-                { language: 'zh_CN', value: '创建时间' },
-                { language: 'en_US', value: 'Create Time' }
-            ]
-        }
+
     ])
 
     //关闭弹窗

@@ -46,7 +46,13 @@
 </template>
 
 <script lang="ts" setup>
-    import { onMounted, ref } from 'vue'
+    import service from '@/axios';
+    import { useCounterStore } from '@/stores/counter';
+    import { desEncrypt } from '@/utils/des';
+    import { storeToRefs } from 'pinia';
+    import { onMounted, ref, watch } from 'vue'
+    const stores = useCounterStore()
+    const { defaultAppNo } = storeToRefs(stores)
     const props = defineProps<{
         title: string
         filter: boolean
@@ -95,136 +101,7 @@
 
     }
     const channelList = ref<channelItem[]>([
-        {
-            id: 1,
-            channel: "应用宝",
-            adType: "穿山甲",
-            showAd: true,
-            splashAd: true,
-            bannerAd: true,
-            interstitialAd: false,
-            rewardedAd: true,
-            fullscreenAd: false,
-            feedAd: true,
-            content: "普通素材"
-        },
-        {
-            id: 2,
-            channel: "华为应用市场",
-            adType: "优量汇",
-            showAd: true,
-            splashAd: true,
-            bannerAd: false,
-            interstitialAd: true,
-            rewardedAd: true,
-            fullscreenAd: true,
-            feedAd: false,
-            content: "精品素材"
-        },
-        {
-            id: 3,
-            channel: "小米应用商店",
-            adType: "穿山甲",
-            showAd: true,
-            splashAd: true,
-            bannerAd: true,
-            interstitialAd: true,
-            rewardedAd: false,
-            fullscreenAd: false,
-            feedAd: true,
-            content: "互动素材"
-        },
-        {
-            id: 4,
-            channel: "OPPO软件商店",
-            adType: "优量汇",
-            showAd: true,
-            splashAd: false,
-            bannerAd: true,
-            interstitialAd: false,
-            rewardedAd: true,
-            fullscreenAd: false,
-            feedAd: true,
-            content: "视频素材"
-        },
-        {
-            id: 5,
-            channel: "VIVO应用商店",
-            adType: "穿山甲",
-            showAd: true,
-            splashAd: true,
-            bannerAd: false,
-            interstitialAd: true,
-            rewardedAd: true,
-            fullscreenAd: false,
-            feedAd: false,
-            content: "原生素材"
-        },
-        {
-            id: 6,
-            channel: "App Store",
-            adType: "优量汇",
-            showAd: false,
-            splashAd: false,
-            bannerAd: false,
-            interstitialAd: false,
-            rewardedAd: true,
-            fullscreenAd: false,
-            feedAd: false,
-            content: "奖励素材"
-        },
-        {
-            id: 7,
-            channel: "Google Play",
-            adType: "AdMob",
-            showAd: true,
-            splashAd: false,
-            bannerAd: true,
-            interstitialAd: true,
-            rewardedAd: true,
-            fullscreenAd: true,
-            feedAd: true,
-            content: "海外素材"
-        },
-        {
-            id: 8,
-            channel: "官方网站",
-            adType: "自有广告",
-            showAd: true,
-            splashAd: true,
-            bannerAd: true,
-            interstitialAd: false,
-            rewardedAd: false,
-            fullscreenAd: false,
-            feedAd: true,
-            content: "品牌素材"
-        },
-        {
-            id: 9,
-            channel: "百度手机助手",
-            adType: "百青藤",
-            showAd: true,
-            splashAd: true,
-            bannerAd: true,
-            interstitialAd: true,
-            rewardedAd: false,
-            fullscreenAd: true,
-            feedAd: true,
-            content: "搜索素材"
-        },
-        {
-            id: 10,
-            channel: "魅族应用商店",
-            adType: "广点通",
-            showAd: true,
-            splashAd: true,
-            bannerAd: false,
-            interstitialAd: true,
-            rewardedAd: true,
-            fullscreenAd: false,
-            feedAd: true,
-            content: "图文素材"
-        }
+
     ])
 
     //定时任务
@@ -243,146 +120,7 @@
         content: string;
     }
     const cornList = ref<cornItem[]>([
-        {
-            id: 1,
-            channel: "应用宝",
-            startTime: "2023-05-01 00:00:00",
-            endTime: "2023-12-31 23:59:59",
-            showAd: true,
-            splashAd: true,
-            bannerAd: true,
-            interstitialAd: false,
-            rewardedAd: true,
-            fullscreenAd: false,
-            feedAd: true,
-            content: "普通素材"
-        },
-        {
-            id: 2,
-            channel: "华为应用市场",
-            startTime: "2023-06-15 00:00:00",
-            endTime: "2024-01-15 23:59:59",
-            showAd: true,
-            splashAd: true,
-            bannerAd: false,
-            interstitialAd: true,
-            rewardedAd: true,
-            fullscreenAd: true,
-            feedAd: false,
-            content: "精品素材"
-        },
-        {
-            id: 3,
-            channel: "小米应用商店",
-            startTime: "2023-04-10 00:00:00",
-            endTime: "2023-10-10 23:59:59",
-            showAd: true,
-            splashAd: true,
-            bannerAd: true,
-            interstitialAd: true,
-            rewardedAd: false,
-            fullscreenAd: false,
-            feedAd: true,
-            content: "互动素材"
-        },
-        {
-            id: 4,
-            channel: "OPPO软件商店",
-            startTime: "2023-07-01 00:00:00",
-            endTime: "2024-02-29 23:59:59",
-            showAd: true,
-            splashAd: false,
-            bannerAd: true,
-            interstitialAd: false,
-            rewardedAd: true,
-            fullscreenAd: false,
-            feedAd: true,
-            content: "视频素材"
-        },
-        {
-            id: 5,
-            channel: "VIVO应用商店",
-            startTime: "2023-08-15 00:00:00",
-            endTime: "2023-11-15 23:59:59",
-            showAd: true,
-            splashAd: true,
-            bannerAd: false,
-            interstitialAd: true,
-            rewardedAd: true,
-            fullscreenAd: false,
-            feedAd: false,
-            content: "原生素材"
-        },
-        {
-            id: 6,
-            channel: "App Store",
-            startTime: "2023-09-01 00:00:00",
-            endTime: "2024-03-01 23:59:59",
-            showAd: false,
-            splashAd: false,
-            bannerAd: false,
-            interstitialAd: false,
-            rewardedAd: true,
-            fullscreenAd: false,
-            feedAd: false,
-            content: "奖励素材"
-        },
-        {
-            id: 7,
-            channel: "Google Play",
-            startTime: "2023-06-01 00:00:00",
-            endTime: "2024-06-01 23:59:59",
-            showAd: true,
-            splashAd: false,
-            bannerAd: true,
-            interstitialAd: true,
-            rewardedAd: true,
-            fullscreenAd: true,
-            feedAd: true,
-            content: "海外素材"
-        },
-        {
-            id: 8,
-            channel: "官方网站",
-            startTime: "2023-07-10 00:00:00",
-            endTime: "2023-12-10 23:59:59",
-            showAd: true,
-            splashAd: true,
-            bannerAd: true,
-            interstitialAd: false,
-            rewardedAd: false,
-            fullscreenAd: false,
-            feedAd: true,
-            content: "品牌素材"
-        },
-        {
-            id: 9,
-            channel: "百度手机助手",
-            startTime: "2023-08-01 00:00:00",
-            endTime: "2024-01-31 23:59:59",
-            showAd: true,
-            splashAd: true,
-            bannerAd: true,
-            interstitialAd: true,
-            rewardedAd: false,
-            fullscreenAd: true,
-            feedAd: true,
-            content: "搜索素材"
-        },
-        {
-            id: 10,
-            channel: "魅族应用商店",
-            startTime: "2023-09-15 00:00:00",
-            endTime: "2024-02-15 23:59:59",
-            showAd: true,
-            splashAd: true,
-            bannerAd: false,
-            interstitialAd: true,
-            rewardedAd: true,
-            fullscreenAd: false,
-            feedAd: true,
-            content: "图文素材"
-        }
+
     ])
 
 
@@ -395,66 +133,7 @@
         closeCountLimit: number;   // 关闭几次后不显示 
     }
     const interstitiaAdsList = ref<InterstitialAdsItem[]>([
-        {
-            id: 1,
-            adPositionId: "splash_001",
-            loadProbability: 1.0,
-            closeCountLimit: 3
-        },
-        {
-            id: 2,
-            adPositionId: "banner_top_001",
-            loadProbability: 0.8,
-            closeCountLimit: 5
-        },
-        {
-            id: 3,
-            adPositionId: "banner_bottom_001",
-            loadProbability: 0.9,
-            closeCountLimit: 4
-        },
-        {
-            id: 4,
-            adPositionId: "interstitial_game_001",
-            loadProbability: 0.7,
-            closeCountLimit: 2
-        },
-        {
-            id: 5,
-            adPositionId: "interstitial_level_001",
-            loadProbability: 0.6,
-            closeCountLimit: 3
-        },
-        {
-            id: 6,
-            adPositionId: "reward_video_001",
-            loadProbability: 1.0,
-            closeCountLimit: 0
-        },
-        {
-            id: 7,
-            adPositionId: "reward_video_002",
-            loadProbability: 0.95,
-            closeCountLimit: 0
-        },
-        {
-            id: 8,
-            adPositionId: "fullscreen_exit_001",
-            loadProbability: 0.8,
-            closeCountLimit: 2
-        },
-        {
-            id: 9,
-            adPositionId: "feed_home_001",
-            loadProbability: 0.75,
-            closeCountLimit: 5
-        },
-        {
-            id: 10,
-            adPositionId: "feed_detail_001",
-            loadProbability: 0.85,
-            closeCountLimit: 4
-        }
+
     ])
 
     //注释
@@ -490,23 +169,92 @@
             })
         }
     }
-    onMounted(() => {
-        // console.log('props', props.type);
 
 
 
-        switch (props.type) {
-            case 'channel':
-                viewList.value = channelList.value
-                break;
-            case 'corn':
-                viewList.value = cornList.value
-                break;
-            case 'InterstitialAds':
-                viewList.value = interstitiaAdsList.value
-                break;
+    //分页
+    const pageNum = ref<number>(1)
+    const pageSize = ref<number>(10)
+    const totalData = ref<number>(0)
+
+    watch(() => pageNum.value, () => {
+        getData()
+    })
+
+    //监听应用变化
+    watch(() => defaultAppNo.value, () => {
+        getData()
+    })
+
+    const getChannelList = async () => {
+        try {
+            const params = {
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
+                appNo: defaultAppNo.value,
+                timestamp: Date.now()
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/advChannelConfig/list', {
+                enData
+            })
+            console.log('渠道广告列表', res);
+            totalData.value = res.data.total
+            channelList.value = res.data.rows
+        } catch (err) {
+
         }
-        initParams()
+    }
+
+
+    const getAdvList = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
+                appNo: defaultAppNo.value,
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/advInterstitialConfig/list', {
+                enData
+            })
+            console.log('插屏广告列表', res);
+            totalData.value = res.data.total
+            interstitiaAdsList.value = res.data.rows
+        } catch (err) {
+            console.log('获取插屏广告失败', err);
+        }
+    }
+    const getData = async () => {
+        try {
+            console.log('props.type', props.type);
+            switch (props.type) {
+                case 'channel':
+                    await getChannelList()
+                    viewList.value = channelList.value
+                    break;
+                case 'corn':
+                    viewList.value = cornList.value
+                    break;
+                case 'InterstitialAds':
+                    await getAdvList()
+                    viewList.value = interstitiaAdsList.value
+                    break;
+            }
+            initParams()
+
+        }
+        catch (err) {
+            console.log('获取数据出错', err);
+        }
+    }
+    onMounted(() => {
+
+        getData()
+
+
+
     })
 </script>
 

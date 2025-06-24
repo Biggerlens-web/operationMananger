@@ -4,8 +4,6 @@ import { defineStore } from 'pinia'
 export const useCounterStore = defineStore(
   'counter',
   () => {
-    const companyView = ref<string | number>('') //显示公司id
-    const companyList = ref<any>([]) //公司列表
     const regionList = reactive<any>([
       {
         label: '国内',
@@ -17,7 +15,10 @@ export const useCounterStore = defineStore(
       },
     ]) //地域列表
     const international = ref<any>() //国际化信息
-
+    const companyList = ref<any>([]) //公司列表
+    const defaultCompanyNo = ref<string | number>('') //选中公司
+    const appListInCom = ref<any>([]) //公司下应用列表
+    const defaultAppNo = ref<string | number>('') //选中应用
     const userName = ref<string>('') //用户名
     const userAvatar = ref<string>('') //用户头像
     const appList = ref<any>([]) // 应用列表
@@ -41,8 +42,11 @@ export const useCounterStore = defineStore(
       operationClass,
       tagList,
       clothFliterParams,
-      companyView,
+
       companyList,
+      defaultCompanyNo,
+      defaultAppNo,
+      appListInCom,
     }
   },
   {

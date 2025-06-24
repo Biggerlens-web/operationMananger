@@ -97,6 +97,7 @@
     import { desEncrypt } from '@/utils/des';
     import copyBanner from '@/components/banner/copyBanner.vue';
     import service from '@/axios';
+    import { useRouter } from 'vue-router';
     const counterStore = useCounterStore()
     const { showPagestion, appList, OSlist, channelList, international } = storeToRefs(counterStore)
     const components: any = {
@@ -122,11 +123,27 @@
     }
 
     //配置轮播图
+    const router = useRouter()
     const setBannerImg = (item: any) => {
 
 
         console.log('配置轮播图', item);
 
+        const channelId = item.channels.channelId
+        const os = item.os.toUpperCase()
+        const appNo = item.parentObj.appNo
+        const lang = item.languageVo.languageName
+        const bannerId = item.id
+        router.push({
+            path: '/bannerImgConfig/index',
+            query: {
+                channelId,
+                os,
+                appNo,
+                lang,
+                bannerId
+            }
+        })
     }
     //分页
     const pageNum = ref<number>(1)

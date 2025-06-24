@@ -1,19 +1,22 @@
 <template>
     <div class="view">
+        <bannerImgBatchAdd v-model:dialog-visible="batchImageDialog" :appNo="searchParams.appNo" :editType="editType"
+            :bannerId="searchParams.bannerId" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" class="add-button" @click="addImg">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增图片
                     </el-button>
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" class="add-button save-button" @click="save">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         保存改动
+                        <div v-if="hasUnsavedChanges" class="red-dot"></div>
                     </el-button>
                 </div>
                 <div class="right-actions">
@@ -29,31 +32,43 @@
 
 
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="应用" class="filter-select">
+                        <el-select filterable v-model="searchParams.appNo" placeholder="应用" class="filter-select"
+                            @change="getBannerList">
                             <el-option v-for="item in appList" :key="item.appNo"
                                 :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
                                 :value="item.appNo" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="系统" class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
+                        <el-select filterable v-model="searchParams.os" placeholder="系统" class="filter-select"
+                            @change="getBannerList">
+                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="语言" class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
+                        <el-select filterable v-model="searchParams.lang" placeholder="语言" class="filter-select"
+                            @change="getBannerList">
+                            <el-option v-for="item in international" :key="item" :label="item.language"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="渠道" class="filter-select">
+                        <el-select filterable v-model="searchParams.channelId" placeholder="渠道" class="filter-select"
+                            @change="getBannerList">
                             <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
+                                :value="item.id" />
+                        </el-select>
+                    </div>
+                    <div class="filter-item">
+                        <el-select filterable v-model="searchParams.bannerId" placeholder="轮播点" class="filter-select"
+                            @change="getUserList">
+                            <el-option v-for="item in bannerList" :key="item.id" :label="item.bannerName"
                                 :value="item.id" />
                         </el-select>
                     </div>
 
                     <div class="filter-item filter-actions">
-                        <el-button type="primary" @click="getUserList">
+                        <el-button type="primary" @click="showBatchAddBannerImg">
                             <el-icon>
                                 <Search />
                             </el-icon>
@@ -71,19 +86,24 @@
                 ghost-class="ghost-class" chosen-class="chosen-class" drag-class="dragging-class"
                 :group="{ name: 'items' }" @start="onDragStart" @end="onDragEnd">
                 <template #item="{ element, index }">
-                    <li :key="element.id" class="template-item" @click="editorTemplate(element.id)">
-                        <div class="img-wrapper" @click.stop="templateViewDialog(element.id)">
-                            <img :src="element.img" alt="" class="template-img">
+                    <li :key="element.img.id" class="template-item" @click="editorTemplate(element.img.id)">
+                        <div class="img-wrapper" @click.stop="templateViewDialog(element.img.id)">
+                            <img :src="element.img.imgUrl" alt="" class="template-img">
+                            <div class="delete-icon" @click.stop="deleteTemplate(element.img.id)">
+                                <el-icon>
+                                    <Delete />
+                                </el-icon>
+                            </div>
                         </div>
                         <p class="template-name">
-                            <el-tooltip :content="element.name" placement="top" :show-after="500" :enterable="false"
-                                popper-class="template-name-tooltip">
+                            <el-tooltip :content="element.img.imgName" placement="top" :show-after="500"
+                                :enterable="false" popper-class="template-name-tooltip">
                                 <span class="name">
-                                    {{ element.name }}
+                                    {{ element.img.imgName }}
                                 </span>
                             </el-tooltip>
-                            <span class="tag tag-test" v-if="!element.isTest">测试</span>
-                            <span class="tag tag-prod" v-if="!element.isProduction">正式</span>
+                            <!-- <span class="tag tag-test" v-if="!element.isTest">测试</span>
+                            <span class="tag tag-prod" v-if="!element.isProduction">正式</span> -->
                         </p>
                     </li>
                 </template>
@@ -96,11 +116,17 @@
     import draggable from 'vuedraggable'
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
-    import { onMounted, ref } from 'vue';
+    import bannerImgBatchAdd from '@/components/banner/bannerImgBatchAdd.vue';
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
+    import { Delete } from '@element-plus/icons-vue';
+    import { ElMessage } from 'element-plus';
+    import { useRoute } from 'vue-router';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, appList, OSlist, channelList, international } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -108,88 +134,51 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
     const list = ref<any>([
-        {
-            name: '模板1模板1模板1模板1模板1模板1模板1模板1模板1模板1模板1',
-            id: 1,
-            img: '',
-        },
-        {
-            name: '模板2',
-            id: 2,
-            img: '',
-        },
-        {
-            name: '模板3',
-            id: 3,
-            img: '',
-        },
-        {
-            name: '模板4',
-            id: 4,
-            img: '',
-        },
-        {
-            name: '模板5',
-            id: 5,
-            img: '',
-        },
-        {
-            name: '模板6',
-            id: 6,
-            img: '',
-        },
-        {
-            name: '模板7',
-            id: 7,
-            img: '',
-        },
-        {
-            name: '模板8',
-            id: 8,
-            img: '',
-        },
-        {
-            name: '模板1模板1模板1模板1模板1模板1模板1模板1模板1模板1模板1',
-            id: 1,
-            img: '',
-        },
-        {
-            name: '模板2',
-            id: 2,
-            img: '',
-        },
-        {
-            name: '模板3',
-            id: 3,
-            img: '',
-        },
-        {
-            name: '模板4',
-            id: 4,
-            img: '',
-        },
-        {
-            name: '模板5',
-            id: 5,
-            img: '',
-        },
-        {
-            name: '模板6',
-            id: 6,
-            img: '',
-        },
-        {
-            name: '模板7',
-            id: 7,
-            img: '',
-        },
-        {
-            name: '模板8',
-            id: 8,
-            img: '',
-        },
+
 
     ])
+
+
+    //新增类型
+    const editType = ref<string>('')
+
+
+
+    //新增图片
+    const addImg = () => {
+        editType.value = 'add'
+        batchImageDialog.value = true
+    }
+
+
+    // 跟踪是否有未保存的改动
+    const hasUnsavedChanges = ref<boolean>(false)
+    const originalList = ref<any>([])
+
+    // 监听列表变化
+    watch(list, (newList) => {
+        // 比较当前列表和原始列表是否相同
+        const currentIds = newList.map((item: any) => item.img.id)
+        const originalIds = originalList.value.map((item: any) => item.img.id)
+
+        // 检查顺序或内容是否发生变化
+        hasUnsavedChanges.value = JSON.stringify(currentIds) !== JSON.stringify(originalIds)
+    }, { deep: true })
+
+
+
+    //批量新增轮播图
+    const batchImageDialog = ref<boolean>(false)
+    watch(() => batchImageDialog.value, (newV) => {
+        if (!newV) {
+            getUserList()
+        }
+    })
+    const showBatchAddBannerImg = () => {
+        editType.value = 'batchAdd'
+        batchImageDialog.value = true
+    }
+
 
     //显示模板图
     const showTemplateView = ref<boolean>(false);
@@ -206,6 +195,8 @@
     }
     const onDragEnd = () => {
         console.log('结束拖动')
+        // 拖拽结束后标记有未保存的改动
+        hasUnsavedChanges.value = true
     }
     const onDragStart = () => {
         console.log('开始拖动')
@@ -214,39 +205,165 @@
 
     //搜索参数
     interface SearchParams {
-        inputText: string
-        companyNo: string
+        appNo: number | string
+        os: string
+        lang: string
+        channelId: string | number
+        bannerId: number | string
 
 
 
     }
     const searchParams = ref<SearchParams>(
         {
-            inputText: '',
-            companyNo: '',
+            appNo: appList.value[0].appNo,
+            os: OSlist.value[0],
+            lang: international.value[0].value,
+            channelId: channelList.value[0].id,
+            bannerId: ''
 
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            inputText: '',
-            companyNo: '',
+            appNo: '',
+            os: '',
+            lang: '',
+            channelId: '',
+            bannerId: ''
 
         }
         getUserList()
     }
 
 
+
+
+    //获取轮播点列表
+    const bannerList = ref<any>([])
+    const getBannerList = async () => {
+
+
+        try {
+
+            const params = {
+                timestamp: Date.now(),
+                appNo: searchParams.value.appNo,
+                os: searchParams.value.os,
+                language: searchParams.value.lang,
+                channelId: searchParams.value.channelId,
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/base/banner/listByAppNoAndOsAndLanguageAndChannelId', {
+
+                enData
+
+            })
+
+            console.log('获取轮播点列表', res);
+            bannerList.value = res.data.data.vos
+            searchParams.value.bannerId = ''
+        } catch (err) {
+            console.log('获取轮播点失败', err);
+
+        }
+    }
+
+
+
+    //获取轮播图列表
     const getUserList = async () => {
-        console.log('获取用户列表');
+        try {
+
+
+            const params = {
+                timestamp: Date.now(),
+                bannerId: searchParams.value.bannerId
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get('/bannerImgConfig/list', {
+                params: {
+                    enData
+                }
+            })
+            console.log('获取轮播图列表', res);
+            list.value = res.data.data.bannerImgConfigList
+            // 保存原始列表用于比较
+            originalList.value = JSON.parse(JSON.stringify(list.value))
+            // 重置改动状态
+            hasUnsavedChanges.value = false
+        } catch (err) {
+
+
+            console.log('获取轮播图列表失败', err);
+        }
 
 
     }
 
 
-    onMounted(() => {
-        getUserList();
+    // 删除模板函数
+    const deleteTemplate = (id: string | number) => {
+        console.log('删除模板', id)
+        const deleteIndex = list.value.findIndex((item: any) => item.img.id === id)
+        if (deleteIndex !== -1) {
+            list.value.splice(deleteIndex, 1)
+            // 删除后标记有未保存的改动
+            hasUnsavedChanges.value = true
+        }
+    }
+
+
+
+    //保存改动
+    const save = async () => {
+        try {
+
+
+            const params = {
+                timestamp: Date.now(),
+                bannerId: searchParams.value.bannerId,
+                imgIds: list.value.map((item: any) => item.img.id)
+            }
+
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/bannerImgConfig/save', {
+                enData
+            })
+
+            console.log('保存改动', res);
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                // 保存成功后重置改动状态
+                hasUnsavedChanges.value = false
+                // 更新原始列表
+                originalList.value = JSON.parse(JSON.stringify(list.value))
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+
+
+            console.log('保存失败', err);
+        }
+    }
+
+
+
+    const route = useRoute()
+    onMounted(async () => {
+        const query = route.query
+        console.log('query', query);
+        if (query) {
+            searchParams.value.appNo = query.appNo ? Number(query.appNo) : appList.value[0].appNo
+            searchParams.value.os = query.os?.toString() || OSlist.value[0]
+            searchParams.value.channelId = query.channelId ? Number(query.channelId) : channelList.value[0].id
+            searchParams.value.lang = query.lang?.toString() || international.value[0].value
+            await getBannerList()
+            searchParams.value.bannerId = query.bannerId ? Number(query.bannerId) : ''
+            getUserList()
+        }
         showPagestion.value = true
     })
 </script>
@@ -269,6 +386,22 @@
 
                         .el-icon {
                             margin-right: 4px;
+                        }
+                    }
+
+                    .save-button {
+                        position: relative;
+
+                        .red-dot {
+                            position: absolute;
+                            top: -2px;
+                            right: -2px;
+                            width: 8px;
+                            height: 8px;
+                            background-color: #ff4757;
+                            border-radius: 50%;
+                            border: 2px solid #fff;
+                            z-index: 10;
                         }
                     }
                 }
@@ -352,11 +485,41 @@
             .img-wrapper {
                 width: 100%;
                 aspect-ratio: 1;
-
+                position: relative;
                 overflow: hidden;
                 border-radius: 4px;
                 background-color: #f5f5f5;
 
+                .delete-icon {
+                    position: absolute;
+                    top: 8px;
+                    right: 8px;
+                    width: 24px;
+                    height: 24px;
+                    background-color: #ff4757;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    opacity: 0;
+                    transition: opacity 0.2s ease;
+                    z-index: 10;
+
+                    .el-icon {
+                        color: white;
+                        font-size: 14px;
+                    }
+
+                    &:hover {
+                        background-color: #ff3742;
+                        transform: scale(1.1);
+                    }
+                }
+
+                &:hover .delete-icon {
+                    opacity: 1;
+                }
             }
 
             .template-img {
