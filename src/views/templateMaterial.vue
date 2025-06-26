@@ -9,6 +9,7 @@
 
 
     <el-card class="stickTp_manage">
+
         <draggable tag="ul" v-model="list" item-key="id" :animation="200" class="template-grid"
             ghost-class="ghost-class" chosen-class="chosen-class" drag-class="dragging-class" :group="{ name: 'items' }"
             @start="onDragStart" @end="onDragEnd">
@@ -24,11 +25,11 @@
                     <div class="template_data" @click.stop>
                         <p class="p_id">ID:{{ element.id }}</p>
                         <p class="p_viewNum">点击数:{{ element.likeNum }}</p>
-                        <p class="p_viewNum">浏览数:{{ element.viewNum }}</p>
+                        <p class="p_viewNum" v-if="element.viewNum">浏览数:{{ element.viewNum }}</p>
                     </div>
 
                     <div class="img-wrapper">
-                        <img :src="element.smallUrl" alt="" class="template-img" />
+                        <img :src="element.smallUrl || element.bigUrl" alt="" class="template-img" />
                     </div>
                     <p class="template-name">
                         <el-button type="primary" style="width: 100%" @click="editorTemplate(element)">
@@ -49,7 +50,7 @@
     import batchTag from '@/components/clothingMaterials/batchTag.vue'
     import addClothTemplate from '@/components/clothingMaterials/addClothTemplate.vue'
     import batchEditeTemplate from '@/components/clothingMaterials/batchEditeTemplate.vue'
-    import { ref, onMounted, watch } from 'vue'
+    import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
     import { useRouter, useRoute } from 'vue-router'
     import draggable from 'vuedraggable'
     import { ElMessage } from 'element-plus'
@@ -60,29 +61,110 @@
     const stores = useCounterStore()
     const { operationClass } = storeToRefs(stores)
     const route = useRoute()
+
+
+    //导出明细
+    const exportExcel = async () => {
+        try {
+            const params: any = {
+                timestamp: Date.now()
+            }
+            let url: string = ''
+            const { type } = route.query
+            switch (type) {
+                case 'sitcker':
+                    url = '/stickerDetail/exportExcel'
+                    params.stickerId = parseInt(route.query.id as string)
+                    break
+                case 'background':
+                    url = '/backgroundDetail/exportExcel'
+                    params.backId = parseInt(route.query.id as string)
+                    break
+                case 'clothing':
+                    url = '/clothingMaterialsDetail/exportExcel'
+                    params.clothingMaterialsId = parseInt(route.query.id as string)
+                    break
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get(url, {
+                params: {
+                    enData
+                },
+                responseType: 'blob'
+            })
+            const blob = new Blob([res.data], { type: 'application/vnd.ms-excel' })
+            const link = document.createElement('a')
+            link.href = URL.createObjectURL(blob)
+            link.download = '明细.xlsx'
+            link.click()
+            URL.revokeObjectURL(link.href)
+        } catch (err) {
+            console.log('导出失败', err);
+        }
+    }
+
+
     //获取素材列表
 
     const getMaterialList = async () => {
         try {
-            const params = {
+            const params: any = {
                 timestamp: Date.now(),
-                clothingMaterialsId: route.query.id,
+                // clothingMaterialsId: route.query.id,
             }
+            const { type } = route.query
+            let url: string = ''
+            if (type === 'clothing') {
+                params.clothingMaterialsId = parseInt(route.query.id as string)
+                url = '/clothingMaterialsDetail/list'
+            } else if (type === 'sitcker') {
+                params.stickerId = parseInt(route.query.id as string)
+                url = '/stickerDetail/list'
+            } else if (type === 'background') {
+                params.backId = parseInt(route.query.id as string)
+                url = '/backgroundDetail/list'
+            }
+
+
+
             console.log('参数', params)
             const enData = desEncrypt(JSON.stringify(params))
-            const res = await service.get('/clothingMaterialsDetail/list', {
-                params: {
+            let res: any = {}
+            if (type === 'clothing') {
+                res = await service.get(url, {
+                    params: {
+                        enData,
+                    },
+                })
+            } else {
+                res = await service.post(url, {
+
                     enData,
-                },
-            })
+
+                })
+            }
+
             console.log('获取素材列表', res)
             list.value = res.data.data.list
+            if (type === 'clothing') {
+
+            } else {
+
+                list.value.forEach((item: any) => {
+                    item.likeNum = item.labels[1].split(':')[1]
+
+                })
+            }
+
+
 
 
             list.value.sort((a, b) => a.detailIndex - b.detailIndex)
         } catch (err) {
             console.log('获取素材列表失败', err)
         }
+
+
     }
     onMounted(() => {
         getMaterialList()
@@ -207,17 +289,54 @@
         try {
 
             const saveIds = list.value.map(item => item.id)
-            const params = {
+            const params: any = {
 
-                clothingMaterialsId: parseInt(route.query.id as string),
+
                 detailIds: saveIds,
                 timestamp: Date.now()
 
 
             }
+            const { type } = route.query
+            let url: string = ''
+            switch (type) {
+                case 'clothing':
+                    params.clothingMaterialsId = parseInt(route.query.id as string)
+                    switch (operationClass.value) {
+                        case 1:
+                            url = '/clothingMaterialsDetail/saveOperationItem'
+                            break;
+                        case 0:
+                            url = '/clothingMaterialsDetail/saveItem'
+                            break;
+                    }
+                    break;
+                case 'background':
+                    params.backId = parseInt(route.query.id as string)
+                    switch (operationClass.value) {
+                        case 1:
+                            url = '/backgroundDetail/saveOperationItem'
+                            break;
+                        case 0:
+                            url = '/backgroundDetail/saveItem'
+                            break;
+                    }
+                    break;
+                case 'sitcker':
+                    params.stickerId = parseInt(route.query.id as string)
+                    switch (operationClass.value) {
+                        case 1:
+                            url = '/stickerDetail/saveOperationItem'
+                            break;
+                        case 0:
+                            url = '/stickerDetail/saveItem'
+                            break;
+                    }
+                    break;
+            }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
-            const url = operationClass.value === 1 ? '/clothingMaterialsDetail/saveOperationItem' : '/clothingMaterialsDetail/saveItem'
+
             const res = await service.post(url, {
 
                 enData
@@ -292,10 +411,19 @@
                 console.log('返回')
                 goBack()
                 break
+            case 'export':
+                console.log('导出')
+                exportExcel()
+                break
             default:
                 break
         }
     }
+
+    onBeforeUnmount(() => {
+        operationClass.value = 0
+    })
+
 </script>
 
 <style lang="scss" scoped>

@@ -29,6 +29,8 @@ export const useCounterStore = defineStore(
     const operationClass = ref<any>() // 操作分类
     const tagList = ref<any>([]) // 标签列表
     const clothFliterParams = ref<any>({}) // 服装筛选参数
+    const stickerFliterParams = ref<any>({}) // 贴纸筛选参数
+    const backgroundFliterParams = ref<any>({}) // 图库筛选参数
     return {
       appList,
       userName,
@@ -42,7 +44,8 @@ export const useCounterStore = defineStore(
       operationClass,
       tagList,
       clothFliterParams,
-
+      stickerFliterParams,
+      backgroundFliterParams,
       companyList,
       defaultCompanyNo,
       defaultAppNo,

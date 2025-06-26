@@ -14,16 +14,16 @@
                     <el-option v-for="item in regionList" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
             </el-form-item>
-            <el-form-item label="服装父分类" prop="tids">
+            <el-form-item label="父分类" prop="tids" v-if="!noHaveParent">
                 <el-select v-model="formData.tids" placeholder="请选择父分类" multiple>
                     <el-option v-for="item in parentList" :key="item.id" :label="item.classType" :value="item.id" />
                 </el-select>
             </el-form-item>
 
-            <el-form-item label="服装子分类名" prop="name">
+            <el-form-item label="子分类名" prop="name">
                 <el-input v-model="formData.name" />
             </el-form-item>
-            <el-form-item label="服装访问名" prop="field">
+            <el-form-item label="访问名" prop="field">
                 <el-input v-model="formData.field" />
             </el-form-item>
 
@@ -97,7 +97,7 @@
 
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { reactive, ref, watch } from 'vue'
+    import { reactive, ref, watch, onMounted } from 'vue'
     import { Plus } from '@element-plus/icons-vue'
     import type { UploadProps, UploadUserFile, UploadFiles } from 'element-plus'
     import { ElMessage } from 'element-plus'
@@ -106,20 +106,33 @@
     const props = defineProps<{
         showEditor: boolean
         editorInfo: any
+        noHaveParent?: boolean
+        type: string
     }>()
 
 
 
     const setEditInfor = () => {
         if (props.editorInfo) {
-            formData.value.id = props.editorInfo.id
-            formData.value.name = props.editorInfo.name
-            formData.value.field = props.editorInfo.field
-            formData.value.international = props.editorInfo.international
-            formData.value.isOperationClass = props.editorInfo.operationClass === 1 ? true : false
-            formData.value.region = props.editorInfo.region === '国内' ? "domestic" : 'foreign'
-            formData.value.tids = props.editorInfo.parentTypeIdList
-            formData.value.appNo = props.editorInfo.appNo
+            if (props.noHaveParent) {
+                formData.value.id = props.editorInfo.id
+                formData.value.name = props.editorInfo.name
+                formData.value.field = props.editorInfo.field
+                formData.value.international = props.editorInfo.international
+                formData.value.isOperationClass = props.editorInfo.operationClass === 1 ? true : false
+                formData.value.region = props.editorInfo.region === '国内' ? "domestic" : 'foreign'
+                formData.value.appNo = props.editorInfo.appNo
+            } else {
+                formData.value.id = props.editorInfo.id
+                formData.value.name = props.editorInfo.name
+                formData.value.field = props.editorInfo.field
+                formData.value.international = props.editorInfo.international
+                formData.value.isOperationClass = props.editorInfo.operationClass === 1 ? true : false
+                formData.value.region = props.editorInfo.region === '国内' ? "domestic" : 'foreign'
+                formData.value.tids = props.editorInfo.parentTypeIdList
+                formData.value.appNo = props.editorInfo.appNo
+            }
+
         }
     }
 
@@ -174,7 +187,7 @@
     const dialogVisible = ref(false)
 
     const counterStore = useCounterStore()
-    const { appList, OSlist, channelList, regionList, international } = storeToRefs(counterStore)
+    const { appList, regionList, international, defaultAppNo } = storeToRefs(counterStore)
 
 
 
@@ -186,7 +199,7 @@
         id: '',
         name: '',
         field: '',
-        appNo: '',
+        appNo: defaultAppNo.value,
         tids: [],
         classImage: [], // 初始化为数组
         classImageBase64: '', // 新增用于存储Base64的字段
@@ -195,10 +208,25 @@
         region: ''
     })
 
+
+
+    onMounted(() => {
+        if (props.noHaveParent) {
+            delete formData.value.tids
+        }
+    })
+
+
+    watch(() => defaultAppNo.value, () => {
+        formData.value.appNo = defaultAppNo.value
+    })
     //获取父类列表
 
     const parentList = ref<any>([])
     const getParentList = async () => {
+        if (props.noHaveParent) {
+            return
+        }
         try {
             const params = {
                 appNo: formData.value.appNo,
@@ -224,22 +252,35 @@
 
     const ruleFormRef = ref<any>(null)
     const rules = ref({
-        channelGroupName: [{ required: true, message: '请输入渠道组名称', trigger: 'blur' }],
-        channelList: [{ required: true, message: '请选择渠道', trigger: 'blur' }]
+
     })
 
     const resetForm = () => {
-        formData.value = {
-            id: '',
-            name: '',
-            field: '',
-            appNo: '',
-            tids: [],
-            classImage: [],
-            classImageBase64: '',
-            international: '',
-            isOperationClass: false,
+        if (props.noHaveParent) {
+            formData.value = {
+                id: '',
+                name: '',
+                field: '',
+                appNo: defaultAppNo.value,
+                classImage: [],
+                classImageBase64: '',
+                international: '',
+                isOperationClass: false,
+            }
+        } else {
+            formData.value = {
+                id: '',
+                name: '',
+                field: '',
+                appNo: defaultAppNo.value,
+                tids: [],
+                classImage: [],
+                classImageBase64: '',
+                international: '',
+                isOperationClass: false,
+            }
         }
+
         ruleFormRef.value?.resetFields()
     }
     const handleClose = () => {
@@ -354,7 +395,7 @@
     const addClothType = async () => {
         try {
 
-            const params = {
+            const params: any = {
                 id: formData.value.id,
                 timestamp: Date.now(),
                 appNo: formData.value.appNo,
@@ -367,10 +408,26 @@
                 isOperationClass: formData.value.isOperationClass,
 
             }
+            if (props.noHaveParent) {
+                delete params.tids
+                params['type'] = params.id ? 'update' : 'add'
+            }
+            let url: string = ''
+            switch (props.type) {
+                case 'background':
+                    url = '/background/save'
+                    break;
+                case 'sitcker':
+                    url = '/sticker/save'
+                    break;
+                case 'clothing':
+                    url = '/clothingMaterials/save'
+                    break;
 
+            }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
-            const res = await service.post('/clothingMaterials/save', {
+            const res = await service.post(url, {
                 enData
             })
             console.log('新增子分类', res);
@@ -386,7 +443,8 @@
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate(async (valid: any) => {
             if (valid) {
-                if (formData.value.tids.length === 0) {
+                console.log('props.noHaveParent', props.noHaveParent);
+                if (formData.value.tids?.length === 0) {
                     ElMessage.warning('请选择父类')
                     return
                 }

@@ -24,50 +24,10 @@
 
             </div>
 
-            <!-- <el-divider class="divider" /> -->
 
-            <!-- <div class="filter-container">
-                <div class="filter-row">
-
-                    <div class="filter-item">
-                        <el-input v-model="searchParams.inputText" placeholder="可查询内容：应用名|访问名|开发者|系统账号ID"></el-input>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="请选择所属公司"
-                            class="filter-select">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
-                        </el-select>
-                    </div>
-
-
-
-                    <div class="filter-item filter-actions">
-                        <el-button type="primary" @click="getUserList">
-                            <el-icon>
-                                <Search />
-                            </el-icon>
-                            查询
-                        </el-button>
-                        <el-button @click="resetSearch">
-                            <el-icon>
-                                <Refresh />
-                            </el-icon>
-                            重置
-                        </el-button>
-                    </div>
-                </div>
-
-
-            </div> -->
         </el-card>
         <el-card class="content-card">
-            <!-- <Transition enter-active-class="animate__animated animate__fadeIn"
-                leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="appData" @editor="editorApp"
-                    @delete="deleteApp"></component>
-            </Transition> -->
+
 
             <appTable :tableData="tableData" /> <el-pagination v-show="showPagestion" class="pagesBox" background
                 layout="prev, pager, next" :total="1000" />

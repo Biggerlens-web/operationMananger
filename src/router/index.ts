@@ -41,7 +41,8 @@ const getRouterList = async () => {
           title: item.menuText,
         },
       }
-      routes[0].redirect = '/appConfig/index'
+      routes[0].redirect = '/system/menu/index'
+      // routes[0].redirect = '/appConfig/index'
       // routes[0].redirect = '/pptTemplate'
       //ppt模板管理 可删除
       const pptRoute = {
@@ -163,9 +164,6 @@ const getCompanyList = async () => {
     const res = await service.get('/companyInfo/getAllCompanyInfo')
     console.log('公司列表', res)
     useCounterStore(pinia).companyList = res.data.rows
-    // if (!useCounterStore(pinia).companyView) {
-    //   // useCounterStore(pinia).companyView = res.data.data.companys[0].companyId
-    // }
   } catch (err) {
     console.log('获取公司列表失败', err)
   }

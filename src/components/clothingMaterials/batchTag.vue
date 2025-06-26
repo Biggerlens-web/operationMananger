@@ -35,6 +35,7 @@
     import { ElMessage } from 'element-plus'
     import { desEncrypt } from '@/utils/des'
     import service from '@/axios'
+    import { useRoute } from 'vue-router'
     const stores = useCounterStore()
 
     const { tagList } = storeToRefs(stores)
@@ -63,6 +64,7 @@
     const handleClose = () => {
         dialogVisible.value = false
     }
+    const route = useRoute()
     const comfirmBatchTag = async () => {
         console.log('chosedTagList', chosedTagList.value);
         try {
@@ -71,9 +73,21 @@
                 labels: chosedTagList.value,
                 ids: props.chosedItem
             }
-
+            const { type } = route.query
+            let url: string = ''
+            switch (type) {
+                case 'clothing':
+                    url = '/clothingMaterialsDetail/batchLabelSave'
+                    break;
+                case 'sitcker':
+                    url = '/stickerDetail/batchLabelSave'
+                    break;
+                case 'background':
+                    url = '/backgroundDetail/batchLabelSave'
+                    break;
+            }
             const enData = desEncrypt(JSON.stringify(params))
-            const res = await service.post('/clothingMaterialsDetail/batchLabelSave', {
+            const res = await service.post(url, {
                 enData
             })
             console.log('批量编辑标签', res);

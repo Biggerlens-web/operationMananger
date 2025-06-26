@@ -1,7 +1,8 @@
 <template>
     <div class="view">
-        <clothEditor v-model:show-editor="showEditor" :editorInfo="editorItemInfo" />
-        <parentManager v-model:dialog="showParentManage" /> <el-card class="filter-card">
+        <clothEditor v-model:show-editor="showEditor" :editorInfo="editorItemInfo" :noHaveParent='true'
+            :type="'sitcker'" />
+        <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
                     <el-button type="primary" @click="addSticker" class="add-button">
@@ -18,18 +19,7 @@
                     </el-button>
 
 
-                    <el-button type="primary" class="add-button" @click="parentManage">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        父类管理
-                    </el-button>
-                    <!-- <el-button type="primary" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        导入国际化
-                    </el-button> -->
+
                 </div>
                 <div class="right-actions">
                     <el-upload style="margin-right: 50px;" action="#" :show-file-list="false"
@@ -51,27 +41,14 @@
             <div class="filter-container">
                 <div class="filter-row">
 
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.appNo" placeholder="应用" class="filter-select"
-                            @change="getParentList">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
-                        </el-select>
-                    </div>
+
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
                             <el-option v-for="item in regionList" :key="item.value" :label="item.label"
                                 :value="item.value" />
                         </el-select>
                     </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.tid" placeholder="父类" class="filter-select"
-                            clearable>
-                            <el-option v-for="item in parentList" :key="item.id" :label="item.classType"
-                                :value="item.id" />
-                        </el-select>
-                    </div>
+
                     <div class="filter-item">
                         <el-input v-model="searchParams.query" placeholder="类名"></el-input>
 
@@ -104,7 +81,7 @@
                     @moveIndex="moveIndex"></component>
             </Transition>
 
-            <el-pagination v-show="showPagestion" class="pagesBox" background layout="total, prev, pager, next"
+            <el-pagination v-show="showPagestion" class="pagesBox" background layout=" prev, pager, next"
                 :total="totalItems" v-model:current-page="searchParams.pageNum" @current-change="handleCurrentChange" />
         </el-card>
     </div>
@@ -114,9 +91,9 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
-    import parentManager from '@/components/clothingMaterials/parentManager.vue';
+
     import clothEditor from '@/components/clothingMaterials/clothEditor.vue';
-    import { onMounted, reactive, ref, watch } from 'vue';
+    import { nextTick, onMounted, reactive, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import { ElMessage, ElMessageBox } from 'element-plus';
@@ -125,7 +102,7 @@
     import { desEncrypt } from '@/utils/des';
     const counterStore = useCounterStore()
     const router = useRouter()
-    const { showPagestion, appList, OSlist, channelList, regionList, operationClass, clothFliterParams } = storeToRefs(counterStore)
+    const { showPagestion, regionList, operationClass, stickerFliterParams, defaultAppNo } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -139,8 +116,6 @@
     //移动
     const moveIndex = async (item: any) => {
         console.log('移动', item);
-
-
         try {
 
             const params = {
@@ -150,7 +125,7 @@
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
-            const res = await service.post('/clothingMaterials/move', {
+            const res = await service.post('/sticker/move', {
                 enData
             })
             console.log('移动', res);
@@ -175,7 +150,7 @@
     }
 
 
-    //获取服装分类列表
+    //获取贴纸分类列表
     const totalItems = ref(0); // 用于存储总条目数
     const getClothList = async () => {
         loading.value = true
@@ -185,39 +160,33 @@
                 region: searchParams.value.region,
                 query: searchParams.value.query,
                 pageNum: searchParams.value.pageNum,
-                tid: searchParams.value.tid,
                 pageSize: searchParams.value.pageSize,
                 timestamp: Date.now()
             }
-
+            console.log('搜索贴纸参数', params);
             const enData = desEncrypt(JSON.stringify(params))
-            const res: any = await service.post('/clothingMaterials/list', {
+            const res: any = await service.post('/sticker/list', {
                 enData
             })
 
-            console.log('获取服装分类列表', res);
+            console.log('获取贴纸分类列表', res);
             totalItems.value = res.data.total
 
-
             for (let item of res.data.rows) {
-                const parentTypeNameArr = item.clothingMaterialsTypeList.map((el: any) => el.classType)
-                item.parentTypeIdList = item.clothingMaterialsTypeList.map((el: any) => el.id)
-                item.parentTypeName = parentTypeNameArr.join(',')
+                item.region = item.region.note
             }
+
             appData.value = res.data.rows
         } catch (err) {
-            console.log('获取服装分类列表失败', err);
+            console.log('获取贴纸分类列表失败', err);
         } finally {
             loading.value = false
         }
     }
 
 
-    //父类管理
-    const showParentManage = ref(false)
-    const parentManage = () => {
-        showParentManage.value = true
-    }
+
+
     //导出excel
     const exportExcel = async () => {
         try {
@@ -228,12 +197,15 @@
                 query: searchParams.value.query,
             }
             const enData = desEncrypt(JSON.stringify(params))
-            const res = await service.get('/clothingMaterials/exportExcel', {
+            const res = await service.get('/sticker/exportExcel', {
                 params: {
                     enData
                 },
                 responseType: 'blob',
             })
+
+
+
             console.log('导出excel', res);
 
             const blob = new Blob([res.data], { type: res.headers['content-type'] });
@@ -280,12 +252,14 @@
     const importInternation = async () => {
         try {
             const formData = new FormData()
-            formData.append('appNo', searchParams.value.appNo)
+
+
+            formData.append('appNo', String(searchParams.value.appNo))
             formData.append('region', searchParams.value.region)
-            formData.append('clothingMaterialsList', fileInterNational.value)
+            formData.append('stickers', fileInterNational.value)
 
 
-            const res = await service.post('/clothingMaterials/importExcelInternationalization', formData, {
+            const res = await service.post('/sticker/importExcelInternationalization', formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
                 }
@@ -323,7 +297,7 @@
     const deleteId = async (id: number) => {
         try {
 
-            const res = await service.post('/clothingMaterials/del/' + id)
+            const res = await service.post(`/sticker/del/${id}`)
 
             if (res.data.code === 200) {
                 ElMessage({
@@ -359,7 +333,7 @@
     //查看详情
     const viewDetail = (row: any) => {
         operationClass.value = row.operationClass
-        router.push('/templateMaterial?id=' + row.id)
+        router.push('/templateMaterial?id=' + row.id + '&type=sitcker')
 
 
         console.log('查看详情', row);
@@ -368,8 +342,8 @@
     //搜索参数
     interface SearchParams {
         query: string
-        appNo: string//应用id
-        tid: number | string//父类
+        appNo: string | number//应用id
+
 
         pageNum: number // 新增当前页码
         pageSize: number // 新增每页显示条数
@@ -378,9 +352,9 @@
     const searchParams = ref<SearchParams>(
         {
             query: '',
-            appNo: '',
+            appNo: defaultAppNo.value,
             region: '',
-            tid: '',
+
             pageNum: 1, // 默认当前页为1
             pageSize: 10 // 默认每页显示10条
         }
@@ -395,7 +369,7 @@
     const handleCurrentChange = (val: number) => {
         searchParams.value.pageNum = val;
 
-        clothFliterParams.value = {
+        stickerFliterParams.value = {
             ...searchParams.value,
 
         }
@@ -405,11 +379,11 @@
     //查询按钮点击事件 - 确保调用 getClothList
     const searching = () => {
         searchParams.value.pageNum = 1; // 点击查询时，通常重置到第一页
-        clothFliterParams.value = {
+        stickerFliterParams.value = {
 
             ...searchParams.value
         }
-        console.log('clothFliterParams', clothFliterParams.value);
+        console.log('stickerFliterParams', stickerFliterParams.value);
         getClothList();
     }
 
@@ -417,14 +391,14 @@
     const resetSearch = () => {
         searchParams.value = {
             query: '',
-            appNo: appList.value[0].appNo,
+            appNo: defaultAppNo.value,
             region: 'domestic',
-            tid: '',
+
             pageNum: 1,
             pageSize: 10
         };
 
-        clothFliterParams.value = {
+        stickerFliterParams.value = {
             ...searchParams.value
         }
         getClothList();
@@ -436,7 +410,6 @@
         id: number;          // 序号
         name: string;              // 名称
         region: string;            // 地区
-        parentTypeName: string//父类名称
         international: string;//国际化
         viewNum: number;       // 总点击数
         updateTime: string;    // 最近更新时间
@@ -448,7 +421,6 @@
         id: '序号',
         name: '名称',
         region: '地区',
-        parentTypeName: '父类名称',
         international: '国际化',
         viewNum: '总点击数',
         updateTime: '最近更新时间',
@@ -469,7 +441,7 @@
         await getClothList()
 
         if (appData.value.length) {
-            console.log('获取用户列表');
+
             const dataItem = appData.value[0]
             const keys = Object.keys(dataItem)
 
@@ -545,20 +517,34 @@
     }
 
 
-    onMounted(() => {
 
-        if (Object.keys(clothFliterParams.value).length > 0) {
+    watch(() => defaultAppNo.value, () => {
+        searchParams.value = {
+            query: '',
+            appNo: defaultAppNo.value,
+            region: 'domestic',
+
+            pageNum: 1,
+            pageSize: 10
+        }
+        getClothList()
+    })
+
+    onMounted(async () => {
+
+        if (Object.keys(stickerFliterParams.value).length > 0) {
             searchParams.value = {
-                ...clothFliterParams.value
+                ...stickerFliterParams.value
             }
+            searchParams.value.appNo = defaultAppNo.value
         } else {
 
 
             searchParams.value = {
                 query: '',
-                appNo: appList.value[0].appNo,
+                appNo: defaultAppNo.value,
                 region: 'domestic',
-                tid: '',
+
                 pageNum: 1,
                 pageSize: 10
             }
@@ -566,11 +552,10 @@
 
 
 
-
-
-        getUserList();//获取服装分类数据
-        getParentList()
         showPagestion.value = true
+        await nextTick()
+        getUserList();//获取贴纸分类数据
+
     })
 </script>
 

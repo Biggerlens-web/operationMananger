@@ -1,6 +1,6 @@
 <template>
     <div class="view">
-        <clothEditor v-model:show-editor="showEditor" :editorInfo="editorItemInfo" />
+        <clothEditor v-model:show-editor="showEditor" :editorInfo="editorItemInfo" :type="'clothing'" />
         <parentManager v-model:dialog="showParentManage" /> <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
@@ -51,14 +51,14 @@
             <div class="filter-container">
                 <div class="filter-row">
 
-                    <div class="filter-item">
+                    <!-- <div class="filter-item">
                         <el-select filterable v-model="searchParams.appNo" placeholder="应用" class="filter-select"
                             @change="getParentList">
                             <el-option v-for="item in appList" :key="item.appNo"
                                 :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
                                 :value="item.appNo" />
                         </el-select>
-                    </div>
+                    </div> -->
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
                             <el-option v-for="item in regionList" :key="item.value" :label="item.label"
@@ -104,7 +104,7 @@
                     @moveIndex="moveIndex"></component>
             </Transition>
 
-            <el-pagination v-show="showPagestion" class="pagesBox" background layout="total, prev, pager, next"
+            <el-pagination v-show="showPagestion" class="pagesBox" background layout=" prev, pager, next"
                 :total="totalItems" v-model:current-page="searchParams.pageNum" @current-change="handleCurrentChange" />
         </el-card>
     </div>
@@ -116,7 +116,7 @@
     import userList from '@/components/user/userList.vue';
     import parentManager from '@/components/clothingMaterials/parentManager.vue';
     import clothEditor from '@/components/clothingMaterials/clothEditor.vue';
-    import { onMounted, reactive, ref, watch } from 'vue';
+    import { nextTick, onMounted, reactive, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import { ElMessage, ElMessageBox } from 'element-plus';
@@ -125,7 +125,7 @@
     import { desEncrypt } from '@/utils/des';
     const counterStore = useCounterStore()
     const router = useRouter()
-    const { showPagestion, appList, OSlist, channelList, regionList, operationClass, clothFliterParams } = storeToRefs(counterStore)
+    const { showPagestion, appList, regionList, operationClass, clothFliterParams, defaultAppNo } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -139,8 +139,6 @@
     //移动
     const moveIndex = async (item: any) => {
         console.log('移动', item);
-
-
         try {
 
             const params = {
@@ -189,7 +187,7 @@
                 pageSize: searchParams.value.pageSize,
                 timestamp: Date.now()
             }
-
+            console.log('服装分类列表参数参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             const res: any = await service.post('/clothingMaterials/list', {
                 enData
@@ -280,7 +278,7 @@
     const importInternation = async () => {
         try {
             const formData = new FormData()
-            formData.append('appNo', searchParams.value.appNo)
+            formData.append('appNo', String(searchParams.value.appNo))
             formData.append('region', searchParams.value.region)
             formData.append('clothingMaterialsList', fileInterNational.value)
 
@@ -359,7 +357,7 @@
     //查看详情
     const viewDetail = (row: any) => {
         operationClass.value = row.operationClass
-        router.push('/templateMaterial?id=' + row.id)
+        router.push('/templateMaterial?id=' + row.id + '&type=clothing')
 
 
         console.log('查看详情', row);
@@ -368,7 +366,7 @@
     //搜索参数
     interface SearchParams {
         query: string
-        appNo: string//应用id
+        appNo: string | number//应用id
         tid: number | string//父类
 
         pageNum: number // 新增当前页码
@@ -378,7 +376,7 @@
     const searchParams = ref<SearchParams>(
         {
             query: '',
-            appNo: '',
+            appNo: defaultAppNo.value,
             region: '',
             tid: '',
             pageNum: 1, // 默认当前页为1
@@ -417,7 +415,7 @@
     const resetSearch = () => {
         searchParams.value = {
             query: '',
-            appNo: appList.value[0].appNo,
+            appNo: defaultAppNo.value,
             region: 'domestic',
             tid: '',
             pageNum: 1,
@@ -545,18 +543,33 @@
     }
 
 
-    onMounted(() => {
+
+
+    watch(() => defaultAppNo.value, (newV) => {
+        searchParams.value = {
+            query: '',
+            appNo: defaultAppNo.value,
+            region: 'domestic',
+            tid: '',
+            pageNum: 1, // 默认当前页为1
+            pageSize: 10 // 默认每页显示10条
+        }
+        getClothList()
+        getParentList()
+    })
+    onMounted(async () => {
 
         if (Object.keys(clothFliterParams.value).length > 0) {
             searchParams.value = {
                 ...clothFliterParams.value
             }
+            searchParams.value.appNo = defaultAppNo.value
         } else {
 
 
             searchParams.value = {
                 query: '',
-                appNo: appList.value[0].appNo,
+                appNo: defaultAppNo.value,
                 region: 'domestic',
                 tid: '',
                 pageNum: 1,
@@ -565,12 +578,12 @@
         }
 
 
+        showPagestion.value = true
 
-
-
+        await nextTick()
         getUserList();//获取服装分类数据
         getParentList()
-        showPagestion.value = true
+
     })
 </script>
 

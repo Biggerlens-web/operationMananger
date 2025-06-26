@@ -181,7 +181,7 @@
         }
     }
 
-    const showMoveBtnPath = ['/clothingMaterials/index', '/sticker/index']
+    const showMoveBtnPath = ['/clothingMaterials/index', '/sticker/index', '/background/index']
 
     const isShowButton = (row: any, type: string) => {
 

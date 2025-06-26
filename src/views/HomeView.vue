@@ -49,9 +49,10 @@
         </div>
 
         <!-- 中间应用筛选区域 -->
-        <div class="header-center">
+        <div class="header-center" v-if='showAppSelcet()'>
           <div class="app-selector">
-            <el-select v-model="defaultAppNo" placeholder="🔍 请选择应用" size="default" @change="handleAppChange">
+            <el-select v-model="defaultAppNo" placeholder="🔍 请选择应用" size="default" @change="handleAppChange"
+              filterable>
               <el-option v-for="app in appListInCom" :key="app.appNo"
                 :label="`${app.appAbbreviation}  [${app.id || app.appNo}]`" :value="app.appNo" />
             </el-select>
@@ -100,7 +101,32 @@
   const isCollapse = ref(false)
   const activeMenu = computed(() => route.path)
 
-  defaultCompanyNo.value = defaultCompanyNo.value ? defaultCompanyNo.value : companyList.value[0].companyNo
+  const showAppSelcet = () => {
+    const hotshowarr = ['/templateMaterial']
+    const path = route.path
+    console.log('path', path);
+    if (hotshowarr.includes(path)) {
+      return false
+    } else {
+      return true
+    }
+  }
+
+  watch(() => companyList.value, (newV) => {
+    console.log('companyList 发生变化:', newV)
+    if (newV && newV.length > 0) {
+      defaultCompanyNo.value = defaultCompanyNo.value ? defaultCompanyNo.value : companyList.value[0].companyNo
+      console.log('设置默认公司编号:', defaultCompanyNo.value)
+    }
+  }, {
+    deep: true,
+    immediate: true
+  })
+
+
+
+
+
 
   //获取公司下的应用
 
@@ -124,10 +150,14 @@
     }
   }
   watch(() => defaultCompanyNo.value, (newValue) => {
+    console.log('defaultCompanyNo 发生变化:', newValue)
     if (newValue) {
+      console.log('获取默认应用');
       // 公司切换时，清空应用选择
       getAppByCom(newValue)
     }
+  }, {
+    immediate: true
   })
 
 

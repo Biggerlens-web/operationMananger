@@ -81,45 +81,47 @@
 </template>
 
 <script lang="ts" setup>
-  import { reactive, ref, render, watch } from 'vue'
+  import { onMounted, reactive, ref, render, watch } from 'vue'
   import { Plus, Delete } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
   import { useRoute } from 'vue-router'
   import { desEncrypt } from '@/utils/des'
   import service from '@/axios'
   const route = useRoute()
-  interface FormData {
-    id: any
-    clothingMaterialsId: any //父级id
-    style: number //样式
 
-    bigUrl: string //大图
-    smallUrl: string //小图
-    keyword: string //关键词
-    pay: number //是否付费
-  }
 
   const props = defineProps<{
     dialogEditor: boolean
-    editData?: FormData
+    editData?: any
   }>()
 
   const emit = defineEmits<{
     'update:dialogEditor': [value: boolean]
-    confirm: [data: FormData]
+    confirm: [data: any]
   }>()
 
   // 表单数据
-  const formData = reactive<FormData>({
+  const formData = reactive<any>({
     id: '',
     style: 0,
-    clothingMaterialsId: parseInt(route.query.id as string) || '',
-    bigUrl: '',
+
     smallUrl: '',
     keyword: '',
     pay: 0,
   })
-
+  const initFormData = () => {
+    const { type } = route.query
+    if (type === 'sitcker') {
+      formData.stickerId = parseInt(route.query.id as string) || ''
+    } else if (type === 'clothing') {
+      formData.clothingMaterialsId = parseInt(route.query.id as string) || ''
+    } else if (type === 'background') {
+      formData.backgroundId = parseInt(route.query.id as string) || ''
+    }
+  }
+  onMounted(() => {
+    initFormData()
+  })
   // 处理关闭
   const handleClose = () => {
     resetForm()
@@ -127,11 +129,13 @@
   }
 
   // 处理确认
+
   const saveMaterial = async () => {
     try {
-      const params = {
+
+      const { type } = route.query
+      const params: any = {
         id: formData.id,
-        clothingMaterialsId: formData.clothingMaterialsId,
         style: formData.style,
         bigUrl: formData.bigUrl.split(',')[1],
         smallUrl: formData.smallUrl.split(',')[1],
@@ -139,10 +143,22 @@
         pay: formData.pay,
         timestamp: Date.now(),
       }
-
+      let url: string = ''
+      if (type === 'sitcker') {
+        url = '/stickerDetail/save'
+        params.stickerId = formData.stickerId
+        params.type = formData.id ? 'update' : 'add'
+      } else if (type === 'clothing') {
+        url = '/clothingMaterialsDetail/save'
+        params.clothingMaterialsId = formData.clothingMaterialsId
+      } else if (type === 'background') {
+        url = '/backgroundDetail/save'
+        params.type = formData.id ? 'update' : 'add'
+        params.backId = formData.backgroundId
+      }
       console.log('参数', params)
       const enData = desEncrypt(JSON.stringify(params))
-      const res = await service.post('/clothingMaterialsDetail/save', {
+      const res = await service.post(url, {
         enData,
       })
       console.log('保存成功', res)
@@ -159,7 +175,7 @@
     }
   }
   const handleConfirm = async () => {
-   
+
     if (!formData.bigUrl) {
       ElMessage.warning('请上传封面图')
       return
@@ -175,9 +191,7 @@
   const resetForm = () => {
     Object.assign(formData, {
       id: '',
-      clothingMaterialsId: parseInt(route.query.id as string) || '',
-
-      style: '',
+      style: 0,
 
       bigUrl: '',
       smallUrl: '',
@@ -185,6 +199,7 @@
 
       pay: 0,
     })
+    initFormData()
   }
 
   // 处理封面图上传
@@ -222,6 +237,7 @@
     () => props.dialogEditor,
     async (isOpen) => {
       if (isOpen && props.editData) {
+
         // 对话框打开时，如果有编辑数据则回显
         Object.assign(formData, {
           id: props.editData.id || 0,

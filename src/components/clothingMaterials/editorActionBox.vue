@@ -12,9 +12,10 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, defineProps, onMounted } from 'vue'
+  import { ref, onMounted } from 'vue'
   import { useCounterStore } from '@/stores/counter'
   import { storeToRefs } from 'pinia';
+  import { useRoute } from 'vue-router';
   const stores = useCounterStore()
   const { operationClass } = storeToRefs(stores)
   // 定义 props
@@ -27,11 +28,12 @@
     actionClick: [event: string]
   }>()
 
-
+  const route = useRoute()
   onMounted(() => {
     if (operationClass.value !== 0) {
       actionList.value = actionList.value.filter((item: any) => item.operationClass !== 0)
     }
+
   })
   const actionList = ref<any>([
     {
@@ -73,6 +75,12 @@
       text: '保存改动',
       icon: 'DocumentChecked',
       action: 'save',
+    },
+    {
+      text: '导出',
+      icon: 'Upload',
+      action: 'export',
+
     },
     {
       text: '返回',

@@ -53,7 +53,11 @@
                     <el-button type="primary">添加小图</el-button>
                 </el-upload>
             </div>
+
         </div>
+        <el-form-item label="是否付费" v-if="showpayBtn()">
+            <el-switch v-model="formData.pay" :active-value="1" :inactive-value="0" active-text="是" inactive-text="否" />
+        </el-form-item>
         <div class="dialog_comfirm">
             <el-button type="primary" @click="handleComfirm">确认</el-button>
             <el-button @click="handleClose">取消</el-button>
@@ -83,11 +87,22 @@
         'update': []
     }>()
 
+
+    //显示是否付费
+    const showArr = ['sitcker', 'background']
+    const showpayBtn = () => {
+        return showArr.includes(route.query.type as string)
+    }
+
+
+
+
     interface FormDataType {
         bigImgs: string[], // For preview
         smallImgs: string[], // For preview
         bigFileList: UploadUserFile[], // Bound to el-upload
         smallFileList: UploadUserFile[], // Bound to el-upload
+        pay: number
     }
 
     const formData = reactive<FormDataType>({
@@ -95,6 +110,7 @@
         smallImgs: [],
         bigFileList: [],
         smallFileList: [],
+        pay: 0
     })
 
     const resetFormData = () => {
@@ -102,6 +118,7 @@
         formData.smallImgs = [];
         formData.bigFileList = [];
         formData.smallFileList = [];
+        formData.pay = 0;
     };
 
     const handleClose = () => {
@@ -199,6 +216,7 @@
         // Preview will be updated by the watcher
     };
 
+
     const handleComfirm = async () => {
         if (formData.bigFileList.length === 0 || formData.smallFileList.length === 0) {
             ElMessage.warning('请至少上传一张大图和一张小图');
@@ -226,15 +244,33 @@
             const bigImgsBase64 = await Promise.all(bigImgBase64Promises);
             const smallImgsBase64 = await Promise.all(smallImgBase64Promises);
 
-            const params = {
+            const params: any = {
                 timestamp: Date.now(),
                 big: bigImgsBase64,
                 small: smallImgsBase64,
                 clothingMaterialsId: parseInt(route.query.id as string)
             };
+            const { type } = route.query
+            let url: string = ''
+            switch (type) {
+                case 'clothing':
+                    params.clothingMaterialsId = parseInt(route.query.id as string)
+                    url = '/clothingMaterialsDetail/saveBatch'
+                    break;
+                case 'sitcker':
+                    params.stickerId = parseInt(route.query.id as string)
+                    params.pay = formData.pay;
+                    url = '/stickerDetail/saveBatch'
+                    break;
+                case 'background':
+                    params.backId = parseInt(route.query.id as string)
+                    url = '/backgroundDetail/saveBatch'
+                    params.pay = formData.pay;
+            }
+
             console.log('批量保存参数', params);
             const enData = desEncrypt(JSON.stringify(params));
-            const res = await service.post('/clothingMaterialsDetail/saveBatch', { enData });
+            const res = await service.post(url, { enData });
 
 
             if (res.data.code === 200) {
