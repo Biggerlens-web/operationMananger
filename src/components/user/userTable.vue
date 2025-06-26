@@ -1,7 +1,7 @@
 <template>
     <el-table :data="tableData" border style="width: 100%" height="600px">
         <template v-for="item in filterParams" :key="item.key">
-            <el-table-column :prop="item.key" :label="item.note" v-if="item.isShow">
+            <el-table-column :prop="item.key" :label="item.note" v-if="item.isShow" min-width="130">
                 <template v-if="item.key === 'avatar' || item.key === 'thumbnail' || item.key === 'image'"
                     #default="scope">
                     <img style="width:100%" :src="scope.row[item.key]" alt="">
