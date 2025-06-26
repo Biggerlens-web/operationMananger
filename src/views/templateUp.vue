@@ -2,7 +2,7 @@
     <div class="view">
         <addTemplateCatalog v-model:dialogEditor="edtiorTemplateType" :isEditor="isEditorTemplateType"
             @clearMark="clearEditorMark" />
-        <img class="backIcon" v-show="activeCataType !== 'catalogList'" @click="goback" :src="backIcon" alt="">
+
         <div class="page-header">
 
             <el-button type="primary" :icon="Plus" @click="addTemplateType">新增模板分类</el-button>
@@ -16,12 +16,13 @@
         </div>
 
         <el-card class="filter-card">
-
             <div class="filter-box">
                 <div class="filter-item">
                     <span class="label">应用:</span>
                     <el-select v-model="activeApp" placeholder="请选择应用" clearable class="filter-select">
-                        <el-option v-for="item in appList" :key="item.id" :label="item.name" :value="item.id" />
+                        <el-option v-for="item in appList" :key="item.id"
+                            :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
+                            :value="item.appNo" />
                     </el-select>
                 </div>
             </div>
@@ -29,6 +30,7 @@
 
 
         <el-card class="content-card">
+            <img class="backIcon" v-show="activeCataType !== 'catalogList'" @click="goback" :src="backIcon" alt="">
             <component :is="componentId" @goDetail="goDetail" @editorTemplateType="editorTemplateType"></component>
         </el-card>
 
@@ -46,8 +48,11 @@
     import { storeToRefs } from 'pinia'
     import backIcon from '../assets/template/返回.png'
     import addTemplateCatalog from '@/components/templates/addTemplateCatalog.vue'
+    import { useCounterStore } from '@/stores/counter'
     const componentId = ref<any>()
     const templateStore = useTemplateStore()
+    const conterStore = useCounterStore()
+    const { appList } = storeToRefs(conterStore)
     const { activeCataType, activeCalaId, activeSubId, typeTitle, subTypeTitle, addTemplateMark } = storeToRefs(templateStore)
     const components: any = {
         catalogList,
@@ -104,24 +109,9 @@
 
     }
 
-    // 筛选相关
-    interface AppItem {
-        id: number
-        name: string
-    }
+
     const activeApp = ref('')
-    const appList = ref<AppItem[]>([
-        { id: 1, name: '123123' },
-        { id: 2, name: '123123' },
-        { id: 3, name: '123123' },
-        { id: 4, name: '123123' },
-        { id: 5, name: '123123' },
-        { id: 6, name: '123123' },
-        { id: 7, name: '123123' },
-        { id: 8, name: '123123' },
-        { id: 9, name: '123123' },
-        { id: 10, name: '123123' }
-    ])
+
     onMounted(() => {
         componentId.value = components[activeCataType.value]
     })
@@ -137,7 +127,7 @@
             position: absolute;
             width: 20px;
             height: 20px;
-            top: 146px;
+            // top: 23%;
             left: 5px;
             cursor: pointer;
         }
