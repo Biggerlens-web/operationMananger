@@ -51,7 +51,9 @@
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="appData" @editor="editorConfig"
-                    @delete="deleteConfig" :ishideEdit="true" @handleNumInput="handleNumInput"></component>
+                    @delete="deleteConfig" :ishideEdit="true" @handleNumInput="handleNumInput"
+                    @switchChange="switchChange">
+                </component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -133,7 +135,26 @@
         })
     }
 
+    //切换开关
+    const switchChange = async (item: any) => {
 
+        console.log('切换开关', item);
+        // try {
+        //     const { key } = item
+        //     const params = {
+        //         timestamp: Date.now(),
+        //         id: item.id,
+        //         [key]: item[key]
+        //     }
+        //     const enData = desEncrypt(JSON.stringify(params))
+        //     const res = await service.post('/feeConfig/save', {
+        //         enData
+        //     })
+        //     console.log('保存成功', res);
+        // } catch (err) {
+        //     console.log('修改失败', err);
+        // }
+    }
     //修改数字输入框
     const handleNumInput = async (item: any) => {
         try {

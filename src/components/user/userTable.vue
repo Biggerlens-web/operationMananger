@@ -10,7 +10,7 @@
                     v-if="item.key === 'isCanPay' || item.key === 'isShowTaobao' || item.key === 'open' || item.key === 'subscriptionLoginEnabled' || item.key === 'backButton' || item.key === 'rightEnterVipUI' || item.key === 'showUpdateVip' || item.key === 'rightShowAdsUnlock'"
                     #default="scope">
                     <el-switch v-model="scope.row[item.key]" :active-value="true" :inactive-value="false"
-                        @change="switchChange(scope.row)" />
+                        @change="switchChange(scope.row, item.key)" />
                 </template>
 
                 <template
@@ -273,9 +273,14 @@
         emit('handleNumInput', obj)
     }
     //switch切换
-    const switchChange = (item: any) => {
+    const switchChange = (item: any, key: string) => {
         console.log('切换', item);
-        emit('switchChange', item)
+
+        const obj = {
+            ...item,
+            key
+        }
+        emit('switchChange', obj)
     }
 
     //选择概率
