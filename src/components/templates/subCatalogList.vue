@@ -1,35 +1,44 @@
 <template>
 
-    <ul class="catalog-list">
+    <draggable tag="ul" v-model="catalogList" item-key="id" :animation="200" class="catalog-list"
+        ghost-class="ghost-class" chosen-class="chosen-class" drag-class="dragging-class" :group="{ name: 'items' }"
+        @start="onDragStart" @end="onDragEnd" handle=".moveIcon">
+        <template #item="{ element, index }">
+            <li :key="element.id" @mouseenter="element.isHover = true" @mouseleave="element.isHover = false"
+                class="catalog-item" @click="goTemplates(element)">
+                <div class="item-main">
+                    <div class="drageIcon">
+                        <img v-show="element.isHover" class="moveIcon" src="../../assets/moveIcon.png" alt="">
+                    </div>
 
-        <li v-for="item in catalogList" :key="item.id" class="catalog-item" @click="goTemplates(item)">
-            <div class="item-main">
-                <div class="item-icon">
-                    <img :src="item.img" alt="" class="template-icon">
+                    <div class="item-icon">
+                        <img :src="element.img" alt="" class="template-icon">
+                    </div>
+                    <div class="item-info">
+                        <span class="item-name">{{ element.name }}</span>
+                        <span class="item-date">{{ element.date }}</span>
+                    </div>
                 </div>
-                <div class="item-info">
-                    <span class="item-name">{{ item.name }}</span>
-                    <span class="item-date">{{ item.date }}</span>
+                <div class="item-action" @click.stop>
+                    <el-dropdown>
+                        <img :src="moreIcon" alt="更多" class="more-icon">
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                                <el-dropdown-item @click="handleDelete">删除</el-dropdown-item>
+                                <el-dropdown-item @click="editor">编辑</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
                 </div>
-            </div>
-            <div class="item-action" @click.stop>
-                <el-dropdown>
-                    <img :src="moreIcon" alt="更多" class="more-icon">
-                    <template #dropdown>
-                        <el-dropdown-menu>
-                            <el-dropdown-item>删除</el-dropdown-item>
-                            <el-dropdown-item @click="editor(item)">编辑</el-dropdown-item>
-                        </el-dropdown-menu>
-                    </template>
-                </el-dropdown>
-            </div>
-        </li>
-    </ul>
+            </li>
+        </template>
+    </draggable>
 </template>
 
 <script lang="ts" setup>
     import { useTemplateStore } from '@/stores/template';
     import moreIcon from '../../assets/template/更多.png'
+    import draggable from 'vuedraggable'
     import { ref } from 'vue'
     import { storeToRefs } from 'pinia';
     const templateStore = useTemplateStore()
@@ -39,7 +48,14 @@
         'goDetail': [value: any],
         'editorTemplateType': [value: any]
     }>()
-    const catalogList = ref([
+    interface CatalogItem {
+        name: string;
+        id: number;
+        img: string;
+        date: string
+        isHover?: boolean;
+    }
+    const catalogList = ref<CatalogItem[]>([
         {
             name: '子模版',
             id: 1,
@@ -101,6 +117,14 @@
             date: '2024-03-01'
         }
     ])
+
+    const onDragStart = () => {
+        console.log('开始拖动')
+    }
+    const onDragEnd = () => {
+        console.log('结束拖动')
+    }
+    const handleDelete = () => { }
     const goTemplates = (item: any) => {
         const k = {
             type: 'templatesList',
@@ -151,6 +175,16 @@
         display: flex;
         align-items: center;
         gap: 16px;
+
+        .drageIcon {
+            width: 13px;
+
+
+            .moveIcon {
+                width: 100%;
+                cursor: pointer;
+            }
+        }
     }
 
     .item-icon {
@@ -207,5 +241,21 @@
 
     .more-icon:hover {
         background-color: #eee;
+    }
+
+    .ghost-class {
+        background-color: #f8f8f8;
+        border: 1px dashed #ccc;
+        opacity: 0.6;
+    }
+
+    .chosen-class {
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .drag-class {
+        opacity: 0.8;
+        transform: rotate(3deg);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
 </style>
