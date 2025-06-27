@@ -1,6 +1,7 @@
 <template>
     <div class="ad-management-view">
-        <channelAdvEditor v-model:show-editor="showChannelEditor" @refresh="refreshTables" :type="channelType" />
+        <channelAdvEditor v-model:show-editor="showChannelEditor" @refresh="refreshTables" :type="channelType"
+            :rowList="currentRow" />
         <cornEditor v-model:show-editor="showCornEditor" :type="cornType" />
         <interstitialAdsEditor v-model:show-editor="showInterstitialAdsEditor" :type="interType" />
 
@@ -88,17 +89,22 @@ const addData = (type: string) => {
     }
 }
 //编辑数据
+//当前编辑数据
+const currentRow = ref<any>({})
 const editorData = (row: any, type: any) => {
     console.log('row', row, 'type', type);
     if (type === '渠道广告') {
         channelType.value = 'update'
         showChannelEditor.value = true
+        currentRow.value = row
     } else if (type === '定时任务') {
         cornType.value = 'update'
         showCornEditor.value = true
+        currentRow.value = row
     } else if (type === '插屏广告') {
         interType.value = 'update'
         showInterstitialAdsEditor.value = true
+        currentRow.value = row
     }
 }
 

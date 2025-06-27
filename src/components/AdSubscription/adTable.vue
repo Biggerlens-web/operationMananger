@@ -19,31 +19,70 @@
                         {{ getNestedProperty(scope.row, item.key) }}
                     </template>
 
-                    <!-- 处理广告类型字段，添加个性化屏蔽广告和摇一摇广告的开关状态 -->
-                    <template v-if="item.key === 'advType'" #default="scope">
+                    <!-- 处理广告类型字段，显示数组中的 id 和 typeName -->
+                    <template v-if="item.key === 'optionals'" #default="scope">
                         <div>
-                            {{ scope.row.advType && scope.row.advType.typeName }}
-                            <template v-if="scope.row.advType && scope.row.advType.typeId === 'TT_ADS'">
-                                <div>
-                                    <span>个性化屏蔽广告</span>
-                                    <el-switch v-model="scope.row.personalAdsOpen" disabled />
-                                </div>
-                                <div>
-                                    <span>摇一摇广告</span>
-                                    <el-switch v-model="scope.row.shakeAdsOpen" disabled />
+                            <!-- 如果只有一个广告类型，直接显示 -->
+                            <template v-if="scope.row.optionals && scope.row.optionals.length === 1">
+                                <span>{{ scope.row.optionals[0].advType.typeName }}</span>
+                            </template>
+
+                            <!-- 如果有多个广告类型，使用下拉选择框 -->
+                            <template v-else-if="scope.row.optionals && scope.row.optionals.length > 1">
+                                <el-select v-model="scope.row.selectedOptionalId" placeholder="选择广告类型"
+                                    style="width: 180px" @change="handleOptionalChange(scope.row, $event)">
+                                    <el-option v-for="optional in scope.row.optionals" :key="optional.advType.id"
+                                        :label="`${optional.advType.typeName}`" :value="optional.advType.id" />
+                                </el-select>
+                            </template>
+
+                            <!-- 如果没有广告类型数据 -->
+                            <template v-else>
+                                <span style="color: #999;">暂无广告类型</span>
+                            </template>
+
+                            <!-- 如果选中的是头条广告，显示个性化屏蔽广告和摇一摇广告开关 -->
+                            <template v-if="getSelectedOptional(scope.row)?.advType?.typeId === 'TT_ADS'">
+                                <div style="margin-top: 8px;">
+                                    <div style="margin-bottom: 4px;">
+                                        <p>个性化屏蔽广告</p>
+                                        <el-switch v-model="scope.row.personalAdsOpen" disabled />
+                                    </div>
+                                    <div>
+                                        <p>摇一摇广告</p>
+                                        <el-switch v-model="scope.row.shakeAdsOpen" disabled />
+                                    </div>
                                 </div>
                             </template>
                         </div>
                     </template>
 
+                    <!-- 处理时间字段，使用时间选择器 -->
+                    <template style="width: 150rpx;" v-if="item.key === 'openStartTime' || item.key === 'openEndTime'"
+                        #default="scope">
+                        <el-time-picker v-model="scope.row[item.key]" format="HH:mm" value-format="HH:mm"
+                            placeholder="选择时间" style="width: 100px;"
+                            @change="handleTimeChange(scope.row, item.key, $event)" />
+                    </template>
+
+                    <!-- 渠道类型的开关字段，包含开始和间隔输入框 -->
                     <template
-                        v-if="item.key === 'showAdv' || item.key === 'showOs' || item.key === 'showBanner' || item.key === 'showInterstitial' || item.key === 'showReward' || item.key === 'showInfoFlow' || item.key === 'showAllScreen' || item.key === 'showContent'"
+                        v-if="(item.key === 'showAdv' || item.key === 'showOs' || item.key === 'showBanner' || item.key === 'showInterstitial' || item.key === 'showReward' || item.key === 'showInfoFlow' || item.key === 'showAllScreen' || item.key === 'showContent') && props.type === 'channel'"
                         #default="scope">
                         <el-switch v-model="scope.row[item.key]" active-text="开" inactive-text="关" />
-                        <div v-if="scope.row[item.key]">
-                            <p>开始 <el-input style="width: 50px;" type='number'></el-input></p>
-                            <p>间隔 <el-input style="width: 50px;" type='number'></el-input></p>
+                        <div>
+                            <p>开始 <el-input style="width: 60px;" type="number"
+                                    v-model="scope.row[getStartFieldName(item.key)]" :min="0" /></p>
+                            <p>间隔 <el-input style="width: 60px;" type="number"
+                                    v-model="scope.row[getIntervalFieldName(item.key)]" :min="0" /></p>
                         </div>
+                    </template>
+
+                    <!-- 定时任务类型的开关字段，只显示开关 -->
+                    <template
+                        v-if="(item.key === 'showAdv' || item.key === 'showOs' || item.key === 'showBanner' || item.key === 'showInterstitial' || item.key === 'showReward' || item.key === 'showInfoFlow' || item.key === 'showAllScreen' || item.key === 'showContent') && props.type === 'corn'"
+                        #default="scope">
+                        <el-switch v-model="scope.row[item.key]" active-text="开" inactive-text="关" />
                     </template>
                 </el-table-column>
             </template>
@@ -98,27 +137,25 @@ const searchParams = ref<any>({
 
 //新增
 const addData = () => {
-    console.log('新增');
     emit('add', props.title)
 }
 
 
 //编辑
 const handleEditor = (row: any) => {
-    console.log('编辑', row);
     emit('editor', row, props.title)
 }
 
 //删除
 const handleDelete = (row: any) => {
-    console.log('删除', row);
+
     emit('delete', row, props.title)
 }
 
 
 // 不同类型表格需要展示的字段配置
 const typeFieldsConfig = ref<any>({
-    channel: ['id', 'channels.channelRemark', 'advType', 'showAdv', 'showOs', 'showBanner', 'showInterstitial', 'showReward', 'showInfoFlow', 'showAllScreen', 'showContent'],
+    channel: ['id', 'channels.channelRemark', 'optionals', 'showAdv', 'showOs', 'showBanner', 'showInterstitial', 'showReward', 'showInfoFlow', 'showAllScreen', 'showContent'],
     corn: ['id', 'channels.channelRemark', 'openStartTime', 'openEndTime', 'showAdv', 'showOs', 'showBanner', 'showInterstitial', 'showReward', 'showInfoFlow', 'showAllScreen', 'showContent'],
     InterstitialAds: ['id', 'pageId', 'loadProgram', 'noLoadAfterSeveralTimesClose']
 })
@@ -174,7 +211,7 @@ const interstitiaAdsList = ref<InterstitialAdsItem[]>([])
 const note = ref<any>({
     id: '编号',
     'channels.channelRemark': '渠道',
-    advType: '广告类型',
+    optionals: '广告类型',
     openStartTime: '开始时间',
     openEndTime: '结束时间',
     showAdv: '显示广告',
@@ -232,6 +269,36 @@ const getNestedProperty = (obj: any, path: string) => {
     }
 
     return result;
+}
+
+// 获取开始字段名称
+const getStartFieldName = (showKey: string) => {
+    const fieldMap: Record<string, string> = {
+        'showAdv': 'advOpenStartNum',
+        'showOs': 'osOpenStartNum',
+        'showBanner': 'bannerOpenStartNum',
+        'showInterstitial': 'interstitialOpenStartNum',
+        'showReward': 'rewardOpenStartNum',
+        'showInfoFlow': 'infoFlowOpenStartNum',
+        'showAllScreen': 'allScreenOpenStartNum',
+        'showContent': 'contentOpenStartNum'
+    }
+    return fieldMap[showKey] || ''
+}
+
+// 获取间隔字段名称
+const getIntervalFieldName = (showKey: string) => {
+    const fieldMap: Record<string, string> = {
+        'showAdv': 'advOpenIntervalNum',
+        'showOs': 'osOpenIntervalNum',
+        'showBanner': 'bannerOpenIntervalNum',
+        'showInterstitial': 'interstitialOpenIntervalNum',
+        'showReward': 'rewardOpenIntervalNum',
+        'showInfoFlow': 'infoFlowOpenIntervalNum',
+        'showAllScreen': 'allScreenOpenIntervalNum',
+        'showContent': 'contentOpenIntervalNum'
+    }
+    return fieldMap[showKey] || ''
 }
 
 
@@ -334,7 +401,8 @@ const getData = async () => {
                 break;
             case 'corn':
                 await getCornList()
-                viewList.value = cornList.value
+                // 对定时任务数据进行时间格式初始化
+                viewList.value = initTimeData(cornList.value)
                 break;
             case 'InterstitialAds':
                 await getAdvList()
@@ -348,6 +416,54 @@ const getData = async () => {
         console.log('获取数据出错', err);
     }
 }
+// 处理广告类型下拉选择框变化
+const handleOptionalChange = (row: any, selectedId: number) => {
+    // 可以在这里添加额外的逻辑，比如更新其他相关字段
+    console.log('选择的广告类型ID:', selectedId, '行数据:', row);
+}
+
+// 处理时间字段变化
+const handleTimeChange = (row: any, fieldKey: string, newTime: string) => {
+    console.log('时间字段变化:', fieldKey, '新时间:', newTime, '行数据:', row);
+    // 可以在这里添加时间格式验证或其他逻辑
+}
+
+// 初始化时间数据格式
+const initTimeData = (data: any[]) => {
+    return data.map(item => {
+        // 将时间字符串转换为时间选择器可识别的格式
+        if (item.openStartTime && typeof item.openStartTime === 'string') {
+            // 如果是 "00:00:00:00" 格式，转换为 "00:00:00:000" 格式
+            item.openStartTime = item.openStartTime.replace(/:(\d{2})$/, ':$100');
+        }
+        if (item.openEndTime && typeof item.openEndTime === 'string') {
+            // 如果是 "00:00:00:00" 格式，转换为 "00:00:00:000" 格式
+            item.openEndTime = item.openEndTime.replace(/:(\d{2})$/, ':$100');
+        }
+        return item;
+    });
+}
+
+// 获取当前选中的广告类型
+const getSelectedOptional = (row: any) => {
+    if (!row.optionals || !Array.isArray(row.optionals)) {
+        return null;
+    }
+
+    // 如果只有一个选项，直接返回第一个
+    if (row.optionals.length === 1) {
+        return row.optionals[0];
+    }
+
+    // 如果有多个选项，根据selectedOptionalId查找
+    if (row.selectedOptionalId) {
+        return row.optionals.find((optional: { advType: { id: any; }; }) => optional.advType.id === row.selectedOptionalId);
+    }
+
+    // 默认返回第一个
+    return row.optionals[0] || null;
+}
+
 defineExpose({
     getData
 });

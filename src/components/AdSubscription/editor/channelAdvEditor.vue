@@ -10,7 +10,7 @@
                 </el-select>
             </el-form-item>
             <el-form-item label="渠道" prop="channel">
-                <el-select v-model="formData.channel">
+                <el-select v-model="formData.channel" placeholder="请选择渠道">
                     <el-option v-for="item in channelList" :key="item.id" :label="item.channelName" :value="item.id" />
                 </el-select>
             </el-form-item>
@@ -49,9 +49,11 @@ import { desEncrypt } from '@/utils/des';
 import { useCounterStore } from '@/stores/counter';
 import { storeToRefs } from 'pinia';
 import { onMounted, ref, watch } from 'vue'
+import { ElMessage } from 'element-plus';
 const props = defineProps<{
     showEditor: boolean,
     type: string,
+    rowList: any,
 }>()
 
 const counterStore = useCounterStore()
@@ -74,6 +76,38 @@ watch(() => formData.value.advArray, (newVal) => {
     // 将选中的广告ID数组转换为逗号分隔的字符串
     formData.value.adv = newVal.join(',');
 }, { deep: true })
+
+// 监听编辑器显示状态和类型，处理数据初始化
+watch(() => [props.showEditor, props.type, props.rowList], ([showEditor, type, rowList]) => {
+    if (showEditor) {
+        if (type === 'update' && rowList) {
+            // 编辑模式：将传入的数据赋值给formData
+            const advArray = (() => {
+                if (!rowList.optionals) return [];
+
+                // 统一转换为数组处理
+                const optionalsArray = Array.isArray(rowList.optionals)
+                    ? rowList.optionals
+                    : [rowList.optionals];
+
+                return optionalsArray
+                    .map((item: { advType: { id: any; }; }) => item.advType?.id)
+                    .filter((id: undefined) => id !== undefined);
+            })();
+            formData.value = {
+                id: rowList.id || '',
+                channel: rowList.channels.id || '',
+                version: rowList.version || '',
+                appNo: rowList.appNo || defaultAppNo.value,
+                adv: advArray.join(','),
+                advArray: advArray
+            }
+        } else {
+            // 新增模式：重置表单数据
+            resetForm()
+        }
+    }
+}, { immediate: true, deep: true })
 
 const languageList = ref([
     {
@@ -162,12 +196,15 @@ const saveData = (data: any) => {
         if (res.data.code === 200) {
             emit('update:showEditor', false)
             emit('refresh')
+            ElMessage.success('保存成功')
             resetForm()
         }
     })
 }
 
 onMounted(() => {
+    console.log('asadad', channelList.value);
+
 })
 </script>
 
