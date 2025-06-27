@@ -1,13 +1,14 @@
 <template>
     <div class="ad-management-view">
-        <channelAdvEditor v-model:show-editor="showChannelEditor" :type="channelType" />
+        <channelAdvEditor v-model:show-editor="showChannelEditor" @refresh="refreshTables" :type="channelType" />
         <cornEditor v-model:show-editor="showCornEditor" :type="cornType" />
         <interstitialAdsEditor v-model:show-editor="showInterstitialAdsEditor" :type="interType" />
 
 
         <el-card class="content-card">
-            <adTable v-for="item in tableELArray" :key="item.type" :title="item.title" :filter="item.filter"
-                :type="item.type" class="ad-table" @add="addData" @editor="editorData" @delete="deleteData" />
+            <adTable v-for="(item, index) in tableELArray" :key="item.type" :title="item.title" :filter="item.filter"
+                :type="item.type" class="ad-table" @add="addData" @editor="editorData" @delete="deleteData"
+                :ref="el => { if (el) adTableRefs[index] = el }" />
         </el-card>
     </div>
 </template>
@@ -15,17 +16,17 @@
 <script lang="ts" setup>
 import { useCounterStore } from '@/stores/counter';
 import { storeToRefs } from 'pinia';
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import adTable from '@/components/AdSubscription/adTable.vue';
 import channelAdvEditor from '@/components/AdSubscription/editor/channelAdvEditor.vue';
 import cornEditor from '@/components/AdSubscription/editor/cornEditor.vue';
 import interstitialAdsEditor from '@/components/AdSubscription/editor/interstitialAdsEditor.vue';
 import service from '@/axios';
 import { desEncrypt } from '@/utils/des';
+import { pinia } from '@/main'
 import { ElMessageBox, ElMessage } from 'element-plus';
-const activeApp = ref<string | number>()
 const counterStore = useCounterStore()
-const { appList } = storeToRefs(counterStore)
+const { appList, defaultAppNo } = storeToRefs(counterStore)
 const tableELArray = reactive<{
     type: string
     title: string
@@ -51,6 +52,20 @@ const tableELArray = reactive<{
 
 
 ])
+const adTableRefs = ref<any[]>([]);
+// 添加这个函数来刷新表格数据
+const refreshTables = () => {
+    console.log('刷新表格数据');
+    // 调用每个表格组件的 getData 方法
+    adTableRefs.value.forEach(table => {
+        if (table && table.getData) {
+            table.getData();
+        }
+    });
+
+    // 刷新广告列表数据
+    getAdList();
+}
 
 //新增数据
 const showChannelEditor = ref<boolean>(false) // 新增渠道广告弹窗
@@ -75,24 +90,6 @@ const addData = (type: string) => {
 //编辑数据
 const editorData = (row: any, type: any) => {
     console.log('row', row, 'type', type);
-    const params = {
-        id: row.id,
-        appNo: row.appNo,
-        timestamp: Date.now(),
-
-    }
-    console.log('params', params);
-
-    const paramsStr = desEncrypt(JSON.stringify(params))
-    service.post('/advChannelConfig/edit', {
-        enData: paramsStr
-    }).then(res => {
-        console.log('res', res);
-    }).catch(err => {
-        console.log('err', err);
-    })
-
-
     if (type === '渠道广告') {
         channelType.value = 'update'
         showChannelEditor.value = true
@@ -108,35 +105,29 @@ const editorData = (row: any, type: any) => {
 //删除数据
 const deleteData = (row: any, type: any) => {
     console.log('row', row, 'type', type);
-    const enData = {
-        id: row.id,
-        timestamp: Date.now(),
-    }
     if (type === '渠道广告') {
-        handleChannelDelete(enData)
+        handleChannelDelete(row.id)
     } else if (type === '定时任务') {
-        handleTaskDelete(enData)
+        handleTaskDelete(row.id)
     } else if (type === '插屏广告') {
-        handleInterstitialAdsDelete(enData)
+        handleInterstitialAdsDelete(row.id)
     }
 }
 
 //渠道广告删除
-const handleChannelDelete = async (data: any) => {
-    console.log('参数', data);
+const handleChannelDelete = async (id: number) => {
+    console.log('参数', id);
     ElMessageBox.confirm('确定删除吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
     })
         .then(async () => {
-            console.log('确定');
-            const enData = desEncrypt(JSON.stringify(data))
             try {
-                const response = await service.post('/advChannelConfig/del', enData)
-                console.log('res', response);
+                const response = await service.post(`/advChannelConfig/del/${id}`)
                 if (response.data.code === 200) {
                     ElMessage.success('删除成功')
+                    refreshTables()
                 }
             } catch (error) {
                 console.error('删除失败', error);
@@ -148,8 +139,7 @@ const handleChannelDelete = async (data: any) => {
         })
 }
 //定时任务删除
-const handleTaskDelete = async (data: any) => {
-    console.log('参数', data);
+const handleTaskDelete = async (id: number) => {
     ElMessageBox.confirm('确定删除吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -157,11 +147,10 @@ const handleTaskDelete = async (data: any) => {
     })
         .then(async () => {
             console.log('确定');
-            const enData = desEncrypt(JSON.stringify(data))
-            const res: any = await service.post('/advChannelTaskConfig/del', enData)
-            console.log('res', res);
+            const res: any = await service.post(`/advChannelTaskConfig/del/${id}`)
             if (res.code === 200) {
                 ElMessage.success('删除成功')
+                refreshTables()
             }
         })
         .catch(() => {
@@ -169,25 +158,46 @@ const handleTaskDelete = async (data: any) => {
         })
 }
 //插屏广告删除
-const handleInterstitialAdsDelete = async (data: any) => {
-    console.log('参数', data);
+const handleInterstitialAdsDelete = async (id: number) => {
     ElMessageBox.confirm('确定删除吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
     })
         .then(async () => {
-            console.log('确定');
-            const enData = desEncrypt(JSON.stringify(data))
-            const res: any = await service.post('/advInterstitialConfig/del', enData)
+            const res: any = await service.post(`/advInterstitialConfig/del/${id}`)
             console.log('res', res);
             if (res.code === 200) {
                 ElMessage.success('删除成功')
+                refreshTables()
             }
         }).catch(() => {
             console.log('取消');
         })
 }
+
+//获取广告列表
+const getAdList = async () => {
+    const params = {
+        appNo: defaultAppNo.value,
+        timestamp: Date.now(),
+    }
+
+    const paramsStr = desEncrypt(JSON.stringify(params))
+    const res: any = await service.post('/advChannelConfig/edit', {
+        enData: paramsStr
+    })
+    if (res.data.code === 200) {
+        useCounterStore(pinia).advertList = res.data.data.advTypes
+        console.log('广告列表', res.data.data.advTypes);
+
+    }
+}
+
+onMounted(() => {
+    getAdList()
+})
+
 </script>
 
 <style lang="scss" scoped>

@@ -61,6 +61,14 @@
                 </template>
             </el-table-column>
         </el-table>
+
+        <!-- 分页组件 -->
+        <div class="pagination-container">
+            <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[10, 20, 50, 100]"
+                :small="false" :disabled="false" :background="true" layout="total, sizes, prev, pager, next"
+                :total="totalData" :prev-text="'上一页'" :next-text="'下一页'" :page-size-text="'条/页'"
+                :total-text="'共 {total} 条'" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
+        </div>
     </div>
 </template>
 
@@ -86,6 +94,8 @@ const searchParams = ref<any>({
     version: '',
 })
 
+
+
 //新增
 const addData = () => {
     console.log('新增');
@@ -104,6 +114,18 @@ const handleDelete = (row: any) => {
     console.log('删除', row);
     emit('delete', row, props.title)
 }
+
+
+// 不同类型表格需要展示的字段配置
+const typeFieldsConfig = ref<any>({
+    channel: ['id', 'channels.channelRemark', 'advType', 'showAdv', 'showOs', 'showBanner', 'showInterstitial', 'showReward', 'showInfoFlow', 'showAllScreen', 'showContent'],
+    corn: ['id', 'channels.channelRemark', 'openStartTime', 'openEndTime', 'showAdv', 'showOs', 'showBanner', 'showInterstitial', 'showReward', 'showInfoFlow', 'showAllScreen', 'showContent'],
+    InterstitialAds: ['id', 'pageId', 'loadProgram', 'noLoadAfterSeveralTimesClose']
+})
+
+const viewList = ref<any>()
+const keyList = ref<any>()
+
 //  渠道信息
 interface channelItem {
     id: number;               // 编号
@@ -119,9 +141,7 @@ interface channelItem {
     showContent: string;          // 内容
 
 }
-const channelList = ref<channelItem[]>([
-
-])
+const channelList = ref<channelItem[]>([])
 
 //定时任务
 interface cornItem {
@@ -139,9 +159,7 @@ interface cornItem {
     showAllScreen: boolean;          // 信息流
     showContent: string;          // 内容
 }
-const cornList = ref<cornItem[]>([
-
-])
+const cornList = ref<cornItem[]>([])
 
 //插屏广告
 interface InterstitialAdsItem {
@@ -150,9 +168,7 @@ interface InterstitialAdsItem {
     loadProbability: number;   // 加载概率(0-1之间的小数)
     closeCountLimit: number;   // 关闭几次后不显示 
 }
-const interstitiaAdsList = ref<InterstitialAdsItem[]>([
-
-])
+const interstitiaAdsList = ref<InterstitialAdsItem[]>([])
 
 //注释
 const note = ref<any>({
@@ -173,16 +189,6 @@ const note = ref<any>({
     loadProgram: '加载概率',
     noLoadAfterSeveralTimesClose: '关闭次数限制',
 })
-
-// 不同类型表格需要展示的字段配置
-const typeFieldsConfig = ref<any>({
-    channel: ['id', 'channels.channelRemark', 'advType', 'showAdv', 'showOs', 'showBanner', 'showInterstitial', 'showReward', 'showInfoFlow', 'showAllScreen', 'showContent'],
-    corn: ['id', 'channels.channelRemark', 'openStartTime', 'openEndTime', 'showAdv', 'showOs', 'showBanner', 'showInterstitial', 'showReward', 'showInfoFlow', 'showAllScreen', 'showContent'],
-    InterstitialAds: ['id', 'pageId', 'loadProgram', 'noLoadAfterSeveralTimesClose']
-})
-
-const viewList = ref<any>()
-const keyList = ref<any>()
 
 //初始化参数列表
 const initParams = () => {
@@ -234,6 +240,18 @@ const getNestedProperty = (obj: any, path: string) => {
 const pageNum = ref<number>(1)
 const pageSize = ref<number>(10)
 const totalData = ref<number>(0)
+
+// 分页事件处理
+const handleSizeChange = (val: number) => {
+    pageSize.value = val
+    pageNum.value = 1 // 重置到第一页
+    getData()
+}
+
+const handleCurrentChange = (val: number) => {
+    pageNum.value = val
+    getData()
+}
 
 watch(() => pageNum.value, () => {
     getData()
@@ -330,12 +348,11 @@ const getData = async () => {
         console.log('获取数据出错', err);
     }
 }
+defineExpose({
+    getData
+});
 onMounted(() => {
-
     getData()
-
-
-
 })
 </script>
 
@@ -436,6 +453,42 @@ onMounted(() => {
                 &:hover {
                     color: #f78989;
                     background-color: #fef0f0;
+                }
+            }
+        }
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        padding: 16px 0;
+
+        :deep(.el-pagination) {
+            .el-pagination__total {
+                color: #606266;
+                font-weight: 500;
+            }
+
+            .el-pager li {
+                transition: all 0.2s ease;
+
+                &:hover {
+                    color: #409eff;
+                }
+
+                &.is-active {
+                    background-color: #409eff;
+                    color: #fff;
+                }
+            }
+
+            .btn-prev,
+            .btn-next {
+                transition: all 0.2s ease;
+
+                &:hover {
+                    color: #409eff;
                 }
             }
         }

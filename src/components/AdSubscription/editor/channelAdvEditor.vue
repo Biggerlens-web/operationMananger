@@ -1,5 +1,5 @@
 <template>
-    <el-dialog :model-value="showEditor" title="编辑渠道广告" width="500" :before-close="handleClose">
+    <el-dialog :model-value="showEditor" title="渠道广告" width="700" :before-close="handleClose">
         <el-form ref="ruleFormRef" style="max-width: 600px" :model="formData" :rules="rules" label-width="auto"
             class="demo-ruleForm" status-icon>
             <el-form-item label="所属应用" prop="appNo">
@@ -17,10 +17,15 @@
             <el-form-item label="版本" prop="version">
                 <el-input v-model="formData.version" placeholder="版本号（整数或浮点数，通过开发人员获取），可留空，留空默认为default" />
             </el-form-item>
-            <el-form-item label="添加广告" prop="adv">
-                <el-select v-model="formData.adv">
-                    <el-option v-for="item in channelList" :key="item.id" :label="item.channelName" :value="item.id" />
-                </el-select>
+            <el-form-item label="添加广告" prop="advArray">
+                <div class="adv-checkbox-container">
+                    <el-checkbox-group v-model="formData.advArray">
+                        <el-checkbox v-for="item in advertList" :key="item.id" :label="item.id"
+                            class="adv-checkbox-item">
+                            {{ item.typeName }}
+                        </el-checkbox>
+                    </el-checkbox-group>
+                </div>
             </el-form-item>
 
 
@@ -43,24 +48,33 @@ import service from '@/axios';
 import { desEncrypt } from '@/utils/des';
 import { useCounterStore } from '@/stores/counter';
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 const props = defineProps<{
     showEditor: boolean,
     type: string,
 }>()
 
 const counterStore = useCounterStore()
-const { appList, OSlist, channelList } = storeToRefs(counterStore)
+const { appList, defaultAppNo, channelList, advertList } = storeToRefs(counterStore)
 const emit = defineEmits<{
-    'update:showEditor': [value: boolean]
+    'update:showEditor': [value: boolean],
+    'refresh': []
 }>()
 const formData = ref<any>({
     id: '',
     channel: '',
     version: '',
-    appNo: '',
-    adv: ''
+    appNo: defaultAppNo.value,
+    adv: '',
+    advArray: []
 })
+
+// 监听advArray变化，更新adv字段（用于提交）
+watch(() => formData.value.advArray, (newVal) => {
+    // 将选中的广告ID数组转换为逗号分隔的字符串
+    formData.value.adv = newVal.join(',');
+}, { deep: true })
+
 const languageList = ref([
     {
         value: '1',
@@ -83,8 +97,9 @@ const resetForm = () => {
         id: '',
         channel: '',
         version: '',
-        appNo: '',
-        adv: ''
+        appNo: defaultAppNo.value,
+        adv: '',
+        advArray: []
     }
     ruleFormRef.value?.resetFields()
 }
@@ -112,7 +127,7 @@ const handleComfirm = () => {
                     appNo: formData.value.appNo,
                     channelId: formData.value.channel,
                     version: formData.value.version,
-                    optionals: formData.value.adv
+                    optionals: formData.value.adv // 这里使用转换后的逗号分隔字符串
                 }
             } else if (props.type === 'update') {
                 data = {
@@ -122,7 +137,7 @@ const handleComfirm = () => {
                     appNo: formData.value.appNo,
                     channelId: formData.value.channel,
                     version: formData.value.version,
-                    optionals: formData.value.adv
+                    optionals: formData.value.adv // 这里使用转换后的逗号分隔字符串
                 }
             }
             console.log('data', data);
@@ -139,16 +154,21 @@ const handleComfirm = () => {
 // 新增or编辑保存数据
 const saveData = (data: any) => {
     console.log('保存数据', data);
-    const enData = desEncrypt(JSON.stringify(data))
-    service.post('/advChannelConfig/save', enData).then((res: any) => {
+    const paramStr = desEncrypt(JSON.stringify(data))
+    service.post('/advChannelConfig/save', {
+        enData: paramStr
+    }).then((res: any) => {
         console.log('res', res);
-        if (res.code === 200) {
+        if (res.data.code === 200) {
             emit('update:showEditor', false)
+            emit('refresh')
             resetForm()
         }
     })
 }
 
+onMounted(() => {
+})
 </script>
 
 <style lang="scss" scoped></style>
