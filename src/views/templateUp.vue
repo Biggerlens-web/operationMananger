@@ -25,6 +25,12 @@
                             :value="item.appNo" />
                     </el-select>
                 </div>
+                <div class="filter-item">
+                    <el-select v-model="activeregion" clearable class="filter-select">
+                        <el-option v-for="item in regionList" :key="item.id" :label="item.regionName"
+                            :value="item.regionName" />
+                    </el-select>
+                </div>
             </div>
         </el-card>
 
@@ -41,15 +47,26 @@ import { Plus } from '@element-plus/icons-vue'
 
 import { useTemplateStore } from '@/stores/template'
 import { storeToRefs } from 'pinia'
-import backIcon from '../assets/template/返回.png'
 import addTemplateCatalog from '@/components/templates/addTemplateCatalog.vue'
 import { useCounterStore } from '@/stores/counter'
-const componentId = ref<any>()
 const templateStore = useTemplateStore()
 const conterStore = useCounterStore()
-const { appList } = storeToRefs(conterStore)
-const { activeCataType, activeCalaId, activeSubId, typeTitle, subTypeTitle, addTemplateMark } = storeToRefs(templateStore)
+const { appList, defaultAppNo } = storeToRefs(conterStore)
+const { activeCataType, typeTitle, subTypeTitle, addTemplateMark } = storeToRefs(templateStore)
 
+const activeApp = ref(defaultAppNo.value)
+const activeregion = ref('domestic')
+
+const regionList = ref([
+    {
+        id: 'domestic',
+        regionName: '国内'
+    },
+    {
+        id: 'foreign',
+        regionName: '国外'
+    },
+])
 
 //新增模板类型
 const edtiorTemplateType = ref<boolean>(false)
@@ -76,7 +93,7 @@ const clearEditorMark = () => {
 
 
 
-const activeApp = ref('')
+
 
 onMounted(() => {
 
