@@ -33,61 +33,62 @@
 
 <script lang="ts" setup>
 
-    import { useCounterStore } from '@/stores/counter';
-    import { storeToRefs } from 'pinia';
-    import { ref } from 'vue'
-    const props = defineProps<{
-        showEditor: boolean
-    }>()
+import { useCounterStore } from '@/stores/counter';
+import { storeToRefs } from 'pinia';
+import { ref } from 'vue'
+const props = defineProps<{
+    showEditor: boolean,
+    type: string,
+}>()
 
-    const counterStore = useCounterStore()
-    const { appList, OSlist, channelList } = storeToRefs(counterStore)
-    const emit = defineEmits<{
-        'update:showEditor': [value: boolean]
-    }>()
-    const formData = ref<any>({
+const counterStore = useCounterStore()
+const { appList, OSlist, channelList } = storeToRefs(counterStore)
+const emit = defineEmits<{
+    'update:showEditor': [value: boolean]
+}>()
+const formData = ref<any>({
+    id: '',
+    channel: '',
+
+    appNo: ''
+})
+const languageList = ref([
+    {
+        value: '1',
+        label: '中文'
+    },
+    {
+        value: '2',
+        label: '英文'
+    }
+])
+
+const ruleFormRef = ref<any>(null)
+const rules = ref({
+    channelGroupName: [{ required: true, message: '请输入渠道组名称', trigger: 'blur' }],
+    channelList: [{ required: true, message: '请选择渠道', trigger: 'blur' }]
+})
+
+const resetForm = () => {
+    formData.value = {
         id: '',
         channel: '',
 
         appNo: ''
-    })
-    const languageList = ref([
-        {
-            value: '1',
-            label: '中文'
-        },
-        {
-            value: '2',
-            label: '英文'
+    }
+    ruleFormRef.value?.resetFields()
+}
+const handleClose = () => {
+    resetForm()
+    emit('update:showEditor', false)
+}
+const handleComfirm = (ruleFormRef: any) => {
+    ruleFormRef.validate((valid: any) => {
+        if (valid) {
+            handleClose()
         }
-    ])
-
-    const ruleFormRef = ref<any>(null)
-    const rules = ref({
-        channelGroupName: [{ required: true, message: '请输入渠道组名称', trigger: 'blur' }],
-        channelList: [{ required: true, message: '请选择渠道', trigger: 'blur' }]
     })
-
-    const resetForm = () => {
-        formData.value = {
-            id: '',
-            channel: '',
-
-            appNo: ''
-        }
-        ruleFormRef.value?.resetFields()
-    }
-    const handleClose = () => {
-        resetForm()
-        emit('update:showEditor', false)
-    }
-    const handleComfirm = (ruleFormRef: any) => {
-        ruleFormRef.validate((valid: any) => {
-            if (valid) {
-                handleClose()
-            }
-        })
-    }
+}
 </script>
 
 <style lang="scss" scoped></style>
