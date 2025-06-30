@@ -6,12 +6,15 @@
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        通过json文件添加
-                    </el-button>
+                    <el-upload ref="upload" class="upload-demo" action="#" :limit="1" :http-request="uploadJson"
+                        :show-file-list="false">
+                        <el-button type="primary" class="add-button">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+                            通过json文件添加
+                        </el-button>
+                    </el-upload>
                     <el-button type="primary" class="add-button" @click="showSDKtemplate">
                         第三方SDK模板
                     </el-button>
@@ -45,14 +48,25 @@
     import prermissionTemplate from '@/components/privacy/prermissionTemplate.vue';
     import otherTemplate from '@/components/privacy/otherTemplate.vue';
     import service from '@/axios';
+    import type { UploadRequestOptions } from 'element-plus'
     import { desEncrypt } from '@/utils/des';
     import editNode from '@/components/privacy/editor/editNode.vue';
+    import { ElMessage } from 'element-plus';
     //显示SDK模板
 
     const dialogSDKtemplateVisible = ref(false);
     const showSDKtemplate = () => {
         dialogSDKtemplateVisible.value = true;
     }
+
+
+    //上传json
+    const uploadJson = (options: UploadRequestOptions) => {
+        console.log('上传json', options);
+
+    }
+
+
 
     //显示权限模板
     const dialogPermissiontemplateVisible = ref(false);
@@ -123,8 +137,21 @@
 
 
     //删除节点
-    const deleteNode = (data: any) => {
+    const deleteNode = async (data: any) => {
         console.log('删除节点', data);
+        const { id } = data
+        try {
+            const res = await service.post(`/privacy/deleteDetail/${id}`)
+            console.log('删除成功', res);
+            if (res.data.code === 200) {
+                ElMessage.success('删除成功')
+                getPrivacyList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('删除节点失败', err);
+        }
     }
 
     //新增节点

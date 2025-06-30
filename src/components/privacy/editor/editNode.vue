@@ -108,7 +108,16 @@
                         </el-col>
                         <el-col :span="3">
                             <div class="sdk-actions">
-                                <el-button type="text" icon="ArrowDown" class="action-btn" />
+                                <div class="dropdown-container">
+                                    <el-button type="text" icon="ArrowDown" class="action-btn"
+                                        @click="toggleSDKDropdown(index)" />
+                                    <div v-show="sdk.showDropdown" class="sdk-dropdown">
+                                        <div v-for="item in SDKList" :key="item.id" class="dropdown-item"
+                                            @click="applySDKTemplate(index, item)">
+                                            {{ item.sdkName }}
+                                        </div>
+                                    </div>
+                                </div>
                                 <el-button type="danger" icon="Close" @click="removeSdk(index)" class="action-btn" />
                             </div>
                         </el-col>
@@ -178,11 +187,14 @@
 </template>
 
 <script lang="ts" setup>
-    import { ref, reactive, watch } from 'vue'
+    import { ref, reactive, watch, onMounted } from 'vue'
     import { ElMessage, ElMessageBox } from 'element-plus'
     import type { FormInstance, FormRules } from 'element-plus'
+    import { ArrowDown, Close, Plus } from '@element-plus/icons-vue'
     import { useCounterStore } from '@/stores/counter'
     import { storeToRefs } from 'pinia'
+    import { desEncrypt } from '@/utils/des'
+    import service from '@/axios'
     const stores = useCounterStore()
 
     const { channelList } = storeToRefs(stores)
@@ -194,6 +206,22 @@
     const props = defineProps<{
         nodeInfo: any
     }>()
+
+    const SDKList = ref<any>([])
+    const getEditInfo = async () => {
+        try {
+            const res = await service.get('/privacy/getDetail')
+            console.log('获取编辑信息', res);
+
+            SDKList.value = res.data.data.threeSDKS
+        } catch (err) {
+            console.log('获取编辑信息失败', err);
+        }
+    }
+    onMounted(() => {
+        getEditInfo()
+    })
+
     watch(() => dialogVisable.value, (newV) => {
         if (newV && props.nodeInfo) {
             console.log('编辑节点弹窗', props.nodeInfo);
@@ -250,7 +278,9 @@
                 text3: '',
                 text4: '',
                 text5: '',
-                text6: ''
+                text6: '',
+                selectedTemplate: '',
+                showDropdown: false
             }
         ],
         permissions: [
@@ -298,8 +328,36 @@
             text3: '',
             text4: '',
             text5: '',
-            text6: ''
+            text6: '',
+            selectedTemplate: '',
+            showDropdown: false
         })
+    }
+
+    // 切换SDK下拉框显示状态
+    const toggleSDKDropdown = (index: number) => {
+        // 关闭其他下拉框
+        formData.sdkList.forEach((sdk, i) => {
+            if (i !== index) {
+                sdk.showDropdown = false
+            }
+        })
+        // 切换当前下拉框状态
+        formData.sdkList[index].showDropdown = !formData.sdkList[index].showDropdown
+    }
+
+    // 应用SDK模板
+    const applySDKTemplate = (index: number, template: any) => {
+        const sdk = formData.sdkList[index]
+        sdk.text = template.sdkName || ''
+        sdk.text1 = template.usePurpose || ''
+        sdk.text2 = template.sharedInfoScope || ''
+        sdk.text3 = template.sdkPrivacyURL || ''
+        sdk.text4 = template.sdkCompany || ''
+        sdk.text5 = template.useScenario || ''
+        sdk.text6 = template.infoCollected || ''
+        sdk.showDropdown = false
+        ElMessage.success('已应用SDK模板')
     }
 
     // 删除SDK
@@ -370,7 +428,9 @@
                 text3: '',
                 text4: '',
                 text5: '',
-                text6: ''
+                text6: '',
+                selectedTemplate: '',
+                showDropdown: false
             }
         ]
         formData.permissions = [
@@ -436,12 +496,35 @@
                     item.text6
                 ),
                 permissionIds: formData.permissions.map(item =>
-                    item.id
+                    String(item.id)
+                ),
+                permissionText: formData.permissions.map(item =>
+                    item.text
+                ),
+                permissionText1: formData.permissions.map(item =>
+                    item.text1
+                ),
+                permissionText2: formData.permissions.map(item =>
+                    item.text2
+                ),
+                otherServerIds: formData.descriptions.map(item =>
+                    String(item.id)
+                ),
+                otherServerText: formData.descriptions.map(item =>
+                    item.text
                 ),
 
 
-
             }
+
+            console.log('提交参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/privacy/saveDetail', {
+                enData
+            }
+
+            )
+            console.log('保存编辑', res);
         } catch (err) {
             console.log('保存失败', err);
         }
@@ -452,9 +535,10 @@
         try {
             await formRef.value.validate()
             // 这里可以添加提交逻辑
-            console.log('表单数据:', formData)
-            ElMessage.success('保存成功')
-            handleClose()
+            // console.log('表单数据:', formData)
+            saveChange()
+            // ElMessage.success('保存成功')
+            // handleClose()
         } catch (error) {
             ElMessage.error('请检查表单填写是否正确')
         }
@@ -534,15 +618,54 @@
 
                 .sdk-actions {
                     display: flex;
-                    justify-content: center;
+                    flex-direction: row;
+                    gap: 8px;
                     align-items: center;
-                    gap: 5px;
+                    justify-content: center;
+
+                    .dropdown-container {
+                        position: relative;
+
+                        .sdk-dropdown {
+                            position: absolute;
+                            top: 100%;
+                            left: 0;
+                            width: 150px;
+                            background: white;
+                            border: 1px solid #dcdfe6;
+                            border-radius: 4px;
+                            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+                            z-index: 1000;
+                            max-height: 200px;
+                            overflow-y: auto;
+
+                            .dropdown-item {
+                                padding: 8px 12px;
+                                cursor: pointer;
+                                font-size: 12px;
+                                border-bottom: 1px solid #f5f7fa;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+
+                                &:hover {
+                                    background-color: #f5f7fa;
+                                }
+
+                                &:last-child {
+                                    border-bottom: none;
+                                }
+                            }
+                        }
+                    }
 
                     .action-btn {
-                        width: 28px;
-                        height: 28px;
-                        padding: 0;
-                        border-radius: 4px;
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 6px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
                     }
                 }
             }

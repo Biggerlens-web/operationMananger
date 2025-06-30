@@ -11,13 +11,14 @@
                             <span class="node-label"
                                 v-if="node.level !== 5 && node.label !== 'SDK' && node.label !== '权限' && node.label !== '说明' && node.label !== 'otherservers'">{{
                                     node.label }}</span>
+
                             <span class="node-label" v-else>{{ node.label }}</span>
                         </template>
                         <template v-else-if="node.level === 5">
                             <span class="node-label"
                                 v-if="node.level === 5 && node.label != '渠道' && node.label != '其他说明' && node.label != '应用权限' && node.label !== '第三方SDK'">{{
                                     node.label }}:{{ node.data.value }}</span>
-                            <span class="node-label" v-else>{{ node.label }}</span>
+                            <span class="node-label" v-else>{{ `${node.label}` }}</span>
                         </template>
 
                         <div class="node-actions">
@@ -45,12 +46,12 @@
                             {{ text || '暂无SDK信息' }}
                         </div>
                     </div>
-                    <div v-else-if="node.level === 6 && node.label === 'permission'" class="textarea-container">
+                    <div v-else-if="node.level === 6 && node.label === '权限'" class="textarea-container">
                         <div v-for="(text, index) in node.data.arr" :key="index" class="custom-text-box">
                             {{ text || '暂无权限信息' }}
                         </div>
                     </div>
-                    <div v-else-if="node.level === 6 && node.label === 'otherservers'" class="textarea-container">
+                    <div v-else-if="node.level === 6 && node.label === '说明'" class="textarea-container">
                         <div v-for="(text, index) in node.data.arr" :key="index" class="custom-text-box">
                             {{ text || '暂无其他服务信息' }}
                         </div>
@@ -60,7 +61,7 @@
         </el-tree>
     </div>
 
-    <appUrlLInk v-model:dialog-visible="showapplink" :url-data="currentUrlData" />
+    <appUrlLInk v-model:dialog-visible="showapplink" :appNo="viewAppNo" />
 </template>
 
 <script lang="ts" setup>
@@ -113,6 +114,7 @@
 
     // 弹窗状态
     const showapplink = ref(false)
+    const viewAppNo = ref<number | string>('')
     const currentUrlData = ref<TreeNode | null>(null)
 
     // 节点点击事件
@@ -132,7 +134,9 @@
 
     // 处理URL点击
     const handleUrlClick = (data: TreeNode) => {
-        currentUrlData.value = data
+        // currentUrlData.value = data
+        console.log('data', data);
+        viewAppNo.value = data.appNo
         showapplink.value = true
     }
 
