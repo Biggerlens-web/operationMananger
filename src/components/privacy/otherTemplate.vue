@@ -187,8 +187,6 @@
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
         try {
-
-
             const params = {
                 timestamp: Date.now(),
                 pageNum: pageNum.value,
