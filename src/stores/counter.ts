@@ -23,6 +23,7 @@ export const useCounterStore = defineStore(
     const userAvatar = ref<string>('') //用户头像
     const appList = ref<any>([]) // 应用列表
     const channelList = ref<any>([]) // 渠道列表
+    const advertList = ref<any>([]) //广告列表
     const OSlist = ref<any>([]) // 系统列表
     const menuList = ref<any>([]) // 菜单列表
     const showPagestion = ref<boolean>(true) // 是否显示分页
@@ -38,6 +39,7 @@ export const useCounterStore = defineStore(
       menuList,
       showPagestion,
       channelList,
+      advertList,
       OSlist,
       international,
       regionList,
