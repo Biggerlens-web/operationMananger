@@ -139,21 +139,30 @@
     const switchChange = async (item: any) => {
 
         console.log('切换开关', item);
-        // try {
-        //     const { key } = item
-        //     const params = {
-        //         timestamp: Date.now(),
-        //         id: item.id,
-        //         [key]: item[key]
-        //     }
-        //     const enData = desEncrypt(JSON.stringify(params))
-        //     const res = await service.post('/feeConfig/save', {
-        //         enData
-        //     })
-        //     console.log('保存成功', res);
-        // } catch (err) {
-        //     console.log('修改失败', err);
-        // }
+
+
+
+        try {
+            const { key } = item
+            const params = {
+                timestamp: Date.now(),
+                id: item.id,
+                [key]: item[key]
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/feeConfig/save', {
+                enData
+            })
+            console.log('保存成功', res);
+            if (res.data.code === 200) {
+                ElMessage.success('修改成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('修改失败', err);
+        }
     }
     //修改数字输入框
     const handleNumInput = async (item: any) => {

@@ -6,12 +6,15 @@
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        通过json文件添加
-                    </el-button>
+                    <el-upload ref="upload" class="upload-demo" action="#" :limit="1" :http-request="uploadJson"
+                        :show-file-list="false">
+                        <el-button type="primary" class="add-button">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+                            通过json文件添加
+                        </el-button>
+                    </el-upload>
                     <el-button type="primary" class="add-button" @click="showSDKtemplate">
                         第三方SDK模板
                     </el-button>
@@ -30,24 +33,40 @@
 
         </el-card>
         <el-card class="content-card">
-            <echartTree />
+            <echartTree :treeData="treeData" @nodeClick="handleNodeClick" @nodeExpand="handleNodeExpand"
+                @nodeCollapse="handleNodeCollapse" @edit="handleEdit" ref="treeRef" @del="deleteNode"
+                @create="handleCreate" />
         </el-card>
     </div>
+    <editNode v-model:dialogVisable="dialogVisableEditNode" :nodeInfo="nodeInfo" />
 </template>
 
 <script lang="ts" setup>
-    import { ref } from 'vue';
+    import { onMounted, ref } from 'vue';
     import echartTree from '@/components/echartTree.vue';
     import privacyTemplate from '@/components/privacy/privacyTemplate.vue';
     import prermissionTemplate from '@/components/privacy/prermissionTemplate.vue';
     import otherTemplate from '@/components/privacy/otherTemplate.vue';
-
+    import service from '@/axios';
+    import type { UploadRequestOptions } from 'element-plus'
+    import { desEncrypt } from '@/utils/des';
+    import editNode from '@/components/privacy/editor/editNode.vue';
+    import { ElMessage } from 'element-plus';
     //显示SDK模板
 
     const dialogSDKtemplateVisible = ref(false);
     const showSDKtemplate = () => {
         dialogSDKtemplateVisible.value = true;
     }
+
+
+    //上传json
+    const uploadJson = (options: UploadRequestOptions) => {
+        console.log('上传json', options);
+
+    }
+
+
 
     //显示权限模板
     const dialogPermissiontemplateVisible = ref(false);
@@ -60,6 +79,105 @@
     const showOthertemplate = () => {
         dialogOthertemplateVisible.value = true;
     }
+
+
+    //编辑节点
+    const dialogVisableEditNode = ref<boolean>(false)
+
+
+    // 树组件引用
+    const treeRef = ref()
+
+    //获取隐私政策列表
+    const treeData = ref<any>()
+    const getPrivacyList = async () => {
+        try {
+            const res = await service.get('/appAdmin/privacyPolicy')
+            console.log('获取隐私列表', res);
+            res.data.data.list.forEach((item: any) => {
+                item.level = 1
+                item.label = item.companyName || ''
+                item.id = item.id || item.companyNo
+                item.isLeaf = false
+                item.hasChildren = true
+            })
+            treeData.value = res.data.data.list
+
+        } catch (err) {
+            console.log('获取隐私列表失败', err);
+        }
+    }
+
+
+
+    // 节点点击事件处理
+    const handleNodeClick = (data: any, node: any) => {
+        console.log('节点点击:', data, node)
+        // 可以在这里处理节点选中逻辑
+    }
+
+    // 节点展开事件处理
+    const handleNodeExpand = (data: any, node: any) => {
+        console.log('节点展开:', data, node)
+    }
+
+    // 节点收起事件处理
+    const handleNodeCollapse = (data: any, node: any) => {
+        console.log('节点收起:', data, node)
+    }
+
+    // 编辑事件处理
+    const nodeInfo = ref<any>()
+    const handleEdit = (data: any) => {
+        console.log('编辑节点:', data)
+        nodeInfo.value = data
+        dialogVisableEditNode.value = true
+        // 可以在这里打开编辑弹窗或跳转到编辑页面
+    }
+
+
+    //删除节点
+    const deleteNode = async (data: any) => {
+        console.log('删除节点', data);
+        const { id } = data
+        try {
+            const res = await service.post(`/privacy/deleteDetail/${id}`)
+            console.log('删除成功', res);
+            if (res.data.code === 200) {
+                ElMessage.success('删除成功')
+                getPrivacyList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('删除节点失败', err);
+        }
+    }
+
+    //新增节点
+    const handleCreate = (data: any) => {
+        console.log('新增节点', data);
+        dialogVisableEditNode.value = true
+    }
+
+
+    // 树操作方法
+    const expandAllNodes = () => {
+        treeRef.value?.expandAll()
+    }
+
+    const collapseAllNodes = () => {
+        treeRef.value?.collapseAll()
+    }
+
+    const getSelectedNodes = () => {
+        return treeRef.value?.getCheckedNodes()
+    }
+
+    onMounted(() => {
+        getPrivacyList()
+    })
+
 </script>
 
 <style lang="scss" scoped>

@@ -1,7 +1,7 @@
 <template>
     <div>
 
-        <el-card class="filterBox">
+        <!-- <el-card class="filterBox">
             <el-select filterable v-model="searchParams.companyNo" placeholder="应用" class="filter-select"
                 style="width: 200px;">
                 <el-option v-for="item in appList" :key="item.appNo"
@@ -9,17 +9,17 @@
                     :value="item.appNo" />
             </el-select>
 
-        </el-card>
+        </el-card> -->
         <el-card class="content_card" @click="enMove">
             <div class="parentBox" ref="parentRef">
                 <div class="left" :style="{ width: leftWidth + '%' }">
-                    <signTable />
-                    <channelTable />
+                    <signTable :signList="signList" @delete='deleteFn' @update="getData" />
+                    <channelTable :channelList="channelList" @delete='deleteFn2' @update="getData" />
                 </div>
                 <div class="middle_line" :style="{ left: middlePosition + '%' }" @mousedown="moveline"
                     @mouseup="enMove"></div>
                 <div class="right" :style="{ width: (100 - leftWidth) + '%' }">
-                    <apkEditor />
+                    <apkEditor :signsList="signList" />
                 </div>
             </div>
         </el-card>
@@ -29,15 +29,24 @@
 <script lang="ts" setup>
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { reactive, ref } from 'vue';
+    import { onMounted, reactive, ref, watch } from 'vue';
     import signTable from '@/components/apk/signTable.vue';
     import channelTable from '@/components/apk/channelTable.vue';
     import apkEditor from '@/components/apk/apkEditor.vue';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
+    import { ElMessage, ElMessageBox } from 'element-plus';
 
     const counterStore = useCounterStore()
-    const { appList } = storeToRefs(counterStore)
+    const { defaultAppNo } = storeToRefs(counterStore)
+
+
+    //分页
+    const pageNum = ref<number>(1)
+    const pageSize = ref<number>(10)
+    const totalData = ref<number>(0)
     const searchParams = reactive({
-        companyNo: ''
+        appNo: defaultAppNo.value
     })
 
 
@@ -83,6 +92,128 @@
         isDragging = false;
         document.removeEventListener('mousemove', move)
     }
+
+
+    //删除签名
+    const deleteFn = async (item: any) => {
+        ElMessageBox.confirm('确认删除吗？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+        }).then(async () => {
+            try {
+
+
+                const res = await service.post(`/apkSign/del/${item.id}`)
+                if (res.data.code === 200) {
+                    ElMessage.success('删除成功')
+                    getData()
+                }
+            } catch (err) {
+                console.log('删除签名失败', err);
+            }
+        }).catch(() => {
+            //取消删除
+        })
+    }
+    //删除渠道
+    const deleteFn2 = (item: any) => {
+        ElMessageBox.confirm('确认删除吗？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+        }).then(async () => {
+            try {
+                const res = await service.post(`/apkSignChannels/del/${item.id}`)
+                if (res.data.code === 200) {
+                    ElMessage.success('删除成功')
+                    getData()
+                }
+            } catch (err) {
+                console.log('删除签名失败', err);
+            }
+        }).catch(() => {
+            //取消删除
+        })
+    }
+    const signList = ref<any>([
+
+
+    ])
+
+    const channelList = ref<any>([
+
+
+    ])
+
+    const getSignList = async () => {
+        try {
+            const params = {
+                pageNum: 1,
+                pageSize: 9999,
+                appNo: searchParams.appNo,
+                timestamp: Date.now()
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/apkSign/list', {
+                enData
+            })
+            return res
+        } catch (err) {
+            console.log('获取签名列表', err);
+        }
+    }
+    const getChannelsList = async () => {
+        try {
+
+            const params = {
+                pageNum: 1,
+                pageSize: 9999,
+                timestamp: Date.now()
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/apkSignChannels/list', {
+                enData
+            })
+            return res
+        } catch (err) {
+
+            console.log('获取渠道失败', err);
+        }
+    }
+
+    const getData = async () => {
+        try {
+
+            const [signRes, channelRes] = await Promise.all([
+                getSignList(),
+                getChannelsList()
+            ])
+
+
+            console.log('签名列表:', signRes)
+
+            signList.value = signRes?.data.rows
+            console.log('渠道列表:', channelRes)
+
+            channelList.value = channelRes?.data.rows
+
+        } catch (err) {
+            console.log('获取数据失败', err)
+        }
+    }
+
+
+
+    //监听应用变化
+    watch(() => defaultAppNo.value, () => {
+
+        searchParams.appNo = defaultAppNo.value
+        getData()
+    })
+    onMounted(() => {
+        getData()
+    })
 </script>
 
 <style lang="scss" scoped>
@@ -91,7 +222,7 @@
     }
 
     .content_card {
-        height: 700px;
+        height: 800px;
         display: flex; // 确保自身也是flex布局
 
         :deep(.el-card__body) {
@@ -104,11 +235,16 @@
             width: 100%;
             flex: 1;
             position: relative;
+            overflow: hidden;
+            /* 防止内容超出 */
 
             .left,
             .right {
-
-                overflow-x: scroll;
+                overflow-x: auto;
+                /* 改为auto，只在需要时显示滚动条 */
+                overflow-y: auto;
+                flex-shrink: 0;
+                /* 防止flex收缩 */
 
                 /* 现代浏览器通用属性 (Firefox) */
                 scrollbar-width: thin;
@@ -150,13 +286,16 @@
 
             .left {
                 display: flex;
-                column-gap: 100px
+                column-gap: 100px;
+                min-width: 0;
+                /* 允许flex项目收缩到内容以下 */
             }
 
             .right {
                 box-sizing: border-box;
                 padding: 10px;
-
+                min-width: 0;
+                /* 允许flex项目收缩到内容以下 */
             }
 
             .middle_line {
@@ -164,11 +303,11 @@
                 height: 100%;
                 background-color: #ccc;
                 position: absolute;
-
                 transform: translateX(-50%); // 这个是关键，让元素真正居中
                 z-index: 10;
                 cursor: ew-resize;
-
+                flex-shrink: 0;
+                /* 防止分割线被压缩 */
 
                 &::after {
                     content: '';
@@ -194,8 +333,6 @@
                     }
                 }
             }
-
-
         }
     }
 </style>
