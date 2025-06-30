@@ -25,171 +25,154 @@
                             :value="item.appNo" />
                     </el-select>
                 </div>
+                <div class="filter-item">
+                    <el-select v-model="activeregion" clearable class="filter-select">
+                        <el-option v-for="item in regionList" :key="item.id" :label="item.regionName"
+                            :value="item.regionName" />
+                    </el-select>
+                </div>
             </div>
         </el-card>
 
 
-        <el-card class="content-card">
-            <img class="backIcon" v-show="activeCataType !== 'catalogList'" @click="goback" :src="backIcon" alt="">
-            <component :is="componentId" @goDetail="goDetail" @editorTemplateType="editorTemplateType"></component>
-        </el-card>
+
 
 
     </div>
 </template>
 
 <script lang="ts" setup>
-    import { onMounted, ref } from 'vue'
-    import { Plus } from '@element-plus/icons-vue'
-    import subCatalogList from '@/components/templates/subCatalogList.vue'
-    import catalogList from '@/components/templates/catalogList.vue'
-    import templatesList from '../components/templates/templatesList.vue'
-    import { useTemplateStore } from '@/stores/template'
-    import { storeToRefs } from 'pinia'
-    import backIcon from '../assets/template/返回.png'
-    import addTemplateCatalog from '@/components/templates/addTemplateCatalog.vue'
-    import { useCounterStore } from '@/stores/counter'
-    const componentId = ref<any>()
-    const templateStore = useTemplateStore()
-    const conterStore = useCounterStore()
-    const { appList } = storeToRefs(conterStore)
-    const { activeCataType, activeCalaId, activeSubId, typeTitle, subTypeTitle, addTemplateMark } = storeToRefs(templateStore)
-    const components: any = {
-        catalogList,
-        subCatalogList,
-        templatesList
-    }
+import { onMounted, ref } from 'vue'
+import { Plus } from '@element-plus/icons-vue'
 
-    //新增模板类型
-    const edtiorTemplateType = ref<boolean>(false)
-    const addTemplateType = () => {
-        edtiorTemplateType.value = true
-    }
-    const addTemplate = () => {
-        console.log('addTemplate');
-        addTemplateMark.value = !addTemplateMark.value
-    }
+import { useTemplateStore } from '@/stores/template'
+import { storeToRefs } from 'pinia'
+import addTemplateCatalog from '@/components/templates/addTemplateCatalog.vue'
+import { useCounterStore } from '@/stores/counter'
+const templateStore = useTemplateStore()
+const conterStore = useCounterStore()
+const { appList, defaultAppNo } = storeToRefs(conterStore)
+const { activeCataType, typeTitle, subTypeTitle, addTemplateMark } = storeToRefs(templateStore)
 
-    //编辑模板类型
-    const isEditorTemplateType = ref<string>('')
-    const editorTemplateType = (obj: any) => {
-        console.log('obj', obj);
-        isEditorTemplateType.value = obj.type
-        edtiorTemplateType.value = true
-    }
-    const clearEditorMark = () => {
-        isEditorTemplateType.value = ''
-    }
+const activeApp = ref(defaultAppNo.value)
+const activeregion = ref('domestic')
 
-    //前进
-    const goDetail = (k: any) => {
-        console.log('k', k);
-        if (k.type === 'subCatalogList') {
-            activeCalaId.value = k.id
-        } else if (k.type === 'templatesList') {
-            activeSubId.value = k.id
-        }
-        activeCataType.value = k.type
-        componentId.value = components[k.type]
-    }
+const regionList = ref([
+    {
+        id: 'domestic',
+        regionName: '国内'
+    },
+    {
+        id: 'foreign',
+        regionName: '国外'
+    },
+])
 
-    //返回
-    const goback = () => {
-        console.log('activeCataType', activeCataType.value);
-        if (activeCataType.value === 'catalogList') return
-        if (activeCataType.value === 'templatesList') {
-            activeCataType.value = 'subCatalogList'
-            subTypeTitle.value = ''
-            componentId.value = components['subCatalogList']
-        } else if (activeCataType.value === 'subCatalogList') {
-            activeCataType.value = 'catalogList'
-            typeTitle.value = '类目管理'
-            componentId.value = components['catalogList']
-        }
+//新增模板类型
+const edtiorTemplateType = ref<boolean>(false)
+const addTemplateType = () => {
+    edtiorTemplateType.value = true
+}
+const addTemplate = () => {
+    console.log('addTemplate');
+    addTemplateMark.value = !addTemplateMark.value
+}
 
-    }
+//编辑模板类型
+const isEditorTemplateType = ref<string>('')
+const editorTemplateType = (obj: any) => {
+    console.log('obj', obj);
+    isEditorTemplateType.value = obj.type
+    edtiorTemplateType.value = true
+}
+const clearEditorMark = () => {
+    isEditorTemplateType.value = ''
+}
 
 
-    const activeApp = ref('')
 
-    onMounted(() => {
-        componentId.value = components[activeCataType.value]
-    })
+
+
+
+
+onMounted(() => {
+
+})
 
 </script>
 
 <style lang="scss" scoped>
-    .view {
-        min-height: 100%;
-        position: relative;
+.view {
+    min-height: 100%;
+    position: relative;
 
-        .backIcon {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            // top: 23%;
-            left: 5px;
-            cursor: pointer;
-        }
+    .backIcon {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        // top: 23%;
+        left: 5px;
+        cursor: pointer;
     }
+}
 
-    .page-header {
-        display: flex;
-        // justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-        position: relative;
+.page-header {
+    display: flex;
+    // justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    position: relative;
 
-        .typeTitle {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
+    .typeTitle {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
     }
+}
 
-    .page-header h2 {
-        margin: 0;
-        font-size: 20px;
-        font-weight: 500;
-        color: #1f2f3d;
-    }
+.page-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #1f2f3d;
+}
 
-    .filter-card {
-        margin-bottom: 16px;
+.filter-card {
+    margin-bottom: 16px;
 
 
-    }
+}
 
-    .filter-box {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 16px;
-        align-items: flex-start;
-    }
+.filter-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-start;
+}
 
-    .filter-item {
-        display: flex;
-        align-items: center;
-        margin-right: 24px;
-    }
+.filter-item {
+    display: flex;
+    align-items: center;
+    margin-right: 24px;
+}
 
-    .filter-item .label {
-        margin-right: 8px;
-        color: #606266;
-        font-size: 14px;
-    }
+.filter-item .label {
+    margin-right: 8px;
+    color: #606266;
+    font-size: 14px;
+}
 
-    .filter-select {
-        width: 200px;
-    }
+.filter-select {
+    width: 200px;
+}
 
-    .filter-actions {
-        margin-left: auto;
-    }
+.filter-actions {
+    margin-left: auto;
+}
 
-    .content-card {
-        height: 680px;
-        overflow-y: scroll;
+.content-card {
+    height: 680px;
+    overflow-y: scroll;
 
-    }
+}
 </style>

@@ -31,7 +31,7 @@
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="系统" class="filter-select">
+                        <el-select filterable v-model="searchParams.os" placeholder="系统" class="filter-select">
                             <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
                         </el-select>
                     </div>
@@ -98,7 +98,7 @@
     interface SearchParams {
         inputText: string
         companyNo: string
-
+        os: string
 
 
     }
@@ -106,6 +106,7 @@
         {
             inputText: '',
             companyNo: '',
+            os: '',
 
         }
     )
@@ -114,6 +115,7 @@
         searchParams.value = {
             inputText: '',
             companyNo: '',
+            os: '',
 
         }
         getUserList()
@@ -285,18 +287,30 @@
         key: string
     }
     const filterParams = ref<filterParams[]>()
+    //获取查询用户信息列表
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
-            }
+        console.log('查询反馈信息', searchParams.value);
+        const params = {
+            ...searchParams.value,
+            pageNum: 1,
+            pageSize: 10,
+            timestamp: Date.now(),
+        }
+        const paramsStr = desEncrypt(JSON.stringify(params))
+        const res = await service.post('/feedback/list', {
+            enData: paramsStr
         })
-        console.log('filterParams', filterParams.value);
+        console.log('res', res);
+        // const dataItem = appData.value[0]
+        // const keys = Object.keys(dataItem)
+        // filterParams.value = keys.map((item) => {
+        //     return {
+        //         note: appNote[item],
+        //         isShow: true,
+        //         key: item
+        //     }
+        // })
+        // console.log('filterParams', filterParams.value);
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {
@@ -318,6 +332,8 @@
         }
         console.log('keyItem', keyItem);
     }
+
+
     onMounted(() => {
         getUserList();
         showPagestion.value = true
