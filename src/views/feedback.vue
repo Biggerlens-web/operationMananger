@@ -296,11 +296,11 @@
             pageSize: 10,
             timestamp: Date.now(),
         }
-        const paramsStr = desEncrypt(JSON.stringify(params))
-        const res = await service.post('/feedback/list', {
-            enData: paramsStr
-        })
-        console.log('res', res);
+        // const paramsStr = desEncrypt(JSON.stringify(params))
+        // const res = await service.post('/feedback/list', {
+        //     enData: paramsStr
+        // })
+        // console.log('res', res);
         // const dataItem = appData.value[0]
         // const keys = Object.keys(dataItem)
         // filterParams.value = keys.map((item) => {
