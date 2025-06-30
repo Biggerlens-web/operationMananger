@@ -144,7 +144,15 @@
       })
       console.log('获取公司下的应用列表', res);
       appListInCom.value = res.data.data.dtos
-      defaultAppNo.value = appListInCom.value[0].appNo
+
+      // 如果已有持久化的 defaultAppNo 且在新列表中存在，则保持原值
+      const currentAppNo = defaultAppNo.value
+      const appExists = appListInCom.value.some((app: any) => app.appNo === currentAppNo)
+
+      if (!currentAppNo || !appExists) {
+        // 如果没有选中的应用或选中的应用不在当前公司的应用列表中，则选择第一个
+        defaultAppNo.value = appListInCom.value[0].appNo
+      }
     } catch (err) {
       console.log('获取该公司下应用列表失败', err);
     }
@@ -153,11 +161,12 @@
     console.log('defaultCompanyNo 发生变化:', newValue)
     if (newValue) {
       console.log('获取默认应用');
-      // 公司切换时，清空应用选择
+      // 公司切换时获取该公司下的应用列表
       getAppByCom(newValue)
     }
   }, {
     immediate: true
+    // 不使用 once: true，因为需要在公司切换时重新获取应用列表
   })
 
 
@@ -179,10 +188,12 @@
     console.log('选择的公司ID:', companyNo)
     // 这里可以添加公司切换的逻辑，比如更新store中的当前公司
     // counterStore.setCurrentCompany(companyId)
+    getAppByCom(companyNo)
   }
 
   const handleAppChange = (appNo: string) => {
     console.log('选择的应用编号:', appNo)
+
     // 这里可以添加应用切换的逻辑，比如更新store中的当前应用
     // counterStore.setCurrentApp(appNo)
     // 或者触发相关的数据刷新

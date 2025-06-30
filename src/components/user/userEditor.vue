@@ -11,7 +11,7 @@
             <el-form-item label="密码" prop="password">
                 <el-input v-model="formData.password" :disabled="!!formData.id" type="password" />
             </el-form-item>
-            <p>Debug: formData.id = "{{ formData.id }}" (Type: {{ typeof formData.id }})</p>
+
             <el-form-item label="性别" prop="gender">
                 <el-select v-model="formData.gender" placeholder="请选择性别">
                     <el-option label="男" :value="1"></el-option>

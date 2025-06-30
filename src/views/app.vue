@@ -10,17 +10,36 @@
                         </el-icon>
                         新增应用
                     </el-button>
-                    <!-- <el-button type="primary" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        EXECEL导入
-                    </el-button> -->
+
                 </div>
-                <!-- <div class="right-actions">
-                    <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
-                        @changeView="changeView" />
-                </div> -->
+
+
+            </div>
+            <el-divider class="divider" />
+            <div class="filter-container">
+                <div class="filter-row">
+
+                    <div class="filter-item">
+                        <el-input v-model="searchParams.searchInfo" placeholder="可查询内容：应用名|访问名|开发者|系统账号"></el-input>
+                    </div>
+
+
+                    <div class="filter-item filter-actions">
+                        <el-button type="primary" @click="getAppList">
+                            <el-icon>
+                                <Search />
+                            </el-icon>
+                            查询
+                        </el-button>
+                        <el-button @click="resetSearch">
+                            <el-icon>
+                                <Refresh />
+                            </el-icon>
+                            重置
+                        </el-button>
+                    </div>
+                </div>
+
 
             </div>
 
@@ -30,7 +49,7 @@
 
 
             <appTable :tableData="tableData" /> <el-pagination v-show="showPagestion" class="pagesBox" background
-                layout="prev, pager, next" :total="1000" />
+                layout="prev, pager, next" :total="totalData" v-model:current-page="pageNum" :page-size="pageSize" />
         </el-card>
     </div>
 </template>
@@ -41,12 +60,14 @@
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import appEditor from '@/components/app/appEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import { ElMessageBox } from 'element-plus';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, defaultCompanyNo } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -54,154 +75,27 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+
+
+    //分页
+    const pageNum = ref<number>(1)
+    const pageSize = ref<number>(10)
+    const totalData = ref<number>(0)
+
     //新增应用
     const showAppEditor = ref<boolean>(false)
     const addApp = () => {
         showAppEditor.value = true
     }
-    //编辑应用
-    // const editorApp = (item: any) => {
-    //     showAppEditor.value = true
-    // }
-    //删除应用
-    // const deleteApp = (item: any) => {
-    //     ElMessageBox.confirm(
-    //         '此操作将永久删除该应用, 是否继续?',
-    //         '提示',
-    //         {
-    //             confirmButtonText: '确定',
-    //             cancelButtonText: '取消',
-    //             type: 'warning',
-    //         }
-    //     )
-    // }
-    //搜索参数
-    // interface SearchParams {
-    //     inputText: string
-    //     companyNo: string
-
-
-
-    // }
-    // const searchParams = ref<SearchParams>(
-    //     {
-    //         inputText: '',
-    //         companyNo: '',
-
-    //     }
-    // )
-    //重置搜索
-    // const resetSearch = () => {
-    //     searchParams.value = {
-    //         inputText: '',
-    //         companyNo: '',
-
-    //     }
-    //     // getUserList()
-    // }
-    // interface AppItem {
-    //     appId: string;        // 应用编号
-    //     shortName: string;    // 应用简称
-    //     companyName: string;  // 所属公司
-    //     accessName: string;   // 应用访问名
-    //     systemId: string;     // 系统账号id
-    //     developer: string;    // 开发者
-    // }
-
-
-    // const appNote: any = {
-    //     appId: '应用编号',
-    //     shortName: '应用简称',
-    //     companyName: '所属公司',
-    //     accessName: '应用访问名',
-    //     systemId: '系统账号id',
-    //     developer: '开发者'
-
-    // }
-    // 生成用户数据
-    // const appData = ref<AppItem[]>([
-    //     {
-    //         appId: 'APP_0001',
-    //         shortName: '商城系统',
-    //         companyName: '科技有限公司',
-    //         accessName: 'app1.example.com',
-    //         systemId: 'SYS_0001',
-    //         developer: '张三'
-    //     },
-    //     {
-    //         appId: 'APP_0002',
-    //         shortName: '会员系统',
-    //         companyName: '网络科技有限公司',
-    //         accessName: 'app2.example.com',
-    //         systemId: 'SYS_0002',
-    //         developer: '李四'
-    //     },
-    //     {
-    //         appId: 'APP_0003',
-    //         shortName: '支付系统',
-    //         companyName: '软件开发有限公司',
-    //         accessName: 'app3.example.com',
-    //         systemId: 'SYS_0003',
-    //         developer: '王五'
-    //     },
-    //     {
-    //         appId: 'APP_0004',
-    //         shortName: '管理系统',
-    //         companyName: '信息技术有限公司',
-    //         accessName: 'app4.example.com',
-    //         systemId: 'SYS_0004',
-    //         developer: '赵六'
-    //     },
-    //     {
-    //         appId: 'APP_0005',
-    //         shortName: '客服系统',
-    //         companyName: '科技有限公司',
-    //         accessName: 'app5.example.com',
-    //         systemId: 'SYS_0005',
-    //         developer: '钱七'
-    //     }
-    // ])
-    // interface filterParams {
-    //     note: string
-    //     isShow: boolean
-    //     key: string
-    // }
-    // const filterParams = ref<filterParams[]>()
-    // const getUserList = async () => {
-    //     console.log('获取用户列表');
-    //     const dataItem = appData.value[0]
-    //     const keys = Object.keys(dataItem)
-    //     filterParams.value = keys.map((item) => {
-    //         return {
-    //             note: appNote[item],
-    //             isShow: true,
-    //             key: item
-    //         }
-    //     })
-    //     console.log('filterParams', filterParams.value);
-    // }
-    //参数显影
-    // const checkedParams = ({ key, checked }: any) => {
-    //     console.log('修改参数', key, checked);
-    //     const item = filterParams.value?.find((item) => item.key === key)
-    //     if (item) {
-    //         item.isShow = checked
-    //     }
-
-    // }
-    //切换显示模式
-    // const changeView = () => {
-
-    //     const keys = Object.keys(components)
-    //     const keyItem = keys.find((item) => item !== componentStr.value)
-    //     if (keyItem) {
-    //         componentStr.value = keyItem
-    //         componentName.value = components[keyItem]
-    //     }
-    //     console.log('keyItem', keyItem);
-    // }
-
-
+    const searchParams = ref<any>({
+        searchInfo: ''
+    })
+    const resetSearch = () => {
+        searchParams.value = {
+            searchInfo: ''
+        }
+        getAppList()
+    }
 
 
 
@@ -424,9 +318,30 @@
             ],
         },
     ]
-
+    const getAppList = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
+                companyNo: defaultCompanyNo.value,
+                searchInfo: searchParams.value.searchInfo
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/appInfo/list', {
+                enData
+            })
+            console.log('应用列表', res);
+        } catch (err) {
+            console.log('获取应用列表失败', err);
+        }
+    }
+    //监听公司变化
+    watch(() => defaultCompanyNo.value, () => {
+        getAppList()
+    })
     onMounted(() => {
-        // getUserList();
+        getAppList();
         showPagestion.value = true
     })
 </script>
@@ -475,7 +390,7 @@
 
                     .filter-item {
                         // flex: 1;
-                        width: 200px;
+                        width: 350px;
                         /* 允许元素收缩到比内容更小 */
                     }
 
