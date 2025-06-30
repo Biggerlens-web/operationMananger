@@ -10,10 +10,10 @@
             </div>
         </div>
         <el-button type="primary" @click="addData">新增</el-button>
-        <el-table :data="viewList" border style="width: 100%" :max-height="420" highlight-current-row
+        <el-table :data="viewList" border style="width: 100%" :min-height="420" :max-height="600" highlight-current-row
             :header-cell-style="{ background: '#f5f7fa' }" :cell-style="{ padding: '8px 0' }">
             <template v-for="item in keyList" :key="item.key">
-                <el-table-column :prop="item.key" width="120" :label="item.note" show-overflow-tooltip>
+                <el-table-column :prop="item.key" :label="item.note" show-overflow-tooltip min-width="130">
                     <!-- 处理嵌套对象属性 -->
                     <template v-if="item.key.includes('.')" #default="scope">
                         {{ getNestedProperty(scope.row, item.key) }}
@@ -30,7 +30,7 @@
                             <!-- 如果有多个广告类型，使用下拉选择框 -->
                             <template v-else-if="scope.row.optionals && scope.row.optionals.length > 1">
                                 <el-select v-model="scope.row.selectedOptionalId" placeholder="选择广告类型"
-                                    style="width: 180px" @change="handleOptionalChange(scope.row, $event)">
+                                    style="width: 100px" @change="handleOptionalChange(scope.row, $event)">
                                     <el-option v-for="optional in scope.row.optionals" :key="optional.advType.id"
                                         :label="`${optional.advType.typeName}`" :value="optional.advType.id" />
                                 </el-select>
@@ -69,7 +69,9 @@
                     <template
                         v-if="(item.key === 'showAdv' || item.key === 'showOs' || item.key === 'showBanner' || item.key === 'showInterstitial' || item.key === 'showReward' || item.key === 'showInfoFlow' || item.key === 'showAllScreen' || item.key === 'showContent') && props.type === 'channel'"
                         #default="scope">
-                        <el-switch v-model="scope.row[item.key]" active-text="开" inactive-text="关" />
+                        <el-switch :model-value="getSwitchValue(scope.row[item.key])"
+                            @update:model-value="setSwitchValue(scope.row, item.key, $event)" active-text="开"
+                            inactive-text="关" />
                         <div>
                             <p>开始 <el-input style="width: 60px;" type="number"
                                     v-model="scope.row[getStartFieldName(item.key)]" :min="0" /></p>
@@ -82,17 +84,34 @@
                     <template
                         v-if="(item.key === 'showAdv' || item.key === 'showOs' || item.key === 'showBanner' || item.key === 'showInterstitial' || item.key === 'showReward' || item.key === 'showInfoFlow' || item.key === 'showAllScreen' || item.key === 'showContent') && props.type === 'corn'"
                         #default="scope">
-                        <el-switch v-model="scope.row[item.key]" active-text="开" inactive-text="关" />
+                        <el-switch :model-value="getSwitchValue(scope.row[item.key])"
+                            @update:model-value="setSwitchValue(scope.row, item.key, $event)" active-text="开"
+                            inactive-text="关" />
                     </template>
+
+
+                    <!-- 插屏广告字段组件 -->
+
+                    <template v-if="item.key === 'pageId'" #default="scope">
+                        <el-input v-model="scope.row[item.key]" placeholder="请输入广告显示位ID" />
+                    </template>
+
+                    <template v-if="item.key === 'loadProgram' || item.key === 'noLoadAfterSeveralTimesClose'"
+                        #default="scope">
+                        <el-input v-model="scope.row[item.key]" type="number" />
+                    </template>
+
                 </el-table-column>
             </template>
 
-            <el-table-column label="操作" fixed="right" width="150" align="center">
+            <el-table-column label="操作" fixed="right" width="150">
                 <template #default="scope">
-                    <div class="action-buttons">
-                        <el-button type="primary" size="small" text @click="handleEditor(scope.row)">
+                    <div class="action-buttons" style="display: flex; flex-direction: column; gap: 4px;">
+                        <el-button v-if="type !== 'InterstitialAds'" type="primary" size="small" text
+                            @click="handleEditor(scope.row)">
                             编辑
                         </el-button>
+                        <el-button type="primary" size="small" text @click="handleResult(scope.row)">提交修改</el-button>
                         <el-button type="danger" size="small" text @click="handleDelete(scope.row)">
                             删除
                         </el-button>
@@ -127,7 +146,8 @@ const props = defineProps<{
 const emit = defineEmits<{
     'add': [value: any],
     'editor': [value: any, title: string],
-    'delete': [value: any, title: string]
+    'delete': [value: any, title: string],
+    'save': [value: any, title: string]
 }>()
 const searchParams = ref<any>({
     version: '',
@@ -148,15 +168,20 @@ const handleEditor = (row: any) => {
 
 //删除
 const handleDelete = (row: any) => {
-
     emit('delete', row, props.title)
 }
+
+//提交修改
+const handleResult = (row: any) => {
+    emit('save', row, props.title)
+}
+
 
 
 // 不同类型表格需要展示的字段配置
 const typeFieldsConfig = ref<any>({
     channel: ['id', 'channels.channelRemark', 'optionals', 'showAdv', 'showOs', 'showBanner', 'showInterstitial', 'showReward', 'showInfoFlow', 'showAllScreen', 'showContent'],
-    corn: ['id', 'channels.channelRemark', 'openStartTime', 'openEndTime', 'showAdv', 'showOs', 'showBanner', 'showInterstitial', 'showReward', 'showInfoFlow', 'showAllScreen', 'showContent'],
+    corn: ['id', 'channels.channelName', 'openStartTime', 'openEndTime', 'showAdv', 'showOs', 'showBanner', 'showInterstitial', 'showReward', 'showInfoFlow', 'showAllScreen', 'showContent'],
     InterstitialAds: ['id', 'pageId', 'loadProgram', 'noLoadAfterSeveralTimesClose']
 })
 
@@ -201,9 +226,9 @@ const cornList = ref<cornItem[]>([])
 //插屏广告
 interface InterstitialAdsItem {
     id: number;                // 编号
-    adPositionId: string;      // 广告显示位ID
-    loadProbability: number;   // 加载概率(0-1之间的小数)
-    closeCountLimit: number;   // 关闭几次后不显示 
+    pageId: string;      // 广告显示位ID
+    loadProgram: number;   // 加载概率(0-1之间的小数)
+    noLoadAfterSeveralTimesClose: number;   // 关闭几次后不显示 
 }
 const interstitiaAdsList = ref<InterstitialAdsItem[]>([])
 
@@ -211,6 +236,7 @@ const interstitiaAdsList = ref<InterstitialAdsItem[]>([])
 const note = ref<any>({
     id: '编号',
     'channels.channelRemark': '渠道',
+    'channels.channelName': '渠道',
     optionals: '广告类型',
     openStartTime: '开始时间',
     openEndTime: '结束时间',
@@ -409,8 +435,17 @@ const getData = async () => {
                 viewList.value = interstitiaAdsList.value
                 break;
         }
-        initParams()
 
+        // 初始化广告类型选择
+        viewList.value.forEach((item: { optionals: string | any[]; selectedOptionalId: any; }) => {
+            // 如果有多个广告类型，默认选中第一个
+            if (item.optionals && Array.isArray(item.optionals) && item.optionals.length > 1) {
+                item.selectedOptionalId = item.optionals[0]?.advType?.id || null;
+                console.log('初始化选中广告类型:', item.selectedOptionalId);
+            }
+        });
+
+        initParams()
     }
     catch (err) {
         console.log('获取数据出错', err);
@@ -424,7 +459,7 @@ const handleOptionalChange = (row: any, selectedId: number) => {
 
 // 处理时间字段变化
 const handleTimeChange = (row: any, fieldKey: string, newTime: string) => {
-    console.log('时间字段变化:', fieldKey, '新时间:', newTime, '行数据:', row);
+    //console.log('时间字段变化:', fieldKey, '新时间:', newTime, '行数据:', row);
     // 可以在这里添加时间格式验证或其他逻辑
 }
 
@@ -462,6 +497,24 @@ const getSelectedOptional = (row: any) => {
 
     // 默认返回第一个
     return row.optionals[0] || null;
+}
+
+// 获取开关值，支持字符串和布尔值
+const getSwitchValue = (value: any): boolean => {
+    if (typeof value === 'string') {
+        return value === 'true';
+    }
+    return Boolean(value);
+}
+
+// 设置开关值，将布尔值转换为字符串或保持原类型
+const setSwitchValue = (row: any, key: string, value: boolean) => {
+    // 如果原值是字符串类型，则保持字符串格式
+    if (typeof row[key] === 'string') {
+        row[key] = value ? 'true' : 'false';
+    } else {
+        row[key] = value;
+    }
 }
 
 defineExpose({
@@ -576,7 +629,7 @@ onMounted(() => {
 
     .pagination-container {
         display: flex;
-        justify-content: center;
+        justify-self: end;
         margin-top: 20px;
         padding: 16px 0;
 

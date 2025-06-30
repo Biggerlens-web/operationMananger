@@ -32,26 +32,45 @@
 </template>
 
 <script lang="ts" setup>
-
+import service from '@/axios';
+import { desEncrypt } from '@/utils/des';
 import { useCounterStore } from '@/stores/counter';
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { ElMessage } from 'element-plus';
 const props = defineProps<{
     showEditor: boolean,
     type: string,
+    rowList: any,
 }>()
 
 const counterStore = useCounterStore()
-const { appList, OSlist, channelList } = storeToRefs(counterStore)
+const { appList, defaultAppNo, channelList } = storeToRefs(counterStore)
 const emit = defineEmits<{
-    'update:showEditor': [value: boolean]
+    'update:showEditor': [value: boolean],
+    'refresh': []
 }>()
 const formData = ref<any>({
     id: '',
     channel: '',
-
-    appNo: ''
+    appNo: defaultAppNo.value,
 })
+// 监听编辑器显示状态和类型，处理数据初始化
+watch(() => [props.showEditor, props.type, props.rowList], ([showEditor, type, rowList]) => {
+    if (showEditor) {
+        if (type === 'update' && rowList) {
+
+            formData.value = {
+                id: rowList.id || '',
+                channel: rowList.channels.id || '',
+                appNo: rowList.appNo || defaultAppNo.value,
+            }
+        } else {
+            // 新增模式：重置表单数据
+            resetForm()
+        }
+    }
+}, { immediate: true, deep: true })
 const languageList = ref([
     {
         value: '1',
@@ -65,16 +84,15 @@ const languageList = ref([
 
 const ruleFormRef = ref<any>(null)
 const rules = ref({
-    channelGroupName: [{ required: true, message: '请输入渠道组名称', trigger: 'blur' }],
-    channelList: [{ required: true, message: '请选择渠道', trigger: 'blur' }]
+    appNo: [{ required: true, message: '请选择应用', trigger: 'blur' }],
+    channel: [{ required: true, message: '请选择渠道', trigger: 'blur' }]
 })
 
 const resetForm = () => {
     formData.value = {
         id: '',
         channel: '',
-
-        appNo: ''
+        appNo: defaultAppNo.value,
     }
     ruleFormRef.value?.resetFields()
 }
@@ -99,24 +117,21 @@ const handleComfirm = () => {
                 data = {
                     timestamp: Date.now(),
                     type: 'add',
-                    appNo: '',
-                    pageId: '',
-                    loadProgram: '',
-                    noLoadAfterSeveralTimesClose: ''
+                    appNo: formData.value.appNo,
+                    channelId: formData.value.channel,
                 }
+
             } else if (props.type === 'update') {
                 data = {
                     timestamp: Date.now(),
                     type: 'update',
-                    id: '',
-                    appNo: '',
-                    pageId: '',
-                    loadProgram: '',
-                    noLoadAfterSeveralTimesClose: ''
+                    appNo: formData.value.appNo,
+                    channelId: formData.value.channel,
+                    id: formData.value.id,
                 }
             }
             console.log('data', data);
-
+            saveData(data)
 
 
         } else {
@@ -125,6 +140,24 @@ const handleComfirm = () => {
         }
     });
 }
+
+// 新增or编辑保存数据
+const saveData = (data: any) => {
+    console.log('保存数据', data);
+    const paramStr = desEncrypt(JSON.stringify(data))
+    service.post('/advChannelTaskConfig/save', {
+        enData: paramStr
+    }).then((res: any) => {
+        console.log('res', res);
+        if (res.data.code === 200) {
+            emit('update:showEditor', false)
+            emit('refresh')
+            ElMessage.success('保存成功')
+            resetForm()
+        }
+    })
+}
+
 </script>
 
 <style lang="scss" scoped></style>

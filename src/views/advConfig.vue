@@ -2,14 +2,15 @@
     <div class="ad-management-view">
         <channelAdvEditor v-model:show-editor="showChannelEditor" @refresh="refreshTables" :type="channelType"
             :rowList="currentRow" />
-        <cornEditor v-model:show-editor="showCornEditor" :type="cornType" />
+        <cornEditor v-model:show-editor="showCornEditor" @refresh="refreshTables" :type="cornType"
+            :rowList="currentRow" />
         <interstitialAdsEditor v-model:show-editor="showInterstitialAdsEditor" :type="interType" />
 
 
         <el-card class="content-card">
             <adTable v-for="(item, index) in tableELArray" :key="item.type" :title="item.title" :filter="item.filter"
                 :type="item.type" class="ad-table" @add="addData" @editor="editorData" @delete="deleteData"
-                :ref="el => { if (el) adTableRefs[index] = el }" />
+                @save="saveAttr" :ref="el => { if (el) adTableRefs[index] = el }" />
         </el-card>
     </div>
 </template>
@@ -84,8 +85,10 @@ const addData = (type: string) => {
         showCornEditor.value = true
         cornType.value = 'add'
     } else if (type === '插屏广告') {
-        showInterstitialAdsEditor.value = true
+        // showInterstitialAdsEditor.value = true
         interType.value = 'add'
+        addInterstitialAds()
+
     }
 }
 //编辑数据
@@ -101,10 +104,28 @@ const editorData = (row: any, type: any) => {
         cornType.value = 'update'
         showCornEditor.value = true
         currentRow.value = row
-    } else if (type === '插屏广告') {
-        interType.value = 'update'
-        showInterstitialAdsEditor.value = true
-        currentRow.value = row
+    }
+}
+
+//插屏广告新增
+const addInterstitialAds = async () => {
+    const params = {
+        appNo: defaultAppNo.value,
+        type: interType.value,
+        timestamp: Date.now(),
+    }
+    const paramsStr = desEncrypt(JSON.stringify(params))
+    const res: any = await service.post('/advInterstitialConfig/save', {
+        enData: paramsStr
+    })
+    console.log(res, params);
+
+    if (res.data.code === 200) {
+        ElMessage.success('新增成功')
+        // 刷新列表数据
+        refreshTables()
+    } else {
+        ElMessage.error(res.data.message || '保存失败')
     }
 }
 
@@ -154,7 +175,7 @@ const handleTaskDelete = async (id: number) => {
         .then(async () => {
             console.log('确定');
             const res: any = await service.post(`/advChannelTaskConfig/del/${id}`)
-            if (res.code === 200) {
+            if (res.data.code === 200) {
                 ElMessage.success('删除成功')
                 refreshTables()
             }
@@ -173,13 +194,141 @@ const handleInterstitialAdsDelete = async (id: number) => {
         .then(async () => {
             const res: any = await service.post(`/advInterstitialConfig/del/${id}`)
             console.log('res', res);
-            if (res.code === 200) {
+            if (res.data.code === 200) {
                 ElMessage.success('删除成功')
                 refreshTables()
             }
         }).catch(() => {
             console.log('取消');
         })
+}
+
+//提交修改数据
+const saveAttr = async (row: any, type: any) => {
+    console.log('row', row, 'type', type);
+    if (type === '渠道广告') {
+        handleChannelSaveAttr(row)
+    } else if (type === '定时任务') {
+        handleTaskSaveAttr(row)
+    } else if (type === '插屏广告') {
+        handleInterstitialAdsSaveAttr(row)
+    }
+}
+
+//渠道广告提交修改
+const handleChannelSaveAttr = async (row: any) => {
+    console.log('row', row);
+    const params = {
+        id: row.id,
+        advTypeId: row.advType?.id || row.advTypeId,
+        showAdv: row.showAdv,
+        advOpenStartNum: row.advOpenStartNum?.toString(),
+        advOpenIntervalNum: row.advOpenIntervalNum?.toString(),
+        showOs: row.showOs,
+        osOpenStartNum: row.osOpenStartNum?.toString(),
+        osOpenIntervalNum: row.osOpenIntervalNum?.toString(),
+        showBanner: row.showBanner,
+        bannerOpenStartNum: row.bannerOpenStartNum?.toString(),
+        bannerOpenIntervalNum: row.bannerOpenIntervalNum?.toString(),
+        showInterstitial: row.showInterstitial,
+        interstitialOpenStartNum: row.interstitialOpenStartNum?.toString(),
+        interstitialOpenIntervalNum: row.interstitialOpenIntervalNum?.toString(),
+        showReward: row.showReward,
+        rewardOpenStartNum: row.rewardOpenStartNum?.toString(),
+        rewardOpenIntervalNum: row.rewardOpenIntervalNum?.toString(),
+        showInfoFlow: row.showInfoFlow,
+        infoFlowOpenStartNum: row.infoFlowOpenStartNum?.toString(),
+        infoFlowOpenIntervalNum: row.infoFlowOpenIntervalNum?.toString(),
+        showAllScreen: row.showAllScreen,
+        allScreenOpenStartNum: row.allScreenOpenStartNum?.toString(),
+        allScreenOpenIntervalNum: row.allScreenOpenIntervalNum?.toString(),
+        showContent: row.showContent,
+        contentOpenStartNum: row.contentOpenStartNum?.toString(),
+        contentOpenIntervalNum: row.contentOpenIntervalNum?.toString(),
+        personalAdsOpen: row.personalAdsOpen?.toString(),
+        shakeAdsOpen: row.shakeAdsOpen?.toString(),
+        timestamp: Date.now(),
+    }
+
+    try {
+        const paramsStr = desEncrypt(JSON.stringify(params))
+        const res: any = await service.post('/advChannelConfig/saveAttr', {
+            enData: paramsStr
+        })
+
+        if (res.data.code === 200) {
+            ElMessage.success('保存成功')
+            // 刷新列表数据
+            refreshTables()
+        } else {
+            ElMessage.error(res.data.message || '保存失败')
+        }
+    } catch (error) {
+        console.error('保存失败:', error)
+        ElMessage.error('保存失败，请重试')
+    }
+}
+
+
+//定时任务提交修改
+const handleTaskSaveAttr = async (row: any) => {
+    const params = {
+        id: row.id?.toString(),
+        openStartTime: row.openStartTime ? row.openStartTime.replace(/:0000$/, '') : '00:00:00',
+        openEndTime: row.openEndTime ? row.openEndTime.replace(/:0000$/, '') : '00:00:00',
+        showAdv: row.showAdv === 'true' || row.showAdv === true,
+        showOs: row.showOs === 'true' || row.showOs === true,
+        showBanner: row.showBanner === 'true' || row.showBanner === true,
+        showInterstitial: row.showInterstitial === 'true' || row.showInterstitial === true,
+        showReward: row.showReward === 'true' || row.showReward === true,
+        showInfoFlow: row.showInfoFlow === 'true' || row.showInfoFlow === true,
+        showAllScreen: row.showAllScreen === 'true' || row.showAllScreen === true,
+        showContent: row.showContent === 'true' || row.showContent === true,
+        timestamp: Date.now(),
+    }
+    console.log('params', params);
+    try {
+        const paramsStr = desEncrypt(JSON.stringify(params))
+        const res: any = await service.post('/advChannelTaskConfig/saveAttr', {
+            enData: paramsStr
+        })
+
+        if (res.data.code === 200) {
+            ElMessage.success('保存成功')
+            // 刷新列表数据
+            refreshTables()
+        } else {
+            ElMessage.error(res.data.message || '保存失败')
+        }
+    } catch (error) {
+        console.error('保存失败:', error)
+        ElMessage.error('保存失败，请重试')
+    }
+}
+
+//插屏广告提交修改
+const handleInterstitialAdsSaveAttr = async (row: any) => {
+    console.log('row', row);
+    const params = {
+        id: row.id,
+        type: 'update',
+        appNo: row.appNo,
+        pageId: row.pageId,
+        loadProgram: row.loadProgram,
+        noLoadAfterSeveralTimesClose: row.noLoadAfterSeveralTimesClose,
+        timestamp: Date.now(),
+    }
+    const paramsStr = desEncrypt(JSON.stringify(params))
+    const res: any = await service.post('/advInterstitialConfig/save', {
+        enData: paramsStr
+    })
+    if (res.data.code === 200) {
+        ElMessage.success('保存成功')
+        // 刷新列表数据
+        refreshTables()
+    } else {
+        ElMessage.error(res.data.message || '保存失败')
+    }
 }
 
 //获取广告列表

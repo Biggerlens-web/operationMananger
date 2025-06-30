@@ -124,7 +124,7 @@ const ruleFormRef = ref<any>(null)
 const rules = ref({
     appNo: [{ required: true, message: '请选择所属应用', trigger: ['change', 'blur', 'submit'] }],
     channel: [{ required: true, message: '请选择渠道', trigger: ['change', 'blur', 'submit'] }],
-    version: [{ pattern: /^\d+(\.\d+)?$/, message: '版本号格式不正确（需为整数或浮点数）', trigger: ['blur', 'submit'] }]
+    version: [{ pattern: /^(default|\d+(\.\d+)?)$/, message: '版本号格式不正确（需为整数、浮点数或"default"）', trigger: ['blur', 'submit'] }]
 })
 const resetForm = () => {
     formData.value = {
@@ -203,8 +203,6 @@ const saveData = (data: any) => {
 }
 
 onMounted(() => {
-    console.log('asadad', channelList.value);
-
 })
 </script>
 
