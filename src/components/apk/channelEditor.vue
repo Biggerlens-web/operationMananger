@@ -4,26 +4,39 @@
         <el-form ref="ruleFormRef" style="max-width: 600px" :model="formData" :rules="rules" label-width="auto"
             class="demo-ruleForm" status-icon>
 
-            <el-form-item label="渠道组名称" prop="channelGroupName">
-                <el-input v-model="formData.channelGroupName" />
+            <el-form-item label="渠道组名称" prop="channelName">
+                <el-input v-model="formData.channelName" />
             </el-form-item>
         </el-form>
-        <div>
-            <p style="margin-bottom: 10px;">
-                渠道
-            </p>
-            <ul>
-                <li v-for="item in channelData" :key="item.channelKey">
-                    <el-input placeholder='渠道key，对应mate-date中的name' v-model="item.channelKey"></el-input>
-                    <el-input placeholder='渠道value，对应mate-date中的value' v-model="item.channelValue"></el-input>
-                    <el-input placeholder='描述' v-model="item.desc"></el-input>
-                </li>
-                <el-button style="width: 100%;" type="primary" @click="addChannelData">
+        <div class="channel-section">
+            <div class="channel-header">
+                <h4>渠道配置</h4>
+                <el-button type="primary" size="small" @click="addChannelData">
                     <el-icon>
                         <Plus />
                     </el-icon>
-                    添加</el-button>
-            </ul>
+                    添加渠道
+                </el-button>
+            </div>
+
+            <div class="channel-list" v-if="channelData.length > 0">
+                <div v-for="(item, index) in channelData" :key="index" class="channel-item">
+                    <div class="channel-inputs">
+                        <el-input placeholder="渠道Key" v-model="item.channelKey" class="channel-input"></el-input>
+                        <el-input placeholder="渠道Value" v-model="item.channelValue" class="channel-input"></el-input>
+                        <el-input placeholder="描述信息" v-model="item.channelRemark" class="channel-input"></el-input>
+                    </div>
+                    <el-button type="danger" size="small" plain @click="removeChannelData(index)" class="remove-btn">
+                        <el-icon>
+                            <Delete />
+                        </el-icon>
+                    </el-button>
+                </div>
+            </div>
+
+            <div v-else class="empty-state">
+                <p>暂无渠道配置，点击上方按钮添加</p>
+            </div>
         </div>
         <template #footer>
             <div class="dialog-footer">
@@ -37,8 +50,11 @@
 </template>
 
 <script lang="ts" setup>
+    import service from '@/axios';
     import { useCounterStore } from '@/stores/counter';
-    import type { FormInstance } from 'element-plus';
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage, type FormInstance } from 'element-plus';
+    import { Plus, Delete } from '@element-plus/icons-vue';
     import { storeToRefs } from 'pinia';
     import { ref } from 'vue'
     const counterStore = useCounterStore()
@@ -51,38 +67,41 @@
     }>()
 
     const formData = ref<any>({
-        id: '',
-        channelGroupName: ""
+        channelName: '',
+        channelKeys: [],
+        channelValues: [],
+        channelRemarks: [],
+
     })
     const channelData = ref<any>([])
 
     const addChannelData = () => {
         const newData = {
-            desc: '',
+            channelRemark: '',
             channelKey: '',
             channelValue: '',
         }
         channelData.value.push(newData)
     }
+
+    const removeChannelData = (index: number) => {
+        channelData.value.splice(index, 1)
+    }
     const ruleFormRef = ref<FormInstance>()
     const rules = ref<any>({
-        bucket: [{ required: true, message: '请输入域', trigger: 'blur' }],
-        path: [{ required: true, message: '请选择路径', trigger: 'change' }],
-        img: [{ required: true, message: '请上传图片', trigger: 'blur' }],
-        bannerName: [{ required: true, message: '请输入轮播图名称', trigger: 'blur' }]
+
 
     })
 
     const resetForm = () => {
         formData.value = {
-            id: '',
-            appNo: "",
-            signName: '',
-            keyFile: [],
-            keypassword: "",
-            otherName: '',
-            otherNamePassword: '',
-            packName: ''
+
+
+            channelName: '',
+            channelKeys: [],
+            channelValues: [],
+            channelRemarks: [],
+
 
         }
         ruleFormRef.value?.resetFields()
@@ -91,14 +110,142 @@
         resetForm()
         emit('update:dialogVisible', false)
     }
+
+
+    const saveChange = async () => {
+        try {
+            formData.value.channelKeys = channelData.value.map((item: any) => item.channelKey)
+            formData.value.channelValues = channelData.value.map((item: any) => item.channelValue)
+            formData.value.channelRemarks = channelData.value.map((item: any) => item.channelRemark)
+            const params = {
+                timestamp: Date.now(),
+                channelName: formData.value.channelName,
+                channelKeys: formData.value.channelKeys,
+                channelValues: formData.value.channelValues,
+                channelRemarks: formData.value.channelRemarks,
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/apkSignChannels/save', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                handleClose()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        }
+    }
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate((valid: any) => {
             if (valid) {
                 console.log('submit!');
-                handleClose()
+                saveChange()
             }
         })
     }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+    .channel-section {
+        margin-top: 20px;
+
+        .channel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e4e7ed;
+
+            h4 {
+                margin: 0;
+                color: #303133;
+                font-size: 16px;
+                font-weight: 600;
+            }
+        }
+
+        .channel-list {
+            .channel-item {
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                margin-bottom: 12px;
+                padding: 16px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border: 1px solid #e4e7ed;
+                transition: all 0.3s ease;
+
+                &:hover {
+                    border-color: #409eff;
+                    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+                }
+
+                .channel-inputs {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+
+                    .channel-input {
+                        :deep(.el-input__wrapper) {
+                            border-radius: 6px;
+                        }
+                    }
+                }
+
+                .remove-btn {
+                    margin-top: 4px;
+                    min-width: 32px;
+                    height: 32px;
+
+                    &:hover {
+                        background-color: #f56c6c;
+                        border-color: #f56c6c;
+                        color: white;
+                    }
+                }
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #909399;
+            background: #fafafa;
+            border-radius: 8px;
+            border: 1px dashed #d9d9d9;
+
+            p {
+                margin: 0;
+                font-size: 14px;
+            }
+        }
+    }
+
+    // 响应式设计
+    @media (max-width: 768px) {
+        .channel-section {
+            .channel-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .channel-list {
+                .channel-item {
+                    flex-direction: column;
+
+                    .remove-btn {
+                        align-self: flex-end;
+                        margin-top: 8px;
+                    }
+                }
+            }
+        }
+    }
+</style>

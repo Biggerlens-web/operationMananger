@@ -4,13 +4,11 @@
             class="demo-ruleForm" status-icon>
 
 
-            <el-form-item label="编码" prop="channel">
-                <el-select v-model="formData.channel">
-                    <el-option v-for="item in channelList" :key="item.id" :label="item.channelName" :value="item.id" />
-                </el-select>
+            <el-form-item label="编码" prop="autoOpenId">
+                <el-input v-model="formData.autoOpenId" />
             </el-form-item>
-            <el-form-item label="名称" prop="host">
-                <el-input v-model="formData.host" />
+            <el-form-item label="名称" prop="autoOpenName">
+                <el-input v-model="formData.autoOpenName" />
             </el-form-item>
 
 
@@ -29,51 +27,44 @@
 
 <script lang="ts" setup>
 
+    import service from '@/axios';
     import { useCounterStore } from '@/stores/counter';
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage } from 'element-plus';
     import { storeToRefs } from 'pinia';
-    import { ref } from 'vue'
+    import { computed, ref, watch } from 'vue'
     const props = defineProps<{
         showEditor: boolean
+        subPageConfigId: number
+        plansArr: any
     }>()
 
     const counterStore = useCounterStore()
-    const { appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { channelList } = storeToRefs(counterStore)
     const emit = defineEmits<{
         'update:showEditor': [value: boolean]
     }>()
     const formData = ref<any>({
-        id: '',
+        subPageConfigId: computed(() => props.subPageConfigId),
 
-        host: '',
+        autoOpenId: '',
 
-        channel: '',
-        appNo: ''
+        autoOpenName: '',
+
     })
-    const languageList = ref([
-        {
-            value: '1',
-            label: '中文'
-        },
-        {
-            value: '2',
-            label: '英文'
-        }
-    ])
+
 
     const ruleFormRef = ref<any>(null)
     const rules = ref({
-        channelGroupName: [{ required: true, message: '请输入渠道组名称', trigger: 'blur' }],
-        channelList: [{ required: true, message: '请选择渠道', trigger: 'blur' }]
+
     })
 
     const resetForm = () => {
         formData.value = {
-            id: '',
+            subPageConfigId: computed(() => props.subPageConfigId),
+            autoOpenId: '',
 
-            host: '',
-
-            channel: '',
-            appNo: ''
+            autoOpenName: '',
         }
         ruleFormRef.value?.resetFields()
     }
@@ -81,10 +72,43 @@
         resetForm()
         emit('update:showEditor', false)
     }
+
+    const saveChange = async () => {
+        try {
+
+
+            const ishave = props.plansArr.find((item: any) => item.autoOpenId == formData.value.autoOpenId)
+            if (ishave) {
+                ElMessage.error('编码已存在')
+                return
+            }
+            const params = {
+                timestamp: Date.now(),
+                autoOpenId: formData.value.autoOpenId,
+                autoOpenName: formData.value.autoOpenName,
+                subPageConfigId: formData.value.subPageConfigId,
+                "type": 'add'
+            }
+            console.log('参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/subPageConfigAutoOpen/save', {
+                enData
+            })
+            console.log('res', res);
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                handleClose()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        }
+    }
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate((valid: any) => {
             if (valid) {
-                handleClose()
+                saveChange()
             }
         })
     }

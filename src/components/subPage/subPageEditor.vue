@@ -11,15 +11,13 @@
             </el-form-item>
 
             <el-form-item label="渠道" prop="channel">
-                <el-select v-model="formData.channel">
+                <el-select v-model="formData.channel" :multiple="!formData.id">
                     <el-option v-for="item in channelList" :key="item.id" :label="item.channelName" :value="item.id" />
                 </el-select>
             </el-form-item>
-            <el-form-item label="会员服务域名" prop="host">
-                <el-input v-model="formData.host" />
+            <el-form-item label="会员服务域名" prop="baseRoot">
+                <el-input v-model="formData.baseRoot" />
             </el-form-item>
-
-
         </el-form>
 
         <template #footer>
@@ -35,51 +33,57 @@
 
 <script lang="ts" setup>
 
+    import service from '@/axios';
     import { useCounterStore } from '@/stores/counter';
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage } from 'element-plus';
     import { storeToRefs } from 'pinia';
-    import { ref } from 'vue'
+    import { ref, watch } from 'vue'
     const props = defineProps<{
         showEditor: boolean
+        subInfo: any
     }>()
 
+    watch(() => props.showEditor, (newV) => {
+        if (newV && props.subInfo) {
+            formData.value.id = props.subInfo.id
+            formData.value.channel = props.subInfo.channel
+            formData.value.baseRoot = props.subInfo.baseRoot
+        }
+    })
+
     const counterStore = useCounterStore()
-    const { appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { appList, channelList, defaultAppNo } = storeToRefs(counterStore)
     const emit = defineEmits<{
         'update:showEditor': [value: boolean]
     }>()
     const formData = ref<any>({
         id: '',
 
-        host: '',
-
+        baseRoot: '',
         channel: '',
-        appNo: ''
+        channels: [],
+        appNo: defaultAppNo.value
     })
-    const languageList = ref([
-        {
-            value: '1',
-            label: '中文'
-        },
-        {
-            value: '2',
-            label: '英文'
-        }
-    ])
+
 
     const ruleFormRef = ref<any>(null)
     const rules = ref({
-        channelGroupName: [{ required: true, message: '请输入渠道组名称', trigger: 'blur' }],
-        channelList: [{ required: true, message: '请选择渠道', trigger: 'blur' }]
+
     })
 
+    //监听应用变化
+    watch(() => defaultAppNo.value, () => {
+        formData.value.appNo = defaultAppNo.value
+    })
     const resetForm = () => {
         formData.value = {
             id: '',
 
-            host: '',
-
+            baseRoot: '',
+            channels: [],
             channel: '',
-            appNo: ''
+            appNo: defaultAppNo.value
         }
         ruleFormRef.value?.resetFields()
     }
@@ -87,10 +91,48 @@
         resetForm()
         emit('update:showEditor', false)
     }
+
+
+    const saveChange = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                ...formData.value,
+                type: formData.value.id ? 'update' : 'add'
+
+            }
+
+            if (formData.value.id) {
+                console.log('props.subInfo', props.subInfo);
+                params.backBtnVisible = String(props.subInfo.backBtnVisible)
+                params.loginBeforeMemPage = String(props.subInfo.loginBeforeMemPage)
+                params.autoOpen = String(props.subInfo.autoOpen)
+            } else {
+                params.channels = formData.value.channel
+                params.channel = ''
+            }
+            console.log('新增参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/subPageConfig/save', {
+                enData
+            })
+
+            console.log('保存', res);
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                handleClose()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        }
+    }
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate((valid: any) => {
             if (valid) {
-                handleClose()
+
+                saveChange()
             }
         })
     }

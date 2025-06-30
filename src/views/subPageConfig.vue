@@ -1,7 +1,10 @@
 <template>
     <div class="view">
-        <subPageEditor v-model:show-editor="showEditor" />
-        <autoOpenEditor v-model:show-editor="showAutoOpenEditor" />
+        <subPageEditor v-model:show-editor="showEditor" :subInfo="subInfo" />
+        <autoOpenEditor v-model:show-editor="showAutoOpenEditor" :subPageConfigId="subPageConfigId"
+            :plansArr="plansArr" />
+        <subProducts :subPageConfigId="subPageConfigId" v-model:show-editor="showProductsSort"
+            :sortProductList="sortProductList" @save="getUserList" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
@@ -24,15 +27,15 @@
                 <div class="filter-row">
 
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="应用" class="filter-select">
+                        <!-- <el-select filterable v-model="searchParams.companyNo" placeholder="应用" class="filter-select">
                             <el-option v-for="item in appList" :key="item.appNo"
                                 :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
                                 :value="item.appNo" />
-                        </el-select>
+                        </el-select> -->
                     </div>
 
 
-                    <div class="filter-item filter-actions">
+                    <!-- <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getUserList">
                             <el-icon>
                                 <Search />
@@ -45,7 +48,7 @@
                             </el-icon>
                             重置
                         </el-button>
-                    </div>
+                    </div> -->
                 </div>
 
 
@@ -55,11 +58,13 @@
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="appData" @editor="editorConfig"
-                    @delete="deleteConfig" @AutoOpenMethod="AutoOpenMethod"></component>
+                    @delete="deleteConfig" @AutoOpenMethod="AutoOpenMethod" @changeAutoOpen="changeAutoOpen"
+                    @editProductsSort="editProductsSort" @switchChange="switchChange">
+                </component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                :total="1000" />
+                :total="totalData" v-model:current-page="pageNum" :page-size="pageSize" />
         </el-card>
     </div>
 </template>
@@ -70,12 +75,15 @@
     import userList from '@/components/user/userList.vue';
     import subPageEditor from '@/components/subPage/subPageEditor.vue';
     import autoOpenEditor from '@/components/subPage/autoOpenEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import subProducts from '@/components/subPage/subProducts.vue';
+    import { computed, onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { ElMessageBox } from 'element-plus';
+    import { ElMessage, ElMessageBox } from 'element-plus';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, defaultAppNo } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -83,174 +91,202 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+
+    //分页
+    const pageNum = ref<number>(1)
+    const pageSize = ref<number>(10)
+    const totalData = ref<number>(0)
+    watch(() => pageNum.value, () => {
+        getUserList()
+    })
+
+
+
     //新增配置
     const showEditor = ref<boolean>(false)
+    watch(() => showEditor.value, (newV) => {
+        if (!newV) {
+            getUserList()
+            subInfo.value = ''
+        }
+    })
     const addConfig = () => {
         showEditor.value = true
     }
 
     //编辑配置
+    const subInfo = ref<any>()
     const editorConfig = (item: any) => {
         console.log('编辑', item)
+        subInfo.value = item
         showEditor.value = true
     }
     //删除配置
-
+    const delConfigFn = async (id: number) => {
+        try {
+            const res = await service.post(`/subPageConfig/del/${id}`)
+            if (res.data.code === 200) {
+                ElMessage.success('删除失败')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.code)
+            }
+        } catch (err) {
+            console.log('删除失败', err);
+        }
+    }
     const deleteConfig = (item: any) => {
         console.log('删除', item)
         ElMessageBox.confirm('确认删除吗？', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning',
+        }).then(() => {
+            delConfigFn(item.id)
         })
     }
 
 
+
+
+
+
+
+    //商品排序
+    const showProductsSort = ref<boolean>(false)
+    const sortProductList = ref<any>([])
+    const editProductsSort = (item: any) => {
+        console.log('商品排序', item);
+        subPageConfigId.value = item.id
+        sortProductList.value = item.subPageConfigHWProductsVos
+        showProductsSort.value = true
+    }
+
+
+    //切换开关
+    const switchChange = async (item: any) => {
+        try {
+            const { key } = item
+
+            const params = {
+                timestamp: Date.now(),
+                id: item.id,
+                [key]: String(item[key])
+            }
+            console.log('切换开关参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/subPageConfig/saveOneAttr', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+
+            console.log('切换失败', err);
+        }
+    }
+
+
+    //选择自动打开方案
+    const changeAutoOpen = async (item: any) => {
+        try {
+            console.log('选择自动打开方案', item)
+            const params = {
+                timestamp: Date.now(),
+                id: item.id,
+                autoOpen: String(item.autoOpen)
+            }
+
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/subPageConfig/saveOneAttr', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                getUserList()
+            } else {
+                ElMessage.error('保存失败')
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        }
+
+    }
+
     //添加自动打开方案
+    const subPageConfigId = ref()
     const showAutoOpenEditor = ref<boolean>(false)
+    const plansArr = ref()
+    watch(() => showAutoOpenEditor.value, (newV) => {
+        if (!newV) {
+            getUserList()
+        }
+    })
     const AutoOpenMethod = (item: any) => {
         console.log('添加自动打开方案', item)
+        subPageConfigId.value = item.id
+        plansArr.value = item.subPageConfigAutoOpenVos
         showAutoOpenEditor.value = true
     }
     //搜索参数
     interface SearchParams {
-        inputText: string
-        companyNo: string
+        appNo: string | number
+
 
 
 
     }
     const searchParams = ref<SearchParams>(
         {
-            inputText: '',
-            companyNo: '',
+            appNo: defaultAppNo.value,
+
+
 
         }
     )
+
+
+    //监听应用变化
+    watch(() => defaultAppNo.value, () => {
+        searchParams.value.appNo = defaultAppNo.value
+        getUserList()
+    })
+
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            inputText: '',
-            companyNo: '',
+            appNo: defaultAppNo.value,
 
         }
         getUserList()
     }
     interface MemberSystemConfig {
         appName: string;                  // 所属应用
-        channel: string;                  // 渠道
-        memberSystemDomain: string;       // 会员系统域名
-        autoOpenPlan: string;  // 自动打开方案
-        backButton: string;  // 返回按钮
-        subscriptionLoginEnabled: boolean; // 订阅页登录开关
-        productSorting: string; // 商品排序
+        channelName: string;                  // 渠道
+        baseRoot: string;       // 会员系统域名
+        autoOpen: string;  // 自动打开方案
+        backBtnVisible: string;  // 返回按钮
+        loginBeforeMemPage: boolean; // 订阅页登录开关
+        subPageConfigHWProductsVos: string; // 商品排序
     }
 
 
     const appNote: any = {
         appName: '所属应用',
-        channel: '渠道',
-        memberSystemDomain: '会员系统域名',
-        autoOpenPlan: '自动打开方案',
-        backButton: '返回按钮',
-        subscriptionLoginEnabled: '订阅页登录开关',
-        productSorting: '商品排序',
-
-
-
+        channelName: '渠道',
+        baseRoot: '会员系统域名',
+        autoOpen: '自动打开方案',
+        backBtnVisible: '返回按钮',
+        loginBeforeMemPage: '订阅页登录开关',
+        subPageConfigHWProductsVos: '商品排序',
     }
     // 生成用户数据
     const appData = ref<MemberSystemConfig[]>([
-        {
-            appName: "美图秀秀",
-            channel: "App Store",
-            memberSystemDomain: "vip.meitu.com",
-            autoOpenPlan: "delayed",
-            backButton: "show",
-            subscriptionLoginEnabled: true,
-            productSorting: "recommended"
-        },
-        {
-            appName: "美图秀秀",
-            channel: "华为应用市场",
-            memberSystemDomain: "vip.meitu.com",
-            autoOpenPlan: "direct",
-            backButton: "show",
-            subscriptionLoginEnabled: false,
-            productSorting: "price-asc"
-        },
-        {
-            appName: "轻颜相机",
-            channel: "App Store",
-            memberSystemDomain: "member.qingyan.com",
-            autoOpenPlan: "manual",
-            backButton: "custom",
-            subscriptionLoginEnabled: true,
-            productSorting: "popular"
-        },
-        {
-            appName: "轻颜相机",
-            channel: "小米应用商店",
-            memberSystemDomain: "member.qingyan.com",
-            autoOpenPlan: "direct",
-            backButton: "show",
-            subscriptionLoginEnabled: true,
-            productSorting: "price-desc"
-        },
-        {
-            appName: "B612咔叽",
-            channel: "App Store",
-            memberSystemDomain: "vip.b612.com",
-            autoOpenPlan: "delayed",
-            backButton: "hide",
-            subscriptionLoginEnabled: true,
-            productSorting: "recommended"
-        },
-        {
-            appName: "B612咔叽",
-            channel: "应用宝",
-            memberSystemDomain: "vip.b612.com",
-            autoOpenPlan: "none",
-            backButton: "custom",
-            subscriptionLoginEnabled: false,
-            productSorting: "price-asc"
-        },
-        {
-            appName: "Faceu激萌",
-            channel: "App Store",
-            memberSystemDomain: "member.faceu.com",
-            autoOpenPlan: "manual",
-            backButton: "show",
-            subscriptionLoginEnabled: true,
-            productSorting: "popular"
-        },
-        {
-            appName: "Faceu激萌",
-            channel: "OPPO软件商店",
-            memberSystemDomain: "member.faceu.com",
-            autoOpenPlan: "direct",
-            backButton: "hide",
-            subscriptionLoginEnabled: false,
-            productSorting: "price-desc"
-        },
-        {
-            appName: "无他相机",
-            channel: "App Store",
-            memberSystemDomain: "vip.wuta.com",
-            autoOpenPlan: "delayed",
-            backButton: "custom",
-            subscriptionLoginEnabled: true,
-            productSorting: "recommended"
-        },
-        {
-            appName: "无他相机",
-            channel: "VIVO应用商店",
-            memberSystemDomain: "vip.wuta.com",
-            autoOpenPlan: "none",
-            backButton: "show",
-            subscriptionLoginEnabled: false,
-            productSorting: "price-asc"
-        }
+
     ])
     interface filterParams {
         note: string
@@ -259,17 +295,39 @@
     }
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
+
+        try {
+            const params = {
+                timestamp: Date.now(),
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
+                appNo: searchParams.value.appNo,
+
             }
-        })
-        console.log('filterParams', filterParams.value);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/subPageConfig/list', {
+                enData
+            })
+            console.log('获取订阅页列表', res);
+            res.data.rows.forEach((element: any) => {
+                element.backBtnVisible = element.backBtnVisible === 'true' ? true : false
+                element.loginBeforeMemPage = element.loginBeforeMemPage === 'true' ? true : false
+            });
+            totalData.value = res.data.total
+            appData.value = res.data.rows
+            const keys = Object.keys(appNote)
+            filterParams.value = keys.map((item) => {
+                return {
+                    note: appNote[item],
+                    isShow: true,
+                    key: item
+                }
+            })
+            console.log('filterParams', filterParams.value);
+        } catch (err) {
+
+        }
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {

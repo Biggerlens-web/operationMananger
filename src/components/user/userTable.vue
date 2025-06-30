@@ -7,7 +7,7 @@
                     <img style="width:100%" :src="scope.row[item.key]" alt="">
                 </template>
                 <template
-                    v-if="item.key === 'isCanPay' || item.key === 'isShowTaobao' || item.key === 'open' || item.key === 'subscriptionLoginEnabled' || item.key === 'backButton' || item.key === 'rightEnterVipUI' || item.key === 'showUpdateVip' || item.key === 'rightShowAdsUnlock'"
+                    v-if="item.key === 'isCanPay' || item.key === 'isShowTaobao' || item.key === 'open' || item.key === 'loginBeforeMemPage' || item.key === 'backBtnVisible' || item.key === 'rightEnterVipUI' || item.key === 'showUpdateVip' || item.key === 'rightShowAdsUnlock'"
                     #default="scope">
                     <el-switch v-model="scope.row[item.key]" :active-value="true" :inactive-value="false"
                         @change="switchChange(scope.row, item.key)" />
@@ -29,13 +29,15 @@
                 <template v-if="item.key === 'i18nConfig'" #default="scope">
                     <el-button @click="eidtorLanguage(scope.row)">配置</el-button>
                 </template>
-                <template v-if="item.key === 'autoOpenPlan'" #default="scope">
-                    <el-select v-model="scope.row[item.key]">
-                        <el-option label="自动" value="auto" />
-                        <el-option label="手动" value="manual" />
+                <template v-if="item.key === 'autoOpen'" #default="scope">
+                    <el-select v-model="scope.row[item.key]" @change="changeAutoOpen(scope.row)">
+                        <el-option v-for="el in scope.row.subPageConfigAutoOpenVos" :label="el.autoOpenName"
+                            :value="Number(el.autoOpenId)" />
+
                     </el-select>
 
-                    <el-button @click="addAutoOpenMethod" style="width: 100%;margin-top: 10px;">添加</el-button>
+                    <el-button @click="addAutoOpenMethod(scope.row)"
+                        style="width: 100%;margin-top: 10px;">添加</el-button>
                 </template>
                 <template v-if="item.key === 'international'" #default="scope">
                     <p v-for="(value, key) in JSON.parse(scope.row.international)" :key="key">
@@ -56,6 +58,16 @@
                     </p>
                     <p>
                         <el-button type="primary" size="small" @click="addListData(scope.row, item.key)">添加</el-button>
+                    </p>
+
+                </template>
+                <template v-if="item.key === 'subPageConfigHWProductsVos'" #default="scope">
+
+                    <p v-for="el in scope.row[item.key]" :key="el.id">
+                        {{ `${el.productName}:${el.productId}` }}
+                    </p>
+                    <p>
+                        <el-button type="primary" size="small" @click="editProductsSort(scope.row)">编辑</el-button>
                     </p>
 
                 </template>
@@ -130,6 +142,8 @@
         'addListData': [value: any]
         'handleInput': [value: any]
         'handleNumInput': [value: any]
+        'changeAutoOpen': [value: any]
+        'editProductsSort': [value: any]
     }>()
 
     const stores = useCounterStore()
@@ -228,6 +242,20 @@
     const handleDelete = (item: any) => {
         console.log('删除', item)
         emit('delete', item)
+    }
+
+
+
+
+    //选择自动打开方案
+    const changeAutoOpen = (item: any) => {
+        emit('changeAutoOpen', item)
+    }
+
+
+    //编辑商品排序
+    const editProductsSort = (item: any) => {
+        emit('editProductsSort', item)
     }
 
 
