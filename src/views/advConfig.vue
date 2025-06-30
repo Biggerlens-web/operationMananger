@@ -4,8 +4,6 @@
             :rowList="currentRow" />
         <cornEditor v-model:show-editor="showCornEditor" @refresh="refreshTables" :type="cornType"
             :rowList="currentRow" />
-        <interstitialAdsEditor v-model:show-editor="showInterstitialAdsEditor" :type="interType" />
-
 
         <el-card class="content-card">
             <adTable v-for="(item, index) in tableELArray" :key="item.type" :title="item.title" :filter="item.filter"
@@ -22,7 +20,6 @@ import { onMounted, reactive, ref } from 'vue'
 import adTable from '@/components/AdSubscription/adTable.vue';
 import channelAdvEditor from '@/components/AdSubscription/editor/channelAdvEditor.vue';
 import cornEditor from '@/components/AdSubscription/editor/cornEditor.vue';
-import interstitialAdsEditor from '@/components/AdSubscription/editor/interstitialAdsEditor.vue';
 import service from '@/axios';
 import { desEncrypt } from '@/utils/des';
 import { pinia } from '@/main'
@@ -74,8 +71,6 @@ const showChannelEditor = ref<boolean>(false) // 新增渠道广告弹窗
 const channelType = ref<string>('') // 新增 or 编辑渠道广告弹窗
 const showCornEditor = ref<boolean>(false) // 新增定时任务弹窗
 const cornType = ref<string>('') // 新增 or 编辑定时任务弹窗
-const showInterstitialAdsEditor = ref<boolean>(false) // 新增插屏广告弹窗
-const interType = ref<string>('') // 新增 or 编辑插屏广告弹窗
 const addData = (type: string) => {
     console.log('type', type);
     if (type === '渠道广告') {
@@ -85,8 +80,6 @@ const addData = (type: string) => {
         showCornEditor.value = true
         cornType.value = 'add'
     } else if (type === '插屏广告') {
-        // showInterstitialAdsEditor.value = true
-        interType.value = 'add'
         addInterstitialAds()
 
     }
@@ -111,7 +104,7 @@ const editorData = (row: any, type: any) => {
 const addInterstitialAds = async () => {
     const params = {
         appNo: defaultAppNo.value,
-        type: interType.value,
+        type: 'add',
         timestamp: Date.now(),
     }
     const paramsStr = desEncrypt(JSON.stringify(params))
