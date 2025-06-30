@@ -1,7 +1,7 @@
 <template>
     <el-dialog :model-value="dialogVisible" title="第三方SDK模板" width="1000" :before-close="handleClose">
         <div class="view">
-            <SDKTemplateEditor v-model:show-editor="showEditor" />
+            <SDKTemplateEditor v-model:show-editor="showEditor" :SDKInfo="SDKInfo" />
             <el-card class="filter-card">
                 <div class="card-header" style="margin: 0;">
                     <div class="left-actions">
@@ -11,8 +11,9 @@
                             </el-icon>
                             新增模板
                         </el-button>
-                        <el-select v-model="language" placeholder="请选择语言" style="width: 150px;margin-left: 10px;">
-                            <el-option v-for="item in options" :key="item.value" :label="item.label"
+                        <el-select @change="getUserList" v-model="language" placeholder="请选择语言"
+                            style="width: 150px;margin-left: 10px;">
+                            <el-option v-for="item in international" :key="item.value" :label="item.language"
                                 :value="item.value" />
                         </el-select>
                     </div>
@@ -22,54 +23,7 @@
                     </div>
                 </div>
 
-                <!-- <el-divider class="divider" />
 
-            <div class="filter-container">
-                <div class="filter-row">
-
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.appNo" placeholder="请选择应用" clearable>
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName}`" :value="item.appNo" />
-
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.os" placeholder="请选择系统" clearable>
-                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.language" placeholder="请选择语言" clearable>
-                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.channel" placeholder="请选择渠道" clearable>
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
-                                :value="item.id" />
-                        </el-select>
-                    </div>
-
-
-                    <div class="filter-item filter-actions">
-                        <el-button type="primary" @click="getUserList">
-                            <el-icon>
-                                <Search />
-                            </el-icon>
-                            查询
-                        </el-button>
-                        <el-button @click="resetSearch">
-                            <el-icon>
-                                <Refresh />
-                            </el-icon>
-                            重置
-                        </el-button>
-                    </div>
-                </div>
-
-
-            </div> -->
             </el-card>
             <el-card class="content-card">
                 <Transition enter-active-class="animate__animated animate__fadeIn"
@@ -79,7 +33,7 @@
                 </Transition>
 
                 <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                    :total="1000" />
+                    :total="totalData" v-model:current-page="pageNum" v-model:page-size="pageSize" />
             </el-card>
         </div>
         <template #footer>
@@ -99,23 +53,58 @@
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import SDKTemplateEditor from './editor/SDKTemplateEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { ElMessageBox } from 'element-plus';
+    import { ElMessage, ElMessageBox } from 'element-plus';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion } = storeToRefs(counterStore)
+    const { showPagestion, international } = storeToRefs(counterStore)
     const props = defineProps<{
         dialogVisible: boolean
     }>()
+    console.log('international', international);
+
+    //分页
+    const pageNum = ref<number>(1)
+    const pageSize = ref<number>(10)
+    const totalData = ref<number>(0)
+    watch(() => pageNum.value, () => {
+        getUserList()
+    })
     //新增模板
     const showEditor = ref<boolean>(false)
+    watch(() => showEditor.value, (newV) => {
+        if (!newV) {
+            SDKInfo.value = ''
+            getUserList()
+        }
+    })
+    const SDKInfo = ref<any>()
     const addTemplate = (item: any) => {
         showEditor.value = true
     }
     const editorTemplate = (item: any) => {
+        SDKInfo.value = item
         showEditor.value = true
 
+    }
+    const deleteFn = async (id: number) => {
+        try {
+            const res = await service.post(`/appInfoDetailThreesdksItems/del/${id}`)
+            if (res.data.code === 200) {
+                ElMessage({
+                    message: '删除成功',
+                    type: 'success',
+                })
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('删除失败', err);
+        }
     }
     const deleteTemplate = (item: any) => {
         ElMessageBox.confirm(
@@ -126,20 +115,11 @@
                 cancelButtonText: '取消',
                 type: 'warning',
             }
-        )
+        ).then(res => {
+            deleteFn(item.id)
+        })
     }
-    //选择语言
-    const language = ref('')
-    const options = ref([
-        {
-            value: '1',
-            label: '中文'
-        },
-        {
-            value: '2',
-            label: '英文'
-        }
-    ])
+
 
     const emit = defineEmits<{
 
@@ -166,63 +146,28 @@
     const componentName = ref<any>(userTable)
     interface SDKItem {
         sdkName: string;        // SDK名称
-        packageName: string;    // 包名
-        purpose: string;        // 使用目的
+        sdkPackage: string;    // 包名
+        usePurpose: string;        // 使用目的
         sharedInfoScope: string; // 共享信息范围
-        company: string;        // SDK所属公司
-        privacyPolicyUrl: string; // 隐私政策链接
+        sdkCompany: string;        // SDK所属公司
+        sdkPrivacyURL: string; // 隐私政策链接
     }
     const userNote: any = {
         sdkName: 'SDK名称',
-        packageName: '包名',
-        purpose: '使用目的',
+        sdkPackage: '包名',
+        usePurpose: '使用目的',
         sharedInfoScope: '共享信息范围',
-        company: 'SDK所属公司',
-        privacyPolicyUrl: '隐私政策链接',
+        sdkCompany: 'SDK所属公司',
+        sdkPrivacyURL: '隐私政策链接',
 
     }
+    //语言
+    const language = ref<string>('')
+
+
     // 生成角色数据
     const roleData = ref<SDKItem[]>([
-        {
-            sdkName: 'Firebase Analytics',
-            packageName: 'com.google.firebase.analytics',
-            purpose: '数据分析与统计',
-            sharedInfoScope: '设备信息、应用使用情况、用户行为',
-            company: 'Google LLC',
-            privacyPolicyUrl: 'https://firebase.google.com/support/privacy'
-        },
-        {
-            sdkName: 'Tencent Bugly',
-            packageName: 'com.tencent.bugly',
-            purpose: '崩溃分析与错误报告',
-            sharedInfoScope: '设备信息、应用错误日志',
-            company: '腾讯科技(深圳)有限公司',
-            privacyPolicyUrl: 'https://privacy.qq.com/document/preview/fc748b3d96224fdb825ea79e132c1a56'
-        },
-        {
-            sdkName: 'Umeng Analytics',
-            packageName: 'com.umeng.analytics',
-            purpose: '用户行为分析',
-            sharedInfoScope: '设备信息、应用使用情况、用户行为',
-            company: '阿里巴巴集团',
-            privacyPolicyUrl: 'https://www.umeng.com/page/policy'
-        },
-        {
-            sdkName: 'JPush',
-            packageName: 'cn.jpush.android',
-            purpose: '消息推送服务',
-            sharedInfoScope: '设备信息、推送标识符',
-            company: '极光推送',
-            privacyPolicyUrl: 'https://www.jiguang.cn/license/privacy'
-        },
-        {
-            sdkName: 'WeChat SDK',
-            packageName: 'com.tencent.mm.opensdk',
-            purpose: '微信登录与分享',
-            sharedInfoScope: '用户授权信息',
-            company: '腾讯科技(深圳)有限公司',
-            privacyPolicyUrl: 'https://weixin.qq.com/cgi-bin/readtemplate?lang=zh_CN&t=weixin_agreement&s=privacy'
-        }
+
     ])
     interface filterParams {
         note: string
@@ -231,17 +176,37 @@
     }
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = roleData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: userNote[item],
-                isShow: true,
-                key: item
+        try {
+            const params = {
+                timestamp: Date.now(),
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
+                language: language.value,
             }
-        })
-        console.log('filterParams', filterParams.value);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/appInfoDetailThreesdksItems/list', {
+                enData
+            })
+            console.log('获取列表', res);
+
+            roleData.value = res.data.rows
+            totalData.value = res.data.total
+            const keys = Object.keys(userNote)
+            filterParams.value = keys.map((item) => {
+                return {
+                    note: userNote[item],
+                    isShow: true,
+                    key: item
+                }
+            })
+            console.log('filterParams', filterParams.value);
+
+        } catch (err) {
+            console.log('获取第三方sdk模板失败', err);
+        }
+
+
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {
@@ -264,6 +229,7 @@
         console.log('keyItem', keyItem);
     }
     onMounted(() => {
+        language.value = international.value[0].value
         getUserList();
         showPagestion.value = true
     })

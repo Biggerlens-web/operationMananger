@@ -1,7 +1,7 @@
 <template>
     <el-dialog :model-value="dialogVisible" title="权限模板" width="1000" :before-close="handleClose">
         <div class="view">
-            <prermissionTemplateEditor v-model:showEditor="showEditor" />
+            <prermissionTemplateEditor v-model:showEditor="showEditor" :prermissionInfo="prermissionInfo" />
             <el-card class="filter-card">
                 <div class="card-header" style="margin: 0;">
                     <div class="left-actions">
@@ -11,8 +11,9 @@
                             </el-icon>
                             新增模板
                         </el-button>
-                        <el-select v-model="language" placeholder="请选择语言" style="width: 150px;margin-left: 10px;">
-                            <el-option v-for="item in options" :key="item.value" :label="item.label"
+                        <el-select @change="getUserList" v-model="language" placeholder="请选择语言"
+                            style="width: 150px;margin-left: 10px;">
+                            <el-option v-for="item in international" :key="item.value" :label="item.language"
                                 :value="item.value" />
                         </el-select>
                     </div>
@@ -22,64 +23,17 @@
                     </div>
                 </div>
 
-                <!-- <el-divider class="divider" />
 
-            <div class="filter-container">
-                <div class="filter-row">
-
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.appNo" placeholder="请选择应用" clearable>
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName}`" :value="item.appNo" />
-
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.os" placeholder="请选择系统" clearable>
-                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.language" placeholder="请选择语言" clearable>
-                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.channel" placeholder="请选择渠道" clearable>
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
-                                :value="item.id" />
-                        </el-select>
-                    </div>
-
-
-                    <div class="filter-item filter-actions">
-                        <el-button type="primary" @click="getUserList">
-                            <el-icon>
-                                <Search />
-                            </el-icon>
-                            查询
-                        </el-button>
-                        <el-button @click="resetSearch">
-                            <el-icon>
-                                <Refresh />
-                            </el-icon>
-                            重置
-                        </el-button>
-                    </div>
-                </div>
-
-
-            </div> -->
             </el-card>
             <el-card class="content-card">
                 <Transition enter-active-class="animate__animated animate__fadeIn"
                     leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                     <component :is="componentName" :filterParams="filterParams" :tableData="roleData"
-                        :showAction="false"></component>
+                        @editor="editorTemplate" @delete="deleteTemplate"></component>
                 </Transition>
 
                 <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                    :total="1000" />
+                    :total="totalData" v-model="pageNum" :page-size="pageSize" />
             </el-card>
         </div>
         <template #footer>
@@ -99,34 +53,78 @@
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import prermissionTemplateEditor from './editor/prermissionTemplateEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
+    import { ElMessage, ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
-    const { showPagestion } = storeToRefs(counterStore)
+    const { showPagestion, international } = storeToRefs(counterStore)
     const props = defineProps<{
         dialogVisible: boolean
     }>()
 
 
+    //分页
+    const pageNum = ref<number>(1)
+    const pageSize = ref<number>(10)
+    const totalData = ref<number>(0)
+    watch(() => pageNum.value, () => {
+        getUserList()
+
+    })
+
     //新增权限模板
     const showEditor = ref<boolean>(false)
+    watch(() => showEditor.value, (newV) => {
+        if (!newV) {
+            prermissionInfo.value = ''
+            getUserList()
+        }
+    })
+    const prermissionInfo = ref<any>('')
     const addPermission = () => {
         showEditor.value = true
     }
 
+
+
+    //编辑
+    const editorTemplate = (data: any) => {
+        console.log('data', data);
+        prermissionInfo.value = data
+        showEditor.value = true
+    }
+    //删除
+    const deleteFn = async (id: number) => {
+        try {
+            const res = await service.post(`/appInfoDetailPermissionstrsItems//del/${id}`)
+            if (res.data.code === 200) {
+                ElMessage.success('删除成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+
+        }
+    }
+    const deleteTemplate = (data: any) => {
+        ElMessageBox.confirm('确定删除该模板吗？',
+            '提示',
+            {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }).then(res => {
+                console.log('删除');
+                deleteFn(data.id)
+            })
+    }
     //选择语言
     const language = ref('')
-    const options = ref([
-        {
-            value: '1',
-            label: '中文'
-        },
-        {
-            value: '2',
-            label: '英文'
-        }
-    ])
+
 
     const emit = defineEmits<{
 
@@ -154,69 +152,20 @@
 
 
     interface Permission {
-        name: string; // 权限名称
-        description: string; // 权限描述
-        purpose: string;    // 权限用途
+        permissionName: string; // 权限名称
+        permissionDesc: string; // 权限描述
+        permissionUsageScenarios: string;    // 权限用途
     }
     const permissionNote: any = {
-        name: '权限名称',
-        description: '权限描述',
-        purpose: '权限用途',
+        permissionName: '权限名称',
+        permissionDesc: '权限描述',
+        permissionUsageScenarios: '权限用途',
 
 
     }
     // 生成角色数据
     const roleData = ref<Permission[]>([
-        {
-            name: "READ_USER",
-            description: "读取用户信息",
-            purpose: "允许查看用户的基本信息，如用户名、邮箱等"
-        },
-        {
-            name: "WRITE_USER",
-            description: "修改用户信息",
-            purpose: "允许更新用户的个人信息，如修改密码、更新资料等"
-        },
-        {
-            name: "DELETE_USER",
-            description: "删除用户",
-            purpose: "允许删除用户账号及其相关数据"
-        },
-        {
-            name: "MANAGE_ROLES",
-            description: "管理角色",
-            purpose: "允许创建、修改和删除系统角色，分配权限"
-        },
-        {
-            name: "VIEW_LOGS",
-            description: "查看日志",
-            purpose: "允许查看系统操作日志和审计记录"
-        },
-        {
-            name: "MANAGE_SETTINGS",
-            description: "管理系统设置",
-            purpose: "允许修改系统配置参数和全局设置"
-        },
-        {
-            name: "CREATE_CONTENT",
-            description: "创建内容",
-            purpose: "允许创建新的内容，如文章、评论等"
-        },
-        {
-            name: "EDIT_CONTENT",
-            description: "编辑内容",
-            purpose: "允许修改已存在的内容"
-        },
-        {
-            name: "DELETE_CONTENT",
-            description: "删除内容",
-            purpose: "允许删除已存在的内容"
-        },
-        {
-            name: "MANAGE_MEDIA",
-            description: "管理媒体文件",
-            purpose: "允许上传、删除和管理系统中的媒体文件"
-        }
+
     ])
     interface filterParams {
         note: string
@@ -225,17 +174,36 @@
     }
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = roleData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: permissionNote[item],
-                isShow: true,
-                key: item
+        try {
+            const params = {
+                timestamp: Date.now(),
+                language: language.value,
+                pageNum: pageNum.value,
+                pageSize: pageSize.value,
             }
-        })
-        console.log('filterParams', filterParams.value);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/appInfoDetailPermissionstrsItems/list', {
+                enData
+            })
+            console.log('获取权限列表', res);
+            roleData.value = res.data.rows
+            totalData.value = res.data.total
+
+            const keys = Object.keys(permissionNote)
+            filterParams.value = keys.map((item) => {
+                return {
+                    note: permissionNote[item],
+                    isShow: true,
+                    key: item
+                }
+            })
+            console.log('filterParams', filterParams.value);
+
+        } catch (err) {
+            console.log('获取权限列表失败', err);
+        }
+
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {
@@ -258,6 +226,7 @@
         console.log('keyItem', keyItem);
     }
     onMounted(() => {
+        language.value = international.value[0].value
         getUserList();
         showPagestion.value = true
     })

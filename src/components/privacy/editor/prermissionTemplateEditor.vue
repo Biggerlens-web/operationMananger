@@ -5,17 +5,18 @@
 
             <el-form-item label="语言" prop="language">
                 <el-select v-model="formData.language">
-                    <el-option v-for="item in languageList" :key="item.value" :label="item.label" :value="item.value" />
+                    <el-option v-for="item in international" :key="item.value" :label="item.language"
+                        :value="item.value" />
                 </el-select>
             </el-form-item>
             <el-form-item label="权限名称" prop="permissionName">
                 <el-input v-model="formData.permissionName" />
             </el-form-item>
-            <el-form-item label="权限描述" prop="desc">
-                <el-input v-model="formData.desc" />
+            <el-form-item label="权限描述" prop="permissionDesc">
+                <el-input v-model="formData.permissionDesc" />
             </el-form-item>
-            <el-form-item label="权限用途" prop="use">
-                <el-input v-model="formData.desc" />
+            <el-form-item label="权限用途" prop="permissionUsageScenarios">
+                <el-input v-model="formData.permissionUsageScenarios" />
             </el-form-item>
         </el-form>
 
@@ -31,10 +32,24 @@
 </template>
 
 <script lang="ts" setup>
-    import { ref } from 'vue'
+    import service from '@/axios';
+    import { useCounterStore } from '@/stores/counter';
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage } from 'element-plus';
+    import { storeToRefs } from 'pinia';
+    import { ref, watch } from 'vue'
+    const stores = useCounterStore()
+    const { international } = storeToRefs(stores)
     const props = defineProps<{
         showEditor: boolean
+        prermissionInfo: any
     }>()
+
+    watch(() => props.showEditor, (newV) => {
+        if (newV && props.prermissionInfo) {
+            Object.assign(formData.value, props.prermissionInfo)
+        }
+    })
     const emit = defineEmits<{
         'update:showEditor': [value: boolean]
     }>()
@@ -42,8 +57,8 @@
         id: '',
         language: '',
         permissionName: '',
-        desc: "",
-        use: ''
+        permissionDesc: "",
+        permissionUsageScenarios: ''
     })
     const languageList = ref([
         {
@@ -76,10 +91,34 @@
         resetForm()
         emit('update:showEditor', false)
     }
+
+    const saveChange = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                ...formData.value
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/appInfoDetailPermissionstrsItems/save', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage({
+                    message: '保存成功',
+                    type: 'success'
+                })
+                handleClose()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        }
+    }
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate((valid: any) => {
             if (valid) {
-                handleClose()
+                saveChange()
             }
         })
     }

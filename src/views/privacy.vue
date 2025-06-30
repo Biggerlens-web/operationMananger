@@ -8,20 +8,20 @@
                 <div class="left-actions">
                     <el-upload ref="upload" class="upload-demo" action="#" :limit="1" :http-request="uploadJson"
                         :show-file-list="false">
-                        <el-button type="primary" class="add-button">
+                        <el-button style="margin: 0px;" type="primary" class="add-button">
                             <el-icon>
                                 <Plus />
                             </el-icon>
                             通过json文件添加
                         </el-button>
                     </el-upload>
-                    <el-button type="primary" class="add-button" @click="showSDKtemplate">
+                    <el-button style="margin: 0px;" type="primary" class="add-button" @click="showSDKtemplate">
                         第三方SDK模板
                     </el-button>
-                    <el-button type="primary" class="add-button" @click="showPermissiontemplate">
+                    <el-button style="margin: 0px;" type="primary" class="add-button" @click="showPermissiontemplate">
                         权限模板
                     </el-button>
-                    <el-button type="primary" class="add-button" @click="showOthertemplate">
+                    <el-button style="margin: 0px;" type="primary" class="add-button" @click="showOthertemplate">
                         其他说明模板
                     </el-button>
                 </div>
@@ -61,9 +61,20 @@
 
 
     //上传json
-    const uploadJson = (options: UploadRequestOptions) => {
+    const uploadJson = async (options: UploadRequestOptions) => {
         console.log('上传json', options);
-
+        try {
+            const formData = new FormData()
+            formData.append('file', options.file)
+            const res = await service.post('/privacy/jsonByFile', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            console.log('上传json', res);
+        } catch (err) {
+            console.log('上传失败', err);
+        }
     }
 
 
@@ -193,6 +204,10 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+
                     .add-button {
                         font-weight: 500;
 

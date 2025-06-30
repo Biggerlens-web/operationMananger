@@ -61,7 +61,7 @@
         </el-tree>
     </div>
 
-    <appUrlLInk v-model:dialog-visible="showapplink" :appNo="viewAppNo" />
+    <appUrlLInk v-model:dialog-visible="showapplink" :appNo="viewAppNo" :appName="viewAppName" />
 </template>
 
 <script lang="ts" setup>
@@ -115,6 +115,7 @@
     // 弹窗状态
     const showapplink = ref(false)
     const viewAppNo = ref<number | string>('')
+    const viewAppName = ref<string>('')
     const currentUrlData = ref<TreeNode | null>(null)
 
     // 节点点击事件
@@ -137,6 +138,7 @@
         // currentUrlData.value = data
         console.log('data', data);
         viewAppNo.value = data.appNo
+        viewAppName.value = data.appName
         showapplink.value = true
     }
 

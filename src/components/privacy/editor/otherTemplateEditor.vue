@@ -5,11 +5,12 @@
 
             <el-form-item label="语言" prop="language">
                 <el-select v-model="formData.language">
-                    <el-option v-for="item in languageList" :key="item.value" :label="item.label" :value="item.value" />
+                    <el-option v-for="item in international" :key="item.value" :label="item.language"
+                        :value="item.value" />
                 </el-select>
             </el-form-item>
-            <el-form-item label="其他内容说明" prop="desc">
-                <el-input type="textarea" v-model="formData.desc" />
+            <el-form-item label="其他内容说明" prop="otherInfoContent">
+                <el-input type="textarea" v-model="formData.otherInfoContent" />
             </el-form-item>
         </el-form>
 
@@ -25,10 +26,23 @@
 </template>
 
 <script lang="ts" setup>
-    import { ref } from 'vue';
+    import service from '@/axios';
+    import { useCounterStore } from '@/stores/counter';
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage } from 'element-plus';
+    import { storeToRefs } from 'pinia';
+    import { ref, watch } from 'vue';
+    const stores = useCounterStore()
+    const { international } = storeToRefs(stores)
     const props = defineProps<{
         showEditor: boolean
+        otherInfo: any
     }>()
+    watch(() => props.showEditor, (newV) => {
+        if (newV && props.otherInfo) {
+            Object.assign(formData.value, props.otherInfo)
+        }
+    })
     const emit = defineEmits<{
         'update:showEditor': [value: boolean]
     }>()
@@ -36,31 +50,46 @@
     const formData = ref<any>({
         id: '',
         language: '',
-        desc: ''
+        otherInfoContent: ''
     })
-    const languageList = ref([
-        {
-            value: '1',
-            label: '中文'
-        },
-        {
-            value: '2',
-            label: '英文'
-        }
-    ])
+
     const ruleFormRef = ref<any>(null)
     const rules = ref({
-        channelGroupName: [{ required: true, message: '请输入渠道组名称', trigger: 'blur' }],
-        channelList: [{ required: true, message: '请选择渠道', trigger: 'blur' }]
+
     })
     const handleClose = () => {
+        formData.value = {
+            id: '',
+            language: '',
+            otherInfoContent: ''
+        }
         emit('update:showEditor', false)
     }
 
+    const saveChange = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                ...formData.value
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/appInfoDetailOtherserversItems/save', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                handleClose()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+
+        }
+    }
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate((valid: any) => {
             if (valid) {
-                emit('update:showEditor', false)
+                saveChange()
             } else {
                 console.log('error submit!!')
                 return false
