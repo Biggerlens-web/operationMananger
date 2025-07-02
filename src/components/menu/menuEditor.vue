@@ -56,6 +56,10 @@
     import service from '@/axios';
     import { ElMessage, type FormInstance } from 'element-plus';
     import { desEncrypt } from '@/utils/des';
+    import { useCounterStore } from '@/stores/counter';
+    import { storeToRefs } from 'pinia';
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
     const props = defineProps<{
         dialogVisible: boolean,
         menuInfo?: any
@@ -138,6 +142,7 @@
             params.type = formData.value.id ? 'update' : 'add'
             const enData = desEncrypt(JSON.stringify(params))
             console.log('保存参数', params)
+            showLoading.value = true
             const res = await service.post('/system/menu/save', {
                 enData
             })
@@ -152,6 +157,8 @@
 
             console.log('err', err);
             ElMessage.error('网络错误')
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (formEl: any) => {
@@ -167,12 +174,15 @@
     const parentMenuList = ref<any>([])
     const getParentMenuList = async () => {
         try {
+            showLoading.value = true
             const menuInfo = await service.get('/system/menu/menuInfo')
 
             console.log('获取父级菜单信息', menuInfo.data.data.menus);
             parentMenuList.value = menuInfo.data.data.menus
         } catch (err) {
             console.log('获取父级菜单信息失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 

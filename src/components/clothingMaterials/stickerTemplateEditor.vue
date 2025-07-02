@@ -3,7 +3,8 @@
     <div class="form-container">
       <!-- 封面图上传区域 -->
       <div class="upload-section">
-        <div class="upload-label">封面大图</div>
+        <div class="upload-label">{{ route.query.type === 'template' ? '背景图' : '封面大图' }}
+        </div>
         <div class="image-upload-container">
           <el-upload class="image-uploader" :show-file-list="false" action="#" :before-upload="handleImageUpload">
             <img v-if="formData.bigUrl" :src="formData.bigUrl" class="uploaded-image" />
@@ -11,7 +12,7 @@
               <el-icon>
                 <Plus />
               </el-icon>
-              <span>点击上传封面图</span>
+              <span>点击上传图片</span>
             </div>
           </el-upload>
           <el-button v-if="formData.bigUrl" type="danger" size="small" class="delete-image-btn"
@@ -28,7 +29,7 @@
       <div class="form-content">
         <!-- 小图上传区域 -->
         <div class="form-item">
-          <span class="label">封面小图</span>
+          <span class="label">{{ route.query.type === 'template' ? '封面图' : '封面小图' }}</span>
           <div class="small-images-container">
             <div class="small-images-grid">
               <div v-if="formData.smallUrl" class="small-image-item">
@@ -52,9 +53,21 @@
         </div>
 
         <!-- 样式选择区域 -->
-        <div class="form-item">
+        <div class="form-item" v-if="route.query.type !== 'template'">
           <span class="label">样式</span>
           <el-input-number v-model="formData.style" />
+        </div>
+        <div class="form-item" v-if="route.query.type === 'template'">
+          <span class="label">宽</span>
+          <el-input v-model="formData.backgroundWidth" type="text" placeholder="请输入宽" class="form-input"></el-input>
+        </div>
+        <div class="form-item" v-if="route.query.type === 'template'">
+          <span class="label">高</span>
+          <el-input v-model="formData.backgroundHeight" type="text" placeholder="请输入高" class="form-input"></el-input>
+        </div>
+        <div class="form-item" v-if="route.query.type === 'template'">
+          <span class="label">版本号</span>
+          <el-input v-model="formData.version" type="text" placeholder="请输入版本号" class="form-input"></el-input>
         </div>
         <!-- 描述输入区域 -->
         <div class="form-item">
@@ -67,6 +80,12 @@
           <span class="label">是否付费</span>
           <el-switch v-model="formData.pay" :active-value="1" :inactive-value="0" active-text="付费"
             inactive-text="免费"></el-switch>
+        </div>
+
+        <div class="form-item" v-if="route.query.type === 'template'">
+          <span class="label">是否推荐模板</span>
+          <el-switch v-model="formData.isRecommend" :active-value="true" :inactive-value="false" active-text="是"
+            inactive-text="否"></el-switch>
         </div>
       </div>
     </div>
@@ -81,18 +100,22 @@
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, reactive, ref, render, watch } from 'vue'
+  import { onMounted, reactive, ref, render, version, watch } from 'vue'
   import { Plus, Delete } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
   import { useRoute } from 'vue-router'
   import { desEncrypt } from '@/utils/des'
   import service from '@/axios'
+  import { useCounterStore } from '@/stores/counter'
+  import { storeToRefs } from 'pinia'
   const route = useRoute()
-
-
+  const counterStore = useCounterStore()
+  const { changeSChildTemplate } = counterStore
+  const { showLoading } = storeToRefs(counterStore)
   const props = defineProps<{
     dialogEditor: boolean
     editData?: any
+    isAddChild?: any
   }>()
 
   const emit = defineEmits<{
@@ -108,6 +131,10 @@
     smallUrl: '',
     keyword: '',
     pay: 0,
+    backgroundWidth: 0,
+    backgroundHeight: 0,
+    version: '',
+    isRecommend: false
   })
   const initFormData = () => {
     const { type } = route.query
@@ -117,6 +144,8 @@
       formData.clothingMaterialsId = parseInt(route.query.id as string) || ''
     } else if (type === 'background') {
       formData.backgroundId = parseInt(route.query.id as string) || ''
+    } else if (type === 'template') {
+      formData.templateUpId = parseInt(route.query.id as string) || ''
     }
   }
   onMounted(() => {
@@ -134,7 +163,7 @@
     try {
 
       const { type } = route.query
-      const params: any = {
+      let params: any = {
         id: formData.id,
         style: formData.style,
         bigUrl: formData.bigUrl.split(',')[1],
@@ -155,9 +184,30 @@
         url = '/backgroundDetail/save'
         params.type = formData.id ? 'update' : 'add'
         params.backId = formData.backgroundId
+      } else if (type === 'template') {
+        url = '/templateUpDetail/save'
+        params = {
+          timestamp: Date.now(),
+          type: formData.id ? 'update' : 'add',
+          templateUpId: formData.templateUpId,
+          backgroundWidth: parseInt(formData.backgroundWidth),
+          backgroundHeight: parseInt(formData.backgroundHeight),
+          backgroundImage: formData.bigUrl.split(',')[1],
+          coverImage: formData.smallUrl.split(',')[1],
+          version: formData.version,
+          keyword: formData.keyword,
+          pay: formData.pay,
+          templateType: props.isAddChild ? 2 : 1,
+          templateParentId: props.isAddChild,
+          isRecommend: formData.isRecommend,
+          id: formData.id,
+          backgroundImageName: props.editData?.backgroundImageName || null
+        }
       }
+
       console.log('参数', params)
       const enData = desEncrypt(JSON.stringify(params))
+      showLoading.value = true
       const res = await service.post(url, {
         enData,
       })
@@ -172,8 +222,12 @@
     } catch (err) {
       console.log('保存失败', err)
       return false
+    } finally {
+      showLoading.value = false
     }
   }
+
+
   const handleConfirm = async () => {
 
     if (!formData.bigUrl) {
@@ -184,6 +238,8 @@
     const isSuccess = await saveMaterial()
     if (isSuccess) {
       handleClose()
+      if (props.isAddChild)
+        changeSChildTemplate(true)
     }
   }
 
@@ -192,13 +248,16 @@
     Object.assign(formData, {
       id: '',
       style: 0,
-
       bigUrl: '',
       smallUrl: '',
       keyword: '',
-
+      backgroundWidth: 0,
+      backgroundHeight: 0,
+      version: '',
       pay: 0,
+      isRecommend: false
     })
+    console.log('格式化数据');
     initFormData()
   }
 
@@ -239,16 +298,39 @@
       if (isOpen && props.editData) {
 
         // 对话框打开时，如果有编辑数据则回显
-        Object.assign(formData, {
-          id: props.editData.id || 0,
-          style: props.editData.style || 0,
-          clothingMaterialsId:
-            props.editData.clothingMaterialsId || parseInt(route.query.id as string),
-          bigUrl: props.editData.bigUrl ? props.editData.bigUrl : '',
-          smallUrl: props.editData.smallUrl ? props.editData.smallUrl : '',
-          keyword: props.editData.keyword || '',
-          pay: props.editData.pay === undefined ? 0 : props.editData.pay,
-        })
+        if (route.query.type !== 'template') {
+          Object.assign(formData, {
+            id: props.editData.id || 0,
+            style: props.editData.style || 0,
+            clothingMaterialsId:
+              props.editData.clothingMaterialsId || parseInt(route.query.id as string),
+            bigUrl: props.editData.bigUrl ? props.editData.bigUrl : '',
+            smallUrl: props.editData.smallUrl ? props.editData.smallUrl : '',
+            keyword: props.editData.keyword || '',
+            pay: props.editData.pay === undefined ? 0 : props.editData.pay,
+
+
+          })
+        } else {
+
+          Object.assign(formData, {
+            id: props.editData.id || 0,
+            style: props.editData.style || 0,
+            clothingMaterialsId:
+              props.editData.clothingMaterialsId || parseInt(route.query.id as string),
+            bigUrl: props.editData.backgroundUrl ? props.editData.backgroundUrl : '',
+            smallUrl: props.editData.coverUrl ? props.editData.coverUrl : '',
+            keyword: props.editData.keyword || '',
+            pay: props.editData.pay === true ? 1 : 0,
+            backgroundWidth: props.editData.backgroundWidth || 0,
+            backgroundHeight: props.editData.backgroundHeight || 0,
+            version: props.editData.version || '',
+            isRecommend: props.editData.isRecommend || false,
+
+          })
+          console.log('formData', formData);
+        }
+
 
         if (formData.bigUrl) {
           try {

@@ -60,7 +60,7 @@
     import service from '@/axios';
     import { ElMessage, ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
-    const { showPagestion, international } = storeToRefs(counterStore)
+    const { showPagestion, international, showLoading } = storeToRefs(counterStore)
     const props = defineProps<{
         dialogVisible: boolean
     }>()
@@ -99,6 +99,7 @@
     //删除
     const deleteFn = async (id: number) => {
         try {
+            showLoading.value = true
             const res = await service.post(`/appInfoDetailPermissionstrsItems//del/${id}`)
             if (res.data.code === 200) {
                 ElMessage.success('删除成功')
@@ -108,6 +109,8 @@
             }
         } catch (err) {
 
+        } finally {
+            showLoading.value = false
         }
     }
     const deleteTemplate = (data: any) => {
@@ -182,6 +185,7 @@
                 pageSize: pageSize.value,
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/appInfoDetailPermissionstrsItems/list', {
                 enData
             })
@@ -201,6 +205,8 @@
 
         } catch (err) {
             console.log('获取权限列表失败', err);
+        } finally {
+            showLoading.value = false
         }
 
 

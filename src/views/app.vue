@@ -67,7 +67,7 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion, defaultCompanyNo } = storeToRefs(counterStore)
+    const { showPagestion, defaultCompanyNo, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -328,12 +328,15 @@
                 searchInfo: searchParams.value.searchInfo
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/appInfo/list', {
                 enData
             })
             console.log('应用列表', res);
         } catch (err) {
             console.log('获取应用列表失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     //监听公司变化

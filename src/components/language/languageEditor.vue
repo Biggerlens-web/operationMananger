@@ -26,9 +26,13 @@
 
 <script lang="ts" setup>
     import service from '@/axios';
+    import { useCounterStore } from '@/stores/counter';
     import { desEncrypt } from '@/utils/des';
     import { ElMessage, type FormInstance } from 'element-plus';
+    import { storeToRefs } from 'pinia';
     import { ref, watch } from 'vue'
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
     const props = defineProps<{
         dialogVisible: boolean
         languageInfo: any
@@ -82,6 +86,7 @@
                 ...formData.value
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/base/language/save', {
                 enData
             })
@@ -97,6 +102,8 @@
             }
         } catch (err) {
 
+        } finally {
+            showLoading.value = false
         }
 
     }

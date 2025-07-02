@@ -51,7 +51,7 @@
     import { storeToRefs } from 'pinia';
     import { ref, watch } from 'vue'
     const counterStore = useCounterStore()
-    const { appList, defaultAppNo } = storeToRefs(counterStore)
+    const { appList, defaultAppNo, showLoading } = storeToRefs(counterStore)
     const props = defineProps<{
         dialogVisible: boolean
         signInfo: any
@@ -60,6 +60,7 @@
     const getEditInfo = async (id: number) => {
         try {
             loading.value = true
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 appNo: formData.value.appNo,
@@ -106,6 +107,7 @@
             ElMessage.error('获取信息失败')
         } finally {
             loading.value = false
+            showLoading.value = false
         }
     }
     watch(() => props.dialogVisible, (newVal, oldVal) => {
@@ -177,6 +179,7 @@
     const saveChange = async () => {
         try {
             // 分离jks文件和其他数据
+            showLoading.value = true
             const { jks, ...otherData } = formData.value
 
 
@@ -215,6 +218,8 @@
 
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (ruleFormRef: any) => {

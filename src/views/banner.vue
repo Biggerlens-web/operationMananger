@@ -99,7 +99,7 @@
     import service from '@/axios';
     import { useRouter } from 'vue-router';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList, international } = storeToRefs(counterStore)
+    const { showPagestion, appList, OSlist, channelList, international, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -177,6 +177,7 @@
     //删除轮播点
     const delBannerFn = async (id: number) => {
         try {
+            showLoading.value = true
             const res = await service.post(`/base/banner/del/${id}`)
             console.log('删除', res);
             if (res.data.code === 200) {
@@ -187,6 +188,8 @@
             }
         } catch (err) {
             console.log('删除失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const deleteBanner = (item: any) => {
@@ -278,6 +281,7 @@
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/base/banner/list', {
 
                 enData
@@ -295,6 +299,9 @@
             totalData.value = res.data.total
         } catch (err) {
             console.log('获取轮播点列表失败', err);
+        } finally {
+            showLoading.value = false
+
         }
         console.log('获取用户列表');
 

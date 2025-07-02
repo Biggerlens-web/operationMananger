@@ -60,7 +60,10 @@
     import { Delete, Plus } from '@element-plus/icons-vue'; // 引入Delete和Plus图标
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
-
+    import { useCounterStore } from '@/stores/counter';
+    import { storeToRefs } from 'pinia';
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
     const props = defineProps<{
         dialogVisible: boolean
         userInfo: any
@@ -189,6 +192,7 @@
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/system/user/save', {
                 enData
             })
@@ -202,6 +206,8 @@
         } catch (err) {
 
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     //确认提交

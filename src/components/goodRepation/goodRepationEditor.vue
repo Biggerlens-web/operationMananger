@@ -77,7 +77,7 @@
         console.log('formData.value', formData.value);
     })
     const counterStore = useCounterStore()
-    const { appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { appList, OSlist, channelList, showLoading } = storeToRefs(counterStore)
     const emit = defineEmits<{
         'update:showEditor': [value: boolean]
     }>()
@@ -129,6 +129,7 @@
             }
             params.probabilitys = params.probabilitys.join(',')
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/goodReputationGui/save', {
                 enData
             })
@@ -142,6 +143,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 

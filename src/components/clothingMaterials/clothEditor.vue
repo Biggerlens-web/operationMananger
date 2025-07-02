@@ -14,6 +14,11 @@
                     <el-option v-for="item in regionList" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
             </el-form-item>
+            <el-form-item label="系统" prop="os" v-if="type === 'template'">
+                <el-select v-model="formData.os" @change="getParentList" placeholder="请选择系统">
+                    <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
+                </el-select>
+            </el-form-item>
             <el-form-item label="父分类" prop="tids" v-if="!noHaveParent">
                 <el-select v-model="formData.tids" placeholder="请选择父分类" multiple>
                     <el-option v-for="item in parentList" :key="item.id" :label="item.classType" :value="item.id" />
@@ -122,6 +127,7 @@
                 formData.value.isOperationClass = props.editorInfo.operationClass === 1 ? true : false
                 formData.value.region = props.editorInfo.region === '国内' ? "domestic" : 'foreign'
                 formData.value.appNo = props.editorInfo.appNo
+                formData.value.os = props.editorInfo.os.value
             } else {
                 formData.value.id = props.editorInfo.id
                 formData.value.name = props.editorInfo.name
@@ -187,7 +193,7 @@
     const dialogVisible = ref(false)
 
     const counterStore = useCounterStore()
-    const { appList, regionList, international, defaultAppNo } = storeToRefs(counterStore)
+    const { appList, regionList, international, defaultAppNo, OSlist, showLoading } = storeToRefs(counterStore)
 
 
 
@@ -205,7 +211,8 @@
         classImageBase64: '', // 新增用于存储Base64的字段
         international: '',
         isOperationClass: false,
-        region: ''
+        region: '',
+        os: '',
     })
 
 
@@ -235,6 +242,7 @@
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get('/clothingMaterialsType/list', {
                 params: {
                     enData
@@ -247,6 +255,8 @@
         } catch (err) {
 
             console.log('获取父类失败');
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -266,6 +276,8 @@
                 classImageBase64: '',
                 international: '',
                 isOperationClass: false,
+                region: '',
+                os: '',
             }
         } else {
             formData.value = {
@@ -278,6 +290,7 @@
                 classImageBase64: '',
                 international: '',
                 isOperationClass: false,
+                region: ''
             }
         }
 
@@ -412,6 +425,9 @@
                 delete params.tids
                 params['type'] = params.id ? 'update' : 'add'
             }
+            if (props.type === 'template') {
+                params.os = formData.value.os.toLowerCase()
+            }
             let url: string = ''
             switch (props.type) {
                 case 'background':
@@ -423,10 +439,16 @@
                 case 'clothing':
                     url = '/clothingMaterials/save'
                     break;
-
+                case 'template':
+                    url = '/templateUp/save'
+                    break
+                case 'mask':
+                    url = '/mask/save'
+                    break
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post(url, {
                 enData
             })
@@ -438,6 +460,8 @@
             }
         } catch (err) {
             console.log('新增子分类失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (ruleFormRef: any) => {

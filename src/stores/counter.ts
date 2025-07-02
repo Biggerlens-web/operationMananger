@@ -32,6 +32,13 @@ export const useCounterStore = defineStore(
     const clothFliterParams = ref<any>({}) // 服装筛选参数
     const stickerFliterParams = ref<any>({}) // 贴纸筛选参数
     const backgroundFliterParams = ref<any>({}) // 图库筛选参数
+    const maskFliterParams = ref<any>({}) // 遮罩筛选参数
+    const templateFliterParams = ref<any>({}) // 模板筛选参数
+    const updateChildTemplate = ref<boolean>(false)
+    const showLoading = ref<boolean>(false) // 显示loading
+    const changeSChildTemplate = (val: boolean) => {
+      updateChildTemplate.value = !updateChildTemplate.value
+    }
     return {
       appList,
       userName,
@@ -48,10 +55,15 @@ export const useCounterStore = defineStore(
       clothFliterParams,
       stickerFliterParams,
       backgroundFliterParams,
+      templateFliterParams,
+      maskFliterParams,
       companyList,
       defaultCompanyNo,
       defaultAppNo,
       appListInCom,
+      updateChildTemplate,
+      changeSChildTemplate,
+      showLoading,
     }
   },
   {

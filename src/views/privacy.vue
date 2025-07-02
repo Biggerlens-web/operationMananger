@@ -38,11 +38,11 @@
                 @create="handleCreate" />
         </el-card>
     </div>
-    <editNode v-model:dialogVisable="dialogVisableEditNode" :nodeInfo="nodeInfo" />
+    <editNode v-model:dialogVisable="dialogVisableEditNode" :nodeInfo="nodeInfo" :addInfo="addInfo" />
 </template>
 
 <script lang="ts" setup>
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import echartTree from '@/components/echartTree.vue';
     import privacyTemplate from '@/components/privacy/privacyTemplate.vue';
     import prermissionTemplate from '@/components/privacy/prermissionTemplate.vue';
@@ -52,6 +52,10 @@
     import { desEncrypt } from '@/utils/des';
     import editNode from '@/components/privacy/editor/editNode.vue';
     import { ElMessage } from 'element-plus';
+    import { useCounterStore } from '@/stores/counter';
+    import { storeToRefs } from 'pinia';
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
     //显示SDK模板
 
     const dialogSDKtemplateVisible = ref(false);
@@ -66,6 +70,7 @@
         try {
             const formData = new FormData()
             formData.append('file', options.file)
+            showLoading.value = true
             const res = await service.post('/privacy/jsonByFile', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
@@ -74,6 +79,8 @@
             console.log('上传json', res);
         } catch (err) {
             console.log('上传失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -95,7 +102,11 @@
     //编辑节点
     const dialogVisableEditNode = ref<boolean>(false)
 
-
+    watch(() => dialogVisableEditNode.value, (newV) => {
+        if (!newV) {
+            getPrivacyList()
+        }
+    })
     // 树组件引用
     const treeRef = ref()
 
@@ -103,6 +114,7 @@
     const treeData = ref<any>()
     const getPrivacyList = async () => {
         try {
+            showLoading.value = true
             const res = await service.get('/appAdmin/privacyPolicy')
             console.log('获取隐私列表', res);
             res.data.data.list.forEach((item: any) => {
@@ -116,6 +128,8 @@
 
         } catch (err) {
             console.log('获取隐私列表失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -152,6 +166,7 @@
         console.log('删除节点', data);
         const { id } = data
         try {
+            showLoading.value = true
             const res = await service.post(`/privacy/deleteDetail/${id}`)
             console.log('删除成功', res);
             if (res.data.code === 200) {
@@ -162,12 +177,19 @@
             }
         } catch (err) {
             console.log('删除节点失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
     //新增节点
+    const addInfo = ref<any>({})
     const handleCreate = (data: any) => {
-        console.log('新增节点', data);
+
+        const appNo = data.parent.data.appNo
+
+        addInfo.value.appNo = appNo
+        addInfo.value.os = data.data.id.toLowerCase()
         dialogVisableEditNode.value = true
     }
 

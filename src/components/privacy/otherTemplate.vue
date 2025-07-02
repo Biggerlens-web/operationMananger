@@ -63,7 +63,7 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion, international } = storeToRefs(counterStore)
+    const { showPagestion, international, showLoading } = storeToRefs(counterStore)
     const props = defineProps<{
         dialogVisible: boolean
     }>()
@@ -104,6 +104,7 @@
     //删除说明模板
     const deleteFn = async (id: number) => {
         try {
+            showLoading.value = true
             const res = await service.post(`/appInfoDetailOtherserversItems//del/${id}`)
             if (res.data.code === 200) {
                 ElMessage.success('删除成功')
@@ -114,6 +115,8 @@
 
         } catch (err) {
             console.log('删除失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const doleteTemplate = (item: any) => {
@@ -194,6 +197,7 @@
                 language: language.value
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/appInfoDetailOtherserversItems/list', {
                 enData
             })
@@ -212,6 +216,8 @@
             console.log('filterParams', filterParams.value);
         } catch (err) {
             console.log('获取说明列表失败', err);
+        } finally {
+            showLoading.value = false
         }
 
 

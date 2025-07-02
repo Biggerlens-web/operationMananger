@@ -75,7 +75,10 @@
     import { ElMessage, ElMessageBox } from 'element-plus'
     import { desEncrypt } from '@/utils/des'
     import service from '@/axios'
-
+    import { useCounterStore } from '@/stores/counter'
+    import { storeToRefs } from 'pinia'
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
     const showEditor = defineModel('showEditor', {
         type: Boolean,
         default: false
@@ -92,6 +95,7 @@
                 subPageConfigId: props.subPageConfigId
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get('/subPageConfigHWProducts/edit', {
                 params: {
                     enData
@@ -103,6 +107,8 @@
         } catch (err) {
             console.log('获取商品信息失败', err);
 
+        } finally {
+            showLoading.value = false
         }
 
 
@@ -201,6 +207,7 @@
                 productName: addProductForm.value.productName,
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/subPageConfigHWProducts/save', {
                 enData
             })
@@ -213,6 +220,8 @@
             }
         } catch (err) {
             console.log('新增失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -236,6 +245,7 @@
 
             console.log('排序保存参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/subPageConfigHWProducts/saveSort', {
                 enData
             })
@@ -246,6 +256,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
 
     }

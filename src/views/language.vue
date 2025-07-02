@@ -37,7 +37,7 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion } = storeToRefs(counterStore)
+    const { showPagestion, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -84,6 +84,7 @@
     //删除语言
     const delLanguageFn = async (id: number) => {
         try {
+            showLoading.value = true
             const res = await service.post(`/base/language/del/${id}`)
             console.log('删除', res);
 
@@ -95,7 +96,9 @@
                 ElMessage.error(res.data.msg)
             }
         } catch (err) {
-
+            console.log('删除语言失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const deleteLanguage = (row: any) => {
@@ -147,7 +150,7 @@
             }
 
             const enData = desEncrypt(JSON.stringify(params))
-
+            showLoading.value = true
             const res = await service.get('/base/language/list', {
                 params: {
                     enData
@@ -167,6 +170,8 @@
             console.log('filterParams', filterParams.value);
         } catch (err) {
             console.log('获取语言列表失败', err);
+        } finally {
+            showLoading.value = false
         }
 
     }

@@ -89,7 +89,7 @@
 
     import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion } = storeToRefs(counterStore)
+    const { showPagestion, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -111,6 +111,7 @@
     //下载模板
     const downloadTemplate = async () => {
         try {
+            showLoading.value = true
             const response = await service.get('/base/bucket/importTemplate', {
                 responseType: 'blob'
             });
@@ -150,6 +151,8 @@
 
             console.error('下载模板失败', err);
             ElMessage.error('下载模板失败，请检查网络或联系管理员。');
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -160,6 +163,7 @@
             const { file } = options
             const formData = new FormData()
             formData.append('file', file)
+            showLoading.value = true
             const res = await service.post('/base/bucket/importByExcel', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
@@ -175,6 +179,8 @@
             }
         } catch (err) {
             console.log('导入失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -202,6 +208,7 @@
     //删除域
     const delBucketFn = async (id: number) => {
         try {
+            showLoading.value = true
             const res = await service.post(`/base/bucket/del/${id}`)
             if (res.data.code === 200) {
 
@@ -212,6 +219,8 @@
             }
         } catch (err) {
 
+        } finally {
+            showLoading.value = false
         }
     }
     const deleteBucket = (row: any) => {
@@ -287,6 +296,7 @@
             }
 
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get('/base/bucket/list', {
                 params: {
                     enData
@@ -310,6 +320,8 @@
             console.log('filterParams', filterParams.value);
         } catch (err) {
 
+        } finally {
+            showLoading.value = false
         }
 
     }

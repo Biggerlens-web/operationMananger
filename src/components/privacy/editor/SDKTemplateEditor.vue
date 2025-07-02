@@ -47,7 +47,7 @@
     import { storeToRefs } from 'pinia';
     import { ref, watch } from 'vue'
     const stores = useCounterStore()
-    const { international } = storeToRefs(stores)
+    const { international, showLoading } = storeToRefs(stores)
     const props = defineProps<{
         showEditor: boolean
         SDKInfo: any
@@ -113,6 +113,7 @@
                 ...formData.value
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/appInfoDetailThreesdksItems/save', {
                 enData
             })
@@ -124,6 +125,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (ruleFormRef: any) => {

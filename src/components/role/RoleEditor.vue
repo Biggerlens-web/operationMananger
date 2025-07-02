@@ -39,6 +39,10 @@
     import { ElMessage, type FormInstance } from 'element-plus';
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
+    import { useCounterStore } from '@/stores/counter';
+    import { storeToRefs } from 'pinia';
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
     const props = defineProps<{
         dialogVisible: boolean
         roleInfo: any
@@ -105,6 +109,7 @@
 
             console.log('保存参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/system/role/save', {
                 enData
             })
@@ -117,7 +122,11 @@
             }
         } catch (err) {
             console.log('err', err);
+        } finally {
+            showLoading.value = false
         }
+
+
     }
     const handleComfirm = (formEl: any) => {
         formEl.validate((valid: any) => {

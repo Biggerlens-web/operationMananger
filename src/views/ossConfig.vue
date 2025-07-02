@@ -105,7 +105,7 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion, defaultAppNo, defaultCompanyNo } = storeToRefs(counterStore)
+    const { showPagestion, defaultAppNo, defaultCompanyNo, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -136,6 +136,7 @@
             const { file } = options
             const formData = new FormData()
             formData.append('file', file)
+            showLoading.value = true
             const res = await service.post('/oss/importByExcel', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
@@ -151,12 +152,15 @@
             }
         } catch (err) {
             console.log('导入失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
     //下载excel模板
     const downloadTemplate = async () => {
         try {
+            showLoading.value = true
             const response = await service.get('/oss/importTemplate', {
                 responseType: 'blob'
             });
@@ -193,6 +197,8 @@
 
         } catch (err) {
             console.log('下载失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -220,6 +226,7 @@
     //删除配置链接
     const delOSSconfig = async (id: number) => {
         try {
+            showLoading.value = true
             const res = await service.post(`/oss/del/${id}`)
             if (res.data.code === 200) {
                 ElMessage({
@@ -232,6 +239,9 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
+
         }
     }
     const deleteOSSConfig = (item: any) => {
@@ -264,6 +274,7 @@
             }
             console.log('json参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get(`/oss/jsonFile`, {
                 params: {
                     enData
@@ -288,6 +299,8 @@
             }
         } catch (err) {
             console.log('获取JSON失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const editorJSON = (item: any) => {
@@ -489,7 +502,7 @@
             const enData = desEncrypt(JSON.stringify(params))
 
 
-
+            showLoading.value = true
             const res = await service.post('/oss/upJson', {
                 enData
             })
@@ -509,6 +522,8 @@
 
         } catch (err) {
             ElMessage.error('保存失败')
+        } finally {
+            showLoading.value = false
         }
 
     }
@@ -522,6 +537,7 @@
                 id: item.id
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get('/oss/getFile', {
                 params: {
                     enData
@@ -544,6 +560,8 @@
             ElMessage.success('模板下载成功');
         } catch (err) {
             console.log('下载失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -588,6 +606,7 @@
             }
             console.log('应用配置参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/oss/list', {
                 enData
             })
@@ -605,6 +624,8 @@
             console.log('filterParams', filterParams.value);
         } catch (err) {
             console.log('获取应用配置列表失败', err);
+        } finally {
+            showLoading.value = false
         }
 
 

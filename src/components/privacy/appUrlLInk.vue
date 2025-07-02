@@ -29,7 +29,7 @@
     import { storeToRefs } from 'pinia';
     import { ref, watch } from 'vue'
     const stores = useCounterStore()
-    const { OSlist } = storeToRefs(stores)
+    const { OSlist, showLoading } = storeToRefs(stores)
     const props = defineProps<{
         dialogVisible: boolean
         appNo: any
@@ -45,6 +45,7 @@
             }
 
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post(`/appInfoDetail/findByAppNo`, {
                 enData
             })
@@ -115,6 +116,8 @@
         } catch (err) {
             console.log('获取应用信息失败', err);
 
+        } finally {
+            showLoading.value = false
         }
     }
 

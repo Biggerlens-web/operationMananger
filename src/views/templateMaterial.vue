@@ -1,13 +1,15 @@
 <template>
     <templateView v-model:dialog-visible="showTemplateView" />
-    <stickerTemplateEditor :editData="editItem" v-model:dialogEditor="dialogEditor" />
+    <stickerTemplateEditor :editData="editItem" v-model:dialogEditor="dialogEditor" :isAddChild="isAddChild" />
     <editorActionBox class="floating-action-box" @actionClick="handleAction" :hasUnsavedChanges="hasUnsavedChanges" />
     <addClothTemplate v-model:dialogAdd="dialogAddCloth" @update="getMaterialList" />
     <batchEditeTemplate :chosedItem="selectedList" v-model:dialog-batch-edite="dialogBatchEdite"
         @update="getMaterialList" />
     <batchTag v-model:dialogShow="dialogBatchTag" :chosedItem="selectedList" />
-
-
+    <publicArea v-model:dialog-visible="showPublicArea" />
+    <sizeEdit v-model:dialogVisible="dialogSizeEdit" @addChildTemplate="addChildTemplate"
+        @editChildTemplate="editChildTemplate" :isAddChild="isAddChild" />
+    <forceTemplate v-model:dialogVisible="dialogForceTemplate" :parentTemplateId="parentTemplateId" />
     <el-card class="stickTp_manage">
 
         <draggable tag="ul" v-model="list" item-key="id" :animation="200" class="template-grid"
@@ -29,13 +31,21 @@
                     </div>
 
                     <div class="img-wrapper">
-                        <img :src="element.smallUrl || element.bigUrl" alt="" class="template-img" />
+                        <img :src="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
+                            class="template-img" />
                     </div>
                     <p class="template-name">
-                        <el-button type="primary" style="width: 100%" @click="editorTemplate(element)">
+                        <el-button type="primary" @click="editorTemplate(element)" size='samll'>
                             编辑
                         </el-button>
-
+                        <el-button size='samll' v-if="route.query.type === 'template'" type="primary"
+                            @click="showSizeEdit(element)">
+                            其他尺寸
+                        </el-button>
+                        <el-button size='samll' v-if="route.query.type === 'template'" type="primary"
+                            @click="showForceTemplate(element)">
+                            模板前景
+                        </el-button>
                     </p>
                 </li>
             </template>
@@ -45,12 +55,15 @@
 
 <script lang="ts" setup>
     import templateView from '@/components/pptTemplate/templateView.vue'
+    import publicArea from '@/components/templates/publicArea.vue'
+    import forceTemplate from '@/components/templates/forceTemplate.vue'
+    import sizeEdit from '@/components/templates/sizeEdit.vue'
     import stickerTemplateEditor from '@/components/clothingMaterials/stickerTemplateEditor.vue'
     import editorActionBox from '@/components/clothingMaterials/editorActionBox.vue'
     import batchTag from '@/components/clothingMaterials/batchTag.vue'
     import addClothTemplate from '@/components/clothingMaterials/addClothTemplate.vue'
     import batchEditeTemplate from '@/components/clothingMaterials/batchEditeTemplate.vue'
-    import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
+    import { ref, onMounted, watch, onBeforeUnmount, toRaw } from 'vue'
     import { useRouter, useRoute } from 'vue-router'
     import draggable from 'vuedraggable'
     import { ElMessage } from 'element-plus'
@@ -59,8 +72,34 @@
     import { useCounterStore } from '@/stores/counter'
     import { storeToRefs } from 'pinia'
     const stores = useCounterStore()
-    const { operationClass } = storeToRefs(stores)
+    const { operationClass, showLoading } = storeToRefs(stores)
     const route = useRoute()
+
+    //其他尺寸
+    const dialogSizeEdit = ref<boolean>(false)
+    watch(() => dialogSizeEdit.value, (newV) => {
+        if (!newV) {
+            isAddChild.value = ''
+        }
+
+    })
+    const showSizeEdit = (item: any) => {
+        console.log('item', item);
+        editItem.value = ''
+        isAddChild.value = item.id
+        dialogSizeEdit.value = true
+    }
+    const isAddChild = ref<any>('')
+    const addChildTemplate = () => {
+
+        dialogEditor.value = true
+    }
+    //编辑子模板
+    const editChildTemplate = (item: any) => {
+        editItem.value = item
+        dialogEditor.value = true
+    }
+
 
 
     //导出明细
@@ -84,8 +123,14 @@
                     url = '/clothingMaterialsDetail/exportExcel'
                     params.clothingMaterialsId = parseInt(route.query.id as string)
                     break
+
+                case 'template':
+                    url = '/templateUpDetail/exportExcel'
+                    params.templateUpId = parseInt(route.query.id as string)
+                    break
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get(url, {
                 params: {
                     enData
@@ -100,6 +145,8 @@
             URL.revokeObjectURL(link.href)
         } catch (err) {
             console.log('导出失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -123,13 +170,14 @@
             } else if (type === 'background') {
                 params.backId = parseInt(route.query.id as string)
                 url = '/backgroundDetail/list'
+            } else if (type === 'template') {
+                params.templateUpId = parseInt(route.query.id as string)
+                url = '/templateUpDetail/list'
             }
-
-
-
             console.log('参数', params)
             const enData = desEncrypt(JSON.stringify(params))
             let res: any = {}
+            showLoading.value = true
             if (type === 'clothing') {
                 res = await service.get(url, {
                     params: {
@@ -162,6 +210,8 @@
             list.value.sort((a, b) => a.detailIndex - b.detailIndex)
         } catch (err) {
             console.log('获取素材列表失败', err)
+        } finally {
+            showLoading.value = false
         }
 
 
@@ -192,6 +242,18 @@
     const list = ref<listItem[]>([])
     const hasUnsavedChanges = ref(false)
 
+
+
+
+
+    //模板前景
+    const dialogForceTemplate = ref<boolean>(false)
+    const parentTemplateId = ref<any>()
+    const showForceTemplate = (item: any) => {
+        parentTemplateId.value = item.id
+        dialogForceTemplate.value = true
+    }
+
     //选中模板集合
     const selectedList = ref<any>([])
     const isSelected = (id: number) => {
@@ -221,6 +283,7 @@
         (newV) => {
             if (!newV) {
                 getMaterialList()
+
             }
         },
     )
@@ -333,10 +396,22 @@
                             break;
                     }
                     break;
+
+                case 'template':
+                    params.templateUpId = parseInt(route.query.id as string)
+                    switch (operationClass.value) {
+                        case 1:
+                            url = '/templateUpDetail/saveOperationItem'
+                            break;
+                        case 0:
+                            url = '/templateUpDetail/saveItem'
+                            break;
+                    }
+                    break;
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
-
+            showLoading.value = true
             const res = await service.post(url, {
 
                 enData
@@ -352,6 +427,8 @@
         } catch (err) {
             ElMessage.error('保存失败')
             console.log('保存失败err', err)
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -361,6 +438,45 @@
         dialogBatchTag.value = true
     }
 
+
+
+    //公共空间
+    const showPublicArea = ref<boolean>(false)
+    const showPublicAreaDialog = () => {
+        showPublicArea.value = true
+    }
+
+
+    //推送
+    const push = async (type: boolean) => {
+        try {
+            if (selectedList.value.length === 0) {
+                ElMessage.warning('请选择要推送的素材')
+                return
+            }
+            const params = {
+                timestamp: Date.now(),
+                ids: selectedList.value,
+                result: type
+            }
+            console.log('参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
+            const res = await service.post('/templateUpDetail/batchResultSave', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('操作成功')
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('失败', err);
+        } finally {
+            showLoading.value = false
+        }
+
+    }
 
 
     //全局操作
@@ -414,6 +530,20 @@
             case 'export':
                 console.log('导出')
                 exportExcel()
+                break
+
+            case 'push':
+                console.log('推送');
+                push(true)
+                break
+            case 'noPush':
+                console.log('不推送');
+                push(false)
+                break
+
+            case 'public':
+                console.log('公共空间');
+                showPublicAreaDialog()
                 break
             default:
                 break
@@ -619,8 +749,22 @@
             width: 100%;
             /* 确保宽度占满父容器 */
             align-items: center;
+            justify-content: center;
+            /* 水平居中对齐 */
+            flex-wrap: nowrap;
+            /* 强制不换行 */
 
-            /* 垂直居中对齐 */
+            .el-button {
+                flex: 1;
+                /* 按钮平均分配空间 */
+                min-width: 0;
+                /* 允许按钮收缩 */
+                font-size: 12px;
+                /* 减小字体以适应空间 */
+                padding: 4px 8px;
+                /* 减小内边距 */
+            }
+
             .name {
                 max-width: 200px;
                 overflow: hidden;

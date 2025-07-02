@@ -60,7 +60,7 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion, international } = storeToRefs(counterStore)
+    const { showPagestion, international, showLoading } = storeToRefs(counterStore)
     const props = defineProps<{
         dialogVisible: boolean
     }>()
@@ -92,6 +92,7 @@
     }
     const deleteFn = async (id: number) => {
         try {
+            showLoading.value = true
             const res = await service.post(`/appInfoDetailThreesdksItems/del/${id}`)
             if (res.data.code === 200) {
                 ElMessage({
@@ -104,6 +105,8 @@
             }
         } catch (err) {
             console.log('删除失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const deleteTemplate = (item: any) => {
@@ -184,6 +187,7 @@
                 language: language.value,
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/appInfoDetailThreesdksItems/list', {
                 enData
             })
@@ -203,6 +207,8 @@
 
         } catch (err) {
             console.log('获取第三方sdk模板失败', err);
+        } finally {
+            showLoading.value = false
         }
 
 

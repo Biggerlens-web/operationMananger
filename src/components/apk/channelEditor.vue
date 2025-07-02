@@ -58,7 +58,7 @@
     import { storeToRefs } from 'pinia';
     import { ref } from 'vue'
     const counterStore = useCounterStore()
-    const { appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { appList, OSlist, channelList, showLoading } = storeToRefs(counterStore)
     const props = defineProps<{
         dialogVisible: boolean
     }>()
@@ -114,6 +114,7 @@
 
     const saveChange = async () => {
         try {
+            showLoading.value = true
             formData.value.channelKeys = channelData.value.map((item: any) => item.channelKey)
             formData.value.channelValues = channelData.value.map((item: any) => item.channelValue)
             formData.value.channelRemarks = channelData.value.map((item: any) => item.channelRemark)
@@ -136,6 +137,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (ruleFormRef: any) => {

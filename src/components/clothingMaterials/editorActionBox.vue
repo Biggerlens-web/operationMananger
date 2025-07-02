@@ -30,12 +30,30 @@
 
   const route = useRoute()
   onMounted(() => {
-    if (operationClass.value !== 0) {
-      actionList.value = actionList.value.filter((item: any) => item.operationClass !== 0)
+    if (route.query.type === 'template') {
+
+      if (operationClass.value !== 0) {
+        actionList.value = actionList.value.filter((item: any) => item.operationClass !== 0)
+
+      }
+      actionList.value = actionList.value.filter((item: any) => item.text !== '批量新增')
+    } else {
+      actionList.value = actionList.value.filter((item: any) => !item.isTemplate)
+      if (operationClass.value !== 0) {
+        actionList.value = actionList.value.filter((item: any) => item.operationClass !== 0)
+      }
     }
+
 
   })
   const actionList = ref<any>([
+    {
+      text: '公共空间',
+      icon: 'FolderOpened',
+      operationClass: 0,
+      action: 'public',
+      isTemplate: true
+    },
     {
       text: '批量新增',
       icon: 'Plus',
@@ -82,6 +100,22 @@
       action: 'export',
 
     },
+
+    {
+      text: '推送',
+      icon: '',
+      action: 'push',
+      isTemplate: true,
+      operationClass: 0
+    },
+    {
+      text: '不推送',
+      icon: '',
+      action: 'noPush',
+      isTemplate: true,
+      operationClass: 0
+    },
+
     {
       text: '返回',
       icon: 'ArrowLeft',

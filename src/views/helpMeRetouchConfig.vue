@@ -97,7 +97,7 @@
     import service from '@/axios';
     import { ElMessage } from 'element-plus';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, defaultAppNo } = storeToRefs(counterStore)
+    const { showPagestion, appList, OSlist, defaultAppNo, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -139,6 +139,7 @@
                 id: editListId.value
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/helpMeRetouch/save', {
                 enData
             })
@@ -151,6 +152,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
 
     }
@@ -186,6 +189,7 @@
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/helpMeRetouch/save', {
 
                 enData
@@ -201,6 +205,8 @@
             }
         } catch (err) {
             console.log('修改输入框失败', err);
+        } finally {
+            showLoading.value = false
         }
 
     }
@@ -216,6 +222,7 @@
 
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/helpMeRetouch/save', {
                 enData
             })
@@ -227,6 +234,8 @@
             }
         } catch (err) {
             console.log('修改数字输入框失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -241,6 +250,7 @@
                 isShowTaobao: String(item.isShowTaobao),
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/helpMeRetouch/save', {
                 enData
             })
@@ -253,6 +263,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -348,6 +360,7 @@
                 isShowTaobao: searchParams.value.isShowTaobao
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/helpMeRetouch/list', {
                 enData
             })
@@ -369,6 +382,8 @@
             console.log('filterParams', filterParams.value);
         } catch (err) {
             console.log('获取帮我修图列表失败', err);
+        } finally {
+            showLoading.value = false
         }
 
     }

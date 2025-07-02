@@ -126,7 +126,7 @@
     import { ElMessage } from 'element-plus';
     import { useRoute } from 'vue-router';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList, international } = storeToRefs(counterStore)
+    const { showPagestion, appList, OSlist, channelList, international, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -255,6 +255,7 @@
                 channelId: searchParams.value.channelId,
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/base/banner/listByAppNoAndOsAndLanguageAndChannelId', {
 
                 enData
@@ -267,6 +268,8 @@
         } catch (err) {
             console.log('获取轮播点失败', err);
 
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -282,6 +285,7 @@
                 bannerId: searchParams.value.bannerId
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get('/bannerImgConfig/list', {
                 params: {
                     enData
@@ -297,6 +301,9 @@
 
 
             console.log('获取轮播图列表失败', err);
+        } finally {
+            showLoading.value = false
+
         }
 
 
@@ -328,6 +335,7 @@
             }
 
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/bannerImgConfig/save', {
                 enData
             })
@@ -346,6 +354,8 @@
 
 
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 

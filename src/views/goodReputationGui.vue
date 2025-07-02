@@ -87,7 +87,7 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist } = storeToRefs(counterStore)
+    const { showPagestion, appList, OSlist, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -138,6 +138,7 @@
                 timeOn: item.timeOn,
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/goodReputationGui/save', {
                 enData
             })
@@ -149,6 +150,8 @@
             }
         } catch (err) {
             console.log('修改开关失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     //选择概率
@@ -178,6 +181,7 @@
                 }
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/goodReputationGui/save', {
                 enData
             })
@@ -189,6 +193,8 @@
             }
         } catch (err) {
             console.log('保存概率失败', err);
+        } finally {
+            showLoading.value = false
         }
 
 
@@ -210,6 +216,7 @@
     //删除弹幕弹窗配置
     const deletFn = async (id: number) => {
         try {
+            showLoading.value = true
             const res = await service.post(`/goodReputationGui/del/${id}`)
             if (res.data.code === 200) {
                 ElMessage.success('删除成功')
@@ -219,6 +226,8 @@
             }
         } catch (err) {
 
+        } finally {
+            showLoading.value = false
         }
     }
     const deleteConfig = (item: any) => {
@@ -251,6 +260,7 @@
 
             console.log('提交修改参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/goodReputationGui/saveAttr', {
                 enData
             })
@@ -263,6 +273,8 @@
             }
         } catch (err) {
             console.log('提交失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -340,6 +352,7 @@
 
             console.log('筛选参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/goodReputationGui/list', {
                 enData
             })
@@ -360,6 +373,8 @@
             console.log('filterParams', filterParams.value);
         } catch (err) {
             console.log('获取好评弹窗列表失败', err);
+        } finally {
+            showLoading.value = false
         }
 
 

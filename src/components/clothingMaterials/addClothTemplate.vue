@@ -73,7 +73,10 @@
     import { useRoute } from 'vue-router';
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
-
+    import { useCounterStore } from '@/stores/counter';
+    import { storeToRefs } from 'pinia';
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
     const props = withDefaults(defineProps<{
         dialogAdd: boolean
         editData?: any
@@ -224,6 +227,7 @@
         }
 
         try {
+
             const getBase64 = (file: UploadUserFile): Promise<string> => {
                 return new Promise((resolve, reject) => {
                     if (file.raw) {
@@ -270,6 +274,7 @@
 
             console.log('批量保存参数', params);
             const enData = desEncrypt(JSON.stringify(params));
+            showLoading.value = true
             const res = await service.post(url, { enData });
 
 
@@ -284,6 +289,8 @@
         } catch (err: any) {
             console.error('批量新增操作失败:', err);
             ElMessage.error(`操作失败: ${err || '请查看控制台获取更多信息'}`);
+        } finally {
+            showLoading.value = false
         }
     };
 </script>

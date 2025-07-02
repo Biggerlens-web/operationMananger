@@ -33,7 +33,7 @@
     import { storeToRefs } from 'pinia';
     import { ref, watch } from 'vue';
     const stores = useCounterStore()
-    const { international } = storeToRefs(stores)
+    const { international, showLoading } = storeToRefs(stores)
     const props = defineProps<{
         showEditor: boolean
         otherInfo: any
@@ -73,6 +73,7 @@
                 ...formData.value
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/appInfoDetailOtherserversItems/save', {
                 enData
             })
@@ -84,6 +85,8 @@
             }
         } catch (err) {
 
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (ruleFormRef: any) => {

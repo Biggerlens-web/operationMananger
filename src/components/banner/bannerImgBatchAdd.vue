@@ -67,10 +67,13 @@
 
 <script lang="ts" setup>
     import service from '@/axios'
+    import { useCounterStore } from '@/stores/counter'
     import { desEncrypt } from '@/utils/des'
     import { ElMessage } from 'element-plus'
+    import { storeToRefs } from 'pinia'
     import { computed, onMounted, ref, watch } from 'vue'
-
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
     const dialogVisible = defineModel('dialogVisible')
 
     // 表格引用
@@ -145,6 +148,7 @@
     //获取轮播点列表
     const getBannerPoint = async () => {
         try {
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 pageNum: pageNum.value,
@@ -165,12 +169,15 @@
         } catch (err) {
             console.log('批量新增获取轮播点失败', err);
 
+        } finally {
+            showLoading.value = false
         }
     }
 
     //获取轮播图列表
     const getBannImgList = async () => {
         try {
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 pageNum: pageNum.value,
@@ -196,6 +203,8 @@
             tableData.value = res.data.rows
         } catch (err) {
             console.log('批量新增获取轮播图片列表失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -219,7 +228,7 @@
         if (props.editType === 'batchAdd') {
             try {
 
-
+                showLoading.value = true
                 const params = {
                     timestamp: Date.now(),
                     bannerIds: selectPoint.value,
@@ -240,11 +249,14 @@
                 }
             } catch (err) {
                 console.log('保存失败', err);
+            } finally {
+                showLoading.value = false
             }
         } else {
 
             const onceBanner = ref<any>([props.bannerId])
             try {
+                showLoading.value = true
                 const params = {
                     timestamp: Date.now(),
                     bannerIds: onceBanner.value,
@@ -265,6 +277,8 @@
                 }
             } catch (err) {
                 console.log('保存失败', err);
+            } finally {
+                showLoading.value = false
             }
         }
 
