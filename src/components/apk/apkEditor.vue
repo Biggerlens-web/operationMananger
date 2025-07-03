@@ -226,7 +226,7 @@
                                 <div class="channel-list">
                                     <el-tag v-for="tag in item.signs" :key="tag">{{
                                         `签名:${tag.signName}\n签名别名:${tag.alias}`
-                                    }}</el-tag>
+                                        }}</el-tag>
                                     <el-button type="text" size="small" @click="handleChangeSign(item)">+</el-button>
                                 </div>
                             </div>
@@ -252,7 +252,7 @@
     import { storeToRefs } from 'pinia'
     import { ref, watch, onMounted, nextTick } from 'vue'
     const stores = useCounterStore()
-    const { channelList } = storeToRefs(stores)
+    const { channelList, showLoading } = storeToRefs(stores)
     const props = defineProps<{ signsList: any }>()
 
 
@@ -260,6 +260,7 @@
     //下载
     const downloadAPk = async (paths: string[]) => {
         try {
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 paths
@@ -283,6 +284,8 @@
             window.URL.revokeObjectURL(url)
         } catch (err) {
             console.log('获取文件失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -291,6 +294,7 @@
     const start = async (item: any) => {
         try {
             console.log('item', item);
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 updateVersionCode: parseInt(item.versionCode),
@@ -323,6 +327,8 @@
             }
         } catch (err) {
             console.log('执行失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -486,6 +492,7 @@
     const handleComfirmChannel = async () => {
         console.log('确定渠道选择', checkedChannel.value);
         try {
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 selectChannels: checkedChannel.value,
@@ -515,6 +522,9 @@
             }
         } catch (err) {
             console.log('修改渠道', err);
+        } finally {
+            showLoading.value = false
+
         }
     }
     watch(() => dialogVisibleChannel.value, (newV) => {
@@ -593,6 +603,7 @@
         }, 200)
 
         try {
+            showLoading.value = true
             const formData = new FormData()
             uploadQueue.value.forEach((file: any) => {
                 formData.append('apks', file)
@@ -641,10 +652,12 @@
             }, 5000)
         } finally {
             isUploading.value = false
+            showLoading.value = false
         }
     }
     const getPackageInfo = async (packageName: string) => {
         try {
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 packageName: packageName
@@ -659,6 +672,9 @@
             return res.data.rows
         } catch (err) {
             console.log('获取包信息失败', err);
+        } finally {
+            showLoading.value = false
+
         }
     }
 

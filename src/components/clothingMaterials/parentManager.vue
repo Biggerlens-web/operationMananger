@@ -78,7 +78,7 @@
             <el-radio-group v-model="addParentData.region">
 
                 <el-radio v-for="item in regionList" :key="item.value" :value="item.value" size="large">{{ item.label
-                }}</el-radio>
+                    }}</el-radio>
 
             </el-radio-group>
 
@@ -105,7 +105,7 @@
     import { reactive, ref, watch } from 'vue'
 
     const stores = useCounterStore()
-    const { international, appList, regionList } = storeToRefs(stores)
+    const { international, appList, regionList, showLoading } = storeToRefs(stores)
 
     const dialogVisible = defineModel('dialog')
     const handleClose = () => {
@@ -126,7 +126,7 @@
     //删除父类
     const removeParent = async (id: number | string) => {
         try {
-
+            showLoading.value = true
             const res = await service.post('/clothingMaterialsType/del/' + id)
 
 
@@ -138,6 +138,8 @@
             }
         } catch (err) {
             console.log('删除失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     //获取父分类列表
@@ -151,6 +153,7 @@
                 timestamp: Date.now()
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get('/clothingMaterialsType/list', {
                 params: {
                     enData
@@ -163,6 +166,8 @@
 
 
             console.log('获取父分类失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const parentList = ref<any>([
@@ -208,6 +213,7 @@
 
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/clothingMaterialsType/save', {
                 enData
             })
@@ -223,6 +229,8 @@
         } catch (err) {
             console.log('保存父类失败', err);
 
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -325,12 +333,15 @@
             }
             console.log('修改参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/clothingMaterialsType/save', {
                 enData
             })
             console.log('保存父类', res);
         } catch (err) {
             console.log('修改失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -347,12 +358,15 @@
                 timestamp: Date.now()
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/clothingMaterialsType/save', {
                 enData
             })
             console.log('修改名称', res);
         } catch (err) {
             console.log('修改名称失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleLanguageComfirm = async () => {

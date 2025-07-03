@@ -31,7 +31,7 @@
                                 编辑节点
                             </el-button>
                             <el-button v-if="data.level === 3" type="text" size="small"
-                                @click.stop="handleCreate(data)">
+                                @click.stop="handleCreate(node)">
                                 新增节点
                             </el-button>
                             <el-button v-if="data.level === 4" type="text" size="small" @click.stop="handleDel(data)">
@@ -61,7 +61,7 @@
         </el-tree>
     </div>
 
-    <appUrlLInk v-model:dialog-visible="showapplink" :appNo="viewAppNo" />
+    <appUrlLInk v-model:dialog-visible="showapplink" :appNo="viewAppNo" :appName="viewAppName" />
 </template>
 
 <script lang="ts" setup>
@@ -73,7 +73,7 @@
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     const stores = useCounterStore()
-    const { OSlist } = storeToRefs(stores)
+    const { OSlist, showLoading } = storeToRefs(stores)
     // 定义组件props
     const props = defineProps<{
         treeData?: TreeNode[]
@@ -115,6 +115,7 @@
     // 弹窗状态
     const showapplink = ref(false)
     const viewAppNo = ref<number | string>('')
+    const viewAppName = ref<string>('')
     const currentUrlData = ref<TreeNode | null>(null)
 
     // 节点点击事件
@@ -137,6 +138,7 @@
         // currentUrlData.value = data
         console.log('data', data);
         viewAppNo.value = data.appNo
+        viewAppName.value = data.appName
         showapplink.value = true
     }
 
@@ -161,14 +163,14 @@
     }
 
     //新增节点
-    const handleCreate = (data: TreeNode) => {
-        console.log('新增节点', data);
-        emit('create', data)
+    const handleCreate = (node: TreeNode) => {
+        console.log('新增节点', node);
+        emit('create', node)
     }
     // 懒加载节点数据
     const loadNode = async (node: any, resolve: (data: TreeNode[]) => void) => {
         console.log('node', node);
-
+        showLoading.value = true
         try {
             console.log('懒加载节点数据:', node)
             // 根据节点数据动态加载子节点
@@ -382,6 +384,8 @@
         } catch (err) {
             console.log('懒加载失败:', err)
             resolve([])
+        } finally {
+            showLoading.value = false
         }
     }
 

@@ -35,7 +35,7 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion } = storeToRefs(counterStore)
+    const { showPagestion, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -83,6 +83,7 @@
     //删除渠道
     const delChannelFn = async (id: number) => {
         try {
+            showLoading.value = true
             const res = await service.post(`/base/channels/del/${id}`)
             console.log('删除', res);
             if (res.data.code === 200) {
@@ -93,6 +94,8 @@
             }
         } catch (err) {
             console.log('删除失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const deleteChannel = (item: any) => {
@@ -141,6 +144,7 @@
                 timestamp: Date.now()
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get('/base/channels/list', {
                 params: {
                     enData
@@ -161,6 +165,8 @@
         } catch (err) {
 
 
+        } finally {
+            showLoading.value = false
         }
 
     }

@@ -45,6 +45,8 @@
     import { ElMessage } from 'element-plus';
     import { storeToRefs } from 'pinia';
     import { onMounted, ref, watch } from 'vue'
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
     const props = defineProps<{
         showEditor: boolean
         configInfo: any
@@ -53,6 +55,7 @@
     const bucketList = ref<any>([])
     const getBucketList = async () => {
         try {
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
             }
@@ -68,6 +71,8 @@
 
         } catch (err) {
             console.log('获取域列表失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -150,6 +155,7 @@
 
     const saveChange = async () => {
         try {
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 ...formData.value,
@@ -171,6 +177,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (ruleFormRef: any) => {

@@ -44,7 +44,7 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, appList, OSlist, channelList, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -94,7 +94,7 @@
 
     const delLabelFn = async (id: number) => {
         try {
-
+            showLoading.value = true
             const res = await service.post(`/base/mateLabel/del/${id}`)
             console.log('删除标签', res);
             if (res.data.code === 200) {
@@ -108,6 +108,8 @@
             }
         } catch (err) {
             console.log('删除失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const deleteMateLabel = (item: any) => {
@@ -180,6 +182,7 @@
                 pageSize: pageSize.value,
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = false
             const res = await service.get('/base/mateLabel/list', {
                 params: {
                     enData
@@ -201,6 +204,8 @@
             console.log('filterParams', filterParams.value);
         } catch (err) {
 
+        } finally {
+            showLoading.value = false
         }
 
     }

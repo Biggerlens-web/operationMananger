@@ -17,13 +17,16 @@
 
 <script lang="ts" setup>
     import service from '@/axios';
+    import { useCounterStore } from '@/stores/counter';
 
     import { desEncrypt } from '@/utils/des';
     import { ElMessage, ElTree } from 'element-plus'
+    import { storeToRefs } from 'pinia';
 
     import { ref, watch, toRaw } from 'vue';
 
-
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
 
 
 
@@ -45,6 +48,7 @@
                 id: props.roleId
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get('/system/rolePermission/getTree', {
                 params: {
                     enData
@@ -66,6 +70,8 @@
 
         } catch (err) {
             console.log('获取权限失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     watch(() => props.dialogVisible, (newV) => {
@@ -124,6 +130,7 @@
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/system/rolePermission/saveAssign', {
                 enData
             })
@@ -136,6 +143,8 @@
             }
         } catch (err) {
             console.log('err', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = () => {

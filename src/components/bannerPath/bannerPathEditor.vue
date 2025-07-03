@@ -31,9 +31,13 @@
 
 <script lang="ts" setup>
     import service from '@/axios';
+    import { useCounterStore } from '@/stores/counter';
     import { desEncrypt } from '@/utils/des';
     import { ElMessage, type FormInstance } from 'element-plus';
+    import { storeToRefs } from 'pinia';
     import { onMounted, ref, watch } from 'vue'
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
     const props = defineProps<{
         dialogVisible: boolean
         bannerPathInfo: any
@@ -56,6 +60,7 @@
     const bucketList = ref<any>()
     const getBucketList = async () => {
         try {
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 pageNum: 1,
@@ -77,6 +82,8 @@
 
         } catch (err) {
 
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -118,6 +125,7 @@
 
     const saveChange = async () => {
         try {
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 ...formData.value,
@@ -137,6 +145,8 @@
             }
         } catch (err) {
 
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (ruleFormRef: any) => {

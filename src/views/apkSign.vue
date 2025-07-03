@@ -38,7 +38,7 @@
     import { ElMessage, ElMessageBox } from 'element-plus';
 
     const counterStore = useCounterStore()
-    const { defaultAppNo } = storeToRefs(counterStore)
+    const { defaultAppNo, showLoading } = storeToRefs(counterStore)
 
 
     //分页
@@ -103,7 +103,7 @@
         }).then(async () => {
             try {
 
-
+                showLoading.value = true
                 const res = await service.post(`/apkSign/del/${item.id}`)
                 if (res.data.code === 200) {
                     ElMessage.success('删除成功')
@@ -111,6 +111,8 @@
                 }
             } catch (err) {
                 console.log('删除签名失败', err);
+            } finally {
+                showLoading.value = false
             }
         }).catch(() => {
             //取消删除
@@ -124,6 +126,7 @@
             type: 'warning'
         }).then(async () => {
             try {
+                showLoading.value = true
                 const res = await service.post(`/apkSignChannels/del/${item.id}`)
                 if (res.data.code === 200) {
                     ElMessage.success('删除成功')
@@ -131,6 +134,8 @@
                 }
             } catch (err) {
                 console.log('删除签名失败', err);
+            } finally {
+                showLoading.value = false
             }
         }).catch(() => {
             //取消删除
@@ -155,12 +160,16 @@
                 timestamp: Date.now()
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/apkSign/list', {
                 enData
             })
             return res
         } catch (err) {
             console.log('获取签名列表', err);
+        } finally {
+            showLoading.value = false
+
         }
     }
     const getChannelsList = async () => {
@@ -172,6 +181,7 @@
                 timestamp: Date.now()
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/apkSignChannels/list', {
                 enData
             })
@@ -179,6 +189,9 @@
         } catch (err) {
 
             console.log('获取渠道失败', err);
+        } finally {
+            showLoading.value = false
+
         }
     }
 

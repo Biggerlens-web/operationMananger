@@ -33,8 +33,12 @@
 <script lang="ts" setup>
     // 导入axios服务
     import service from '@/axios';
+    import { useCounterStore } from '@/stores/counter';
     import { desEncrypt } from '@/utils/des';
     import { ElMessage } from 'element-plus';
+    import { storeToRefs } from 'pinia';
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
     // 导入Vue组合式API
     import { onMounted, ref, watch } from 'vue'
 
@@ -63,6 +67,7 @@
     const bannerPointList = ref<any>([])
     const getAllbannerPoint = async () => {
         try {
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 id: props.copyInfo
@@ -78,6 +83,8 @@
             // TODO: 将获取到的数据设置到选择器选项中
         } catch (err) {
             console.log('获取所有轮播点失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -113,6 +120,7 @@
 
     const saveChange = async () => {
         try {
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 id: props.copyInfo,
@@ -134,6 +142,8 @@
         } catch (err) {
 
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (formEL: any) => {

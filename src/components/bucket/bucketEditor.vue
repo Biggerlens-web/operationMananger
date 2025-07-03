@@ -26,9 +26,13 @@
 
 <script lang="ts" setup>
     import service from '@/axios';
+    import { useCounterStore } from '@/stores/counter';
     import { desEncrypt } from '@/utils/des';
     import { ElMessage, type FormInstance } from 'element-plus';
+    import { storeToRefs } from 'pinia';
     import { ref, watch } from 'vue'
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
     const props = defineProps<{
         dialogVisible: boolean
         buckerInfo: any
@@ -76,6 +80,7 @@
 
     const saveChange = async () => {
         try {
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 type: formData.value.id ? 'update' : 'add',
@@ -94,6 +99,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (ruleFormRef: any) => {

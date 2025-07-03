@@ -91,7 +91,7 @@
     import service from '@/axios';
     import { desEncrypt } from '@/utils/des';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, appList, OSlist, channelList, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -101,6 +101,7 @@
     // 下载模板
     const downloadTemplate = async () => {
         try {
+            showLoading.value = true
             const response = await service.get('/companyInfo/importTemplate', {
                 responseType: 'blob'
             });
@@ -138,6 +139,8 @@
         } catch (err) {
             console.error('下载模板失败', err);
             ElMessage.error('下载模板失败，请检查网络或联系管理员。');
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -148,6 +151,7 @@
             const { file } = options
             const formData = new FormData()
             formData.append('file', file)
+            showLoading.value = true
             const res = await service.post('/companyInfo/importByExcel', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
@@ -163,6 +167,8 @@
             }
         } catch (err) {
             console.log('导入失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -197,6 +203,7 @@
     //删除公司
     const deleteCompanyFn = async (companyNo: string) => {
         try {
+            showLoading.value = true
             const res = await service.post(`/companyInfo/del/${companyNo}`)
             if (res.data.code === 200) {
                 ElMessage.success('删除成功')
@@ -206,6 +213,8 @@
             }
         } catch (err) {
             console.log('删除失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const deleteCompany = (item: any) => {
@@ -284,6 +293,7 @@
                 companyName: searchParams.value.companyName,
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value
             const res = await service.post('/companyInfo/list', {
                 enData
             })
@@ -305,6 +315,8 @@
         } catch (err) {
 
             console.log('获取公司列表失败');
+        } finally {
+            showLoading.value = false
         }
 
     }

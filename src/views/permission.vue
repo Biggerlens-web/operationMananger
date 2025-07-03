@@ -34,7 +34,7 @@
   import { desEncrypt } from '@/utils/des';
   import service from '@/axios';
   const counterStore = useCounterStore()
-  const { showPagestion } = storeToRefs(counterStore)
+  const { showPagestion, showLoading } = storeToRefs(counterStore)
   const components: any = {
     userTable,
     userList
@@ -77,6 +77,7 @@
   //删除权限
   const deletePermissionFn = async (id: number) => {
     try {
+      showLoading.value = true
       const res = await service.post(`/system/permission/del/${id}`)
 
       console.log('删除', res);
@@ -90,6 +91,8 @@
       }
     } catch (err) {
 
+    } finally {
+      showLoading.value = false
     }
   }
   const deletePermission = (row: any) => {
@@ -144,6 +147,7 @@
         pageSize: pageSize.value,
       }
       const enData = desEncrypt(JSON.stringify(params))
+      showLoading.value = true
       const res = await service.get('/system/permission/list', {
         params: {
           enData
@@ -167,6 +171,8 @@
       console.log('filterParams', filterParams.value);
     } catch (err) {
       console.log('获取权限列表失败', err);
+    } finally {
+      showLoading.value = false
     }
 
   }

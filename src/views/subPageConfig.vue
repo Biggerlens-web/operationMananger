@@ -83,7 +83,7 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion, defaultAppNo } = storeToRefs(counterStore)
+    const { showPagestion, defaultAppNo, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -124,6 +124,7 @@
     //删除配置
     const delConfigFn = async (id: number) => {
         try {
+            showLoading.value = true
             const res = await service.post(`/subPageConfig/del/${id}`)
             if (res.data.code === 200) {
                 ElMessage.success('删除失败')
@@ -133,6 +134,8 @@
             }
         } catch (err) {
             console.log('删除失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const deleteConfig = (item: any) => {
@@ -175,6 +178,7 @@
             }
             console.log('切换开关参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/subPageConfig/saveOneAttr', {
                 enData
             })
@@ -187,6 +191,8 @@
         } catch (err) {
 
             console.log('切换失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -202,6 +208,7 @@
             }
 
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/subPageConfig/saveOneAttr', {
                 enData
             })
@@ -213,6 +220,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
 
     }
@@ -305,6 +314,7 @@
 
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/subPageConfig/list', {
                 enData
             })
@@ -326,6 +336,8 @@
             console.log('filterParams', filterParams.value);
         } catch (err) {
 
+        } finally {
+            showLoading.value = false
         }
 
     }

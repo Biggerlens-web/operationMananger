@@ -40,7 +40,7 @@
     }>()
 
     const counterStore = useCounterStore()
-    const { channelList } = storeToRefs(counterStore)
+    const { channelList, showLoading } = storeToRefs(counterStore)
     const emit = defineEmits<{
         'update:showEditor': [value: boolean]
     }>()
@@ -91,6 +91,7 @@
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/subPageConfigAutoOpen/save', {
                 enData
             })
@@ -103,6 +104,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (ruleFormRef: any) => {
