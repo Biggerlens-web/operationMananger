@@ -6,14 +6,15 @@
                 <template #item="{ element, index }">
                     <div class="template-card" :class="{ 'dragging': isDragging }">
                         <div class="card-header">
+                            <el-checkbox v-model="element.isSelected" class="template-checkbox" />
                             <span class="template-id">{{ element.id }}</span>
                         </div>
                         <div class="card-image">
-                            <img :src="element.image" :alt="element.title" />
+                            <img :src="element.coverUrl" :alt="element.title" />
                         </div>
                         <div class="card-actions">
                             <el-button size="small" type="primary" @click="handleEdit(element)">编辑</el-button>
-                            <el-button size="small">其他尺寸</el-button>
+                            <el-button size="small" @click="showSizeEdit(element)">其他尺寸</el-button>
                             <el-button size="small" type="danger">模板前景</el-button>
                         </div>
                     </div>
@@ -23,14 +24,20 @@
 
         <template #footer>
             <el-button type="primary" @click="uploadPublic">同步上传至公共空间</el-button>
+            <el-button type="primary" @click="assign">分配</el-button>
+            <el-button type="primary" @click="checkALl">全部选中</el-button>
+            <el-button type="primary" @click="uploadPublic">保存改动</el-button>
             <el-button type="primary" @click="handleClose">取消</el-button>
         </template>
     </el-dialog>
-    <stickerTemplateEditor :editInfo="editInfo" v-model:dialogEditor="dialogEditor" />
+    <sizeEdit v-model:dialogVisible="dialogSizeEdit" @addChildTemplate="addChildTemplate"
+        @editChildTemplate="editChildTemplate" :isAddChild="isAddChild" />
+    <stickerTemplateEditor :editData="editInfo" v-model:dialogEditor="dialogEditor" />
 </template>
 
 <script lang="ts" setup>
     import service from '@/axios'
+    import sizeEdit from '@/components/templates/sizeEdit.vue'
     import { useCounterStore } from '@/stores/counter'
     import { desEncrypt } from '@/utils/des'
     import { storeToRefs } from 'pinia'
@@ -38,6 +45,7 @@
     import { useRoute } from 'vue-router'
     import draggable from 'vuedraggable'
     import stickerTemplateEditor from '../clothingMaterials/stickerTemplateEditor.vue'
+    import { ElMessage } from 'element-plus'
     const route = useRoute()
 
     const stores = useCounterStore()
@@ -56,9 +64,49 @@
     ])
 
 
-    watch(dialogVisible, (newVal, oldVal) => {
+
+    const checkall = ref(false)
+    const checkALl = () => {
+        checkall.value = !checkall.value
+        if (!checkall.value) {
+            templateList.value.forEach((item: any) => {
+                item.isSelected = false
+            })
+        } else {
+            templateList.value.forEach((item: any) => {
+                item.isSelected = true
+            })
+        }
+
+    }
+
+    const getTemplateList = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                templateUpId: templateUpId.value
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
+            const res = await service.post('/templateUpDetail/list', {
+                enData
+            })
+            res.data.data.list.forEach((item: any) => {
+                item.isSelected = false
+            })
+            templateList.value = res.data.data.list
+        } catch (err) {
+
+        } finally {
+            showLoading.value = false
+        }
+    }
+
+    const templateUpId = ref<number>(0)
+    watch(dialogVisible, async (newVal, oldVal) => {
         if (newVal) {
-            getPublicAreaInfo()
+            await getPublicAreaInfo()
+            getTemplateList()
         }
     })
     const handleClose = () => {
@@ -93,12 +141,44 @@
             )
             console.log('获取公共空间', res);
             region = res.data.data.region
+            templateUpId.value = res.data.data.publicTemplate.id
         } catch (err) {
             console.log('获取公共空间失败', err);
         } finally {
             showLoading.value = false
         }
     }
+
+
+
+    //分配
+    const assign = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                templateUpId: templateUpId.value,
+                detailIds: templateList.value.filter((item: any) => item.isSelected).map((item: any) => item.id)
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
+            const res = await service.post('/templateUpDetail/copyTemplate', {
+                enData
+            })
+            console.log('分配', res);
+            if (res.data.code === 200) {
+                ElMessage.success('分配成功')
+                getTemplateList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('分配失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
+
+    //同步至云空间
     const uploadPublic = async () => {
         try {
             const params = {
@@ -113,6 +193,12 @@
                 enData
             })
             console.log('上传公共空间', res);
+            if (res.data.code === 200) {
+                ElMessage.success('上传成功')
+                getTemplateList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
         } catch (err) {
             console.log('上传失败', err);
         } finally {
@@ -123,9 +209,45 @@
 
     //编辑
     const dialogEditor = ref<boolean>(false)
+    watch(() => dialogEditor.value, (newV) => {
+        if (!newV) {
+            editInfo.value = ''
+            getTemplateList()
+        }
+    })
     const editInfo = ref<any>()
     const handleEdit = (item: any) => {
         console.log('编辑', item);
+        editInfo.value = item
+        dialogEditor.value = true
+    }
+
+
+
+
+
+    //其他尺寸
+    const dialogSizeEdit = ref<boolean>(false)
+    watch(() => dialogSizeEdit.value, (newV) => {
+        if (!newV) {
+            isAddChild.value = ''
+        }
+
+    })
+    const showSizeEdit = (item: any) => {
+        console.log('item', item);
+        editInfo.value = ''
+        isAddChild.value = item.id
+        console.log('isAddChild.value', isAddChild.value);
+        dialogSizeEdit.value = true
+    }
+    const isAddChild = ref<any>('')
+    const addChildTemplate = () => {
+
+        dialogEditor.value = true
+    }
+    //编辑子模板
+    const editChildTemplate = (item: any) => {
         editInfo.value = item
         dialogEditor.value = true
     }
@@ -171,11 +293,50 @@
         padding: 8px 12px;
         background: #f5f7fa;
         border-bottom: 1px solid #e4e7ed;
+        position: relative;
+
+        .template-checkbox {
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+
+            :deep(.el-checkbox__input) {
+                .el-checkbox__inner {
+                    width: 16px;
+                    height: 16px;
+                    border: 2px solid #dcdfe6;
+                    border-radius: 3px;
+                    background-color: #fff;
+
+                    &:hover {
+                        border-color: #409eff;
+                    }
+                }
+
+                &.is-checked .el-checkbox__inner {
+                    background-color: #409eff;
+                    border-color: #409eff;
+
+                    &::after {
+                        border: 1px solid #fff;
+                        border-left: 0;
+                        border-top: 0;
+                        height: 7px;
+                        left: 4px;
+                        top: 1px;
+                        width: 3px;
+                    }
+                }
+            }
+        }
 
         .template-id {
             font-size: 12px;
             color: #409eff;
             font-weight: 500;
+            margin-left: 24px; // 为复选框留出空间
         }
 
         .template-status {

@@ -443,24 +443,28 @@
 
     // 遍历 jsonData 中的所有属性
     console.log('path', path);
+    console.log('Object.entries(noteObj)', Object.entries(noteObj));
     for (const [key, val] of Object.entries(noteObj)) {
       // 如果是直接匹配到顶层属性
       if (key.includes(',')) {
+
         if (key.includes(path)) {
           noteObj[key] = value;
           assaginOBj(key, value, noteObj)
-          return
+
+        }
+      } else {
+        if (key === path) {
+          noteObj[path] = value;
+          console.log(`更新顶层属性 ${path}:`, value);
+          console.log('noteObj', noteObj);
+          console.log('comments', comments.value);
+          assaginOBj(key, value, noteObj)
+          console.log('noteObj', comments.value);
+          return;
         }
       }
-      if (key === path) {
-        noteObj[path] = value;
-        console.log(`更新顶层属性 ${path}:`, value);
-        console.log('noteObj', noteObj);
-        console.log('comments', comments.value);
-        assaginOBj(key, value, noteObj)
-        console.log('noteObj', comments.value);
-        return;
-      }
+
 
 
     }

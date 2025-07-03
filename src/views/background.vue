@@ -532,15 +532,7 @@
 
 
     watch(() => defaultAppNo.value, () => {
-        searchParams.value = {
-            query: '',
-            appNo: defaultAppNo.value,
-            region: 'domestic',
-
-            pageNum: 1,
-            pageSize: 10
-        }
-        getClothList()
+        resetSearch()
     })
 
     onMounted(() => {

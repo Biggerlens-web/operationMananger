@@ -19,7 +19,6 @@
             </div>
 
             <el-divider class="divider" />
-
             <div class="filter-container">
                 <div class="filter-row">
 
@@ -82,7 +81,7 @@
     const componentName = ref<any>(userTable)
     watch(() => defaultAppNo.value, () => {
         searchParams.value.appNo = defaultAppNo.value
-        getUserList()
+        resetSearch()
     })
 
 
@@ -91,7 +90,7 @@
         try {
             const params = {
                 timestamp: Date.now(),
-                appNo: searchParams.value.appNo,
+                appNo: defaultAppNo.value,
                 os: searchParams.value.os,
             }
             console.log('导出参数', params);
@@ -146,41 +145,43 @@
     )
     //重置搜索
     const resetSearch = () => {
+
         searchParams.value = {
 
             appNo: defaultAppNo.value,
             os: OSlist.value[0],
 
         }
+        pageNum.value = 1
         getUserList()
     }
     interface UserFeedback {
-        appName: string;         // 所属应用
+        appAbbreviation: string;         // 所属应用
         system: string;// 系统
-        feedbackContent: string;  // 反馈内容
-        userUid: string;          // 用户uid
-        isMember: boolean;        // 是否会员
-        contactInfo: string;      // 联系方式
-        deviceModel: string;      // 机型
-        osVersion: string;        // 系统版本
+        content: string;  // 反馈内容
+        uid: string;          // 用户uid
+        isMember: '';        // 是否会员
+        contact: string;      // 联系方式
+        phoneType: string;      // 机型
+        systemVersion: string;        // 系统版本
         appVersion: string;       // 应用版本
-        attachments: string[];    // 附件
-        feedbackTime: string;     // 反馈时间
+        attaUrl: string[];    // 附件
+        createTime: string;     // 反馈时间
     }
 
 
     const appNote: any = {
-        appName: '所属应用',
+        appAbbreviation: '所属应用',
         system: '系统',
-        feedbackContent: '反馈内容',
-        userUid: '用户uid',
+        content: '反馈内容',
+        uid: '用户uid',
         isMember: '是否会员',
-        contactInfo: '联系方式',
-        deviceModel: '机型',
-        osVersion: '系统版本',
+        contact: '联系方式',
+        phoneType: '机型',
+        systemVersion: '系统版本',
         appVersion: '应用版本',
-        attachments: '附件',
-        feedbackTime: '反馈时间',
+        attaUrl: '附件',
+        createTime: '反馈时间',
     }
     // 生成用户数据
     const appData = ref<UserFeedback[]>([
@@ -208,6 +209,10 @@
                 enData: paramsStr
             })
             console.log('信息列表', res);
+            res.data.rows.forEach((element: any) => {
+                element.system = element.os.value
+                element.isMember = element.isVip === 1 ? '是' : '否'
+            });
             totalData.value = res.data.total
             appData.value = res.data.rows
             const keys = Object.keys(appNote)

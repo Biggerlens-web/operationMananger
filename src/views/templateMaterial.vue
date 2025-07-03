@@ -11,7 +11,6 @@
         @editChildTemplate="editChildTemplate" :isAddChild="isAddChild" />
     <forceTemplate v-model:dialogVisible="dialogForceTemplate" :parentTemplateId="parentTemplateId" />
     <el-card class="stickTp_manage">
-
         <draggable tag="ul" v-model="list" item-key="id" :animation="200" class="template-grid"
             ghost-class="ghost-class" chosen-class="chosen-class" drag-class="dragging-class" :group="{ name: 'items' }"
             @start="onDragStart" @end="onDragEnd">

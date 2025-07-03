@@ -203,6 +203,10 @@
           id: formData.id,
           backgroundImageName: props.editData?.backgroundImageName || null
         }
+      } else if (type === 'mask') {
+        url = ''
+      } else if (type === 'wallpapper') {
+        url = ''
       }
 
       console.log('参数', params)

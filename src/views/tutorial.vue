@@ -246,57 +246,10 @@
     }
 
 
-    const appNote: any = {
-        appId: '应用编号',
-        shortName: '应用简称',
-        companyName: '所属公司',
-        accessName: '应用访问名',
-        systemId: '系统账号id',
-        developer: '开发者'
 
-    }
     // 生成用户数据
     const appData = ref<AppItem[]>([
-        {
-            appId: 'APP_0001',
-            shortName: '商城系统',
-            companyName: '科技有限公司',
-            accessName: 'app1.example.com',
-            systemId: 'SYS_0001',
-            developer: '张三'
-        },
-        {
-            appId: 'APP_0002',
-            shortName: '会员系统',
-            companyName: '网络科技有限公司',
-            accessName: 'app2.example.com',
-            systemId: 'SYS_0002',
-            developer: '李四'
-        },
-        {
-            appId: 'APP_0003',
-            shortName: '支付系统',
-            companyName: '软件开发有限公司',
-            accessName: 'app3.example.com',
-            systemId: 'SYS_0003',
-            developer: '王五'
-        },
-        {
-            appId: 'APP_0004',
-            shortName: '管理系统',
-            companyName: '信息技术有限公司',
-            accessName: 'app4.example.com',
-            systemId: 'SYS_0004',
-            developer: '赵六'
-        },
-        {
-            appId: 'APP_0005',
-            shortName: '客服系统',
-            companyName: '科技有限公司',
-            accessName: 'app5.example.com',
-            systemId: 'SYS_0005',
-            developer: '钱七'
-        }
+
     ])
     interface filterParams {
         note: string
@@ -323,7 +276,7 @@
                 enData
             })
             console.log('获取教程列表', res);
-
+            appData.value = res.data.rows
 
         } catch (err) {
             console.log('获取教程列表失败', err);

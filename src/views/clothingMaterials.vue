@@ -569,6 +569,9 @@
             pageNum: 1, // 默认当前页为1
             pageSize: 10 // 默认每页显示10条
         }
+        clothFliterParams.value = {
+            ...searchParams.value
+        }
         getClothList()
         getParentList()
     })

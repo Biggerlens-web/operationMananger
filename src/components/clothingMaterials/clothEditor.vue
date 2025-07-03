@@ -445,6 +445,9 @@
                 case 'mask':
                     url = '/mask/save'
                     break
+                case 'shape':
+                    url = '/shape/save'
+                    break
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))

@@ -102,6 +102,14 @@
     const router = useRouter()
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
+
+
+    //监听应用变化
+    watch(() => defaultAppNo.value, () => {
+        pageNum.value = 1
+        resetSearch()
+        getUserList()
+    })
     //分页
     const pageNum = ref<number>(1)
     const pageSize = ref<number>(10)
@@ -275,7 +283,7 @@
     }
 
     watch(() => defaultAppNo.value, async () => {
-        getUserList()
+        resetSearch()
     })
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {

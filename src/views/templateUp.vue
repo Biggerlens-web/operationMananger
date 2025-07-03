@@ -204,7 +204,7 @@
             }
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
-            const res = await service.get('/sticker/exportExcel', {
+            const res = await service.get('/templateUp/exportExcel', {
                 params: {
                     enData
                 },
@@ -268,7 +268,7 @@
             formData.append('stickers', fileInterNational.value)
 
             showLoading.value = true
-            const res = await service.post('/sticker/importExcelInternationalization', formData, {
+            const res = await service.post('/templateUp/importExcelInternationalization', formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
                 }

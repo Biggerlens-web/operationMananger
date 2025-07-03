@@ -34,6 +34,8 @@ export const useCounterStore = defineStore(
     const backgroundFliterParams = ref<any>({}) // 图库筛选参数
     const maskFliterParams = ref<any>({}) // 遮罩筛选参数
     const templateFliterParams = ref<any>({}) // 模板筛选参数
+    const wallpaperFliterParams = ref<any>({}) // 壁纸筛选参数
+    const shapeFliterParams = ref<any>({}) // 形状筛选参数
     const updateChildTemplate = ref<boolean>(false)
     const showLoading = ref<boolean>(false) // 显示loading
     const changeSChildTemplate = (val: boolean) => {
@@ -55,6 +57,7 @@ export const useCounterStore = defineStore(
       clothFliterParams,
       stickerFliterParams,
       backgroundFliterParams,
+      wallpaperFliterParams,
       templateFliterParams,
       maskFliterParams,
       companyList,
@@ -63,6 +66,7 @@ export const useCounterStore = defineStore(
       appListInCom,
       updateChildTemplate,
       changeSChildTemplate,
+      shapeFliterParams,
       showLoading,
     }
   },
