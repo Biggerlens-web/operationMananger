@@ -88,6 +88,12 @@
                 case 'template':
                     url = '/templateUpDetail/batchLabelSave'
                     break
+                case 'mask':
+                    url = '/maskDetail/batchLabelSave'
+                    break
+                case 'wallpapper':
+                    url = ''
+                    break
             }
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true

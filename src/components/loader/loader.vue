@@ -1,9 +1,9 @@
 <template>
-    <div class="loading" v-if="showLoading">
-        <svg width="64px" height="48px">
-            <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" id="back"></polyline>
-            <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" id="front"></polyline>
-        </svg>
+    <div class="container" v-show="showLoading">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
     </div>
 </template>
 
@@ -17,42 +17,63 @@
 </script>
 
 <style scoped>
-    .loading {
+    .container {
         position: fixed;
-        right: 101px;
-        top: 4px;
+        top: 30px;
+        right: 105px;
+        border-radius: 50%;
+        height: 30px;
+        width: 30px;
         z-index: 999999;
+        animation: rotate_3922 1.2s linear infinite;
+        background-color: #9b59b6;
+        background-image: linear-gradient(#9b59b6, #84cdfa, #5ad1cd);
     }
 
-    .loading svg polyline {
-        fill: none;
-        stroke-width: 3;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-
-
+    .container span {
+        position: absolute;
+        border-radius: 50%;
+        height: 100%;
+        width: 100%;
+        background-color: #9b59b6;
+        background-image: linear-gradient(#9b59b6, #84cdfa, #5ad1cd);
     }
 
-    .loading svg polyline#back {
-        fill: none;
-        stroke: #ff4d5033;
+    .container span:nth-of-type(1) {
+        filter: blur(5px);
     }
 
-    .loading svg polyline#front {
-        fill: none;
-        stroke: #ff4d4f;
-        stroke-dasharray: 48, 144;
-        stroke-dashoffset: 192;
-        animation: dash_682 1.4s linear infinite;
+    .container span:nth-of-type(2) {
+        filter: blur(10px);
     }
 
-    @keyframes dash_682 {
-        72.5% {
-            opacity: 0;
+    .container span:nth-of-type(3) {
+        filter: blur(25px);
+    }
+
+    .container span:nth-of-type(4) {
+        filter: blur(50px);
+    }
+
+    .container::after {
+        content: "";
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        background-color: #fff;
+        border: solid 5px #ffffff;
+        border-radius: 50%;
+    }
+
+    @keyframes rotate_3922 {
+        from {
+            transform: translate(-50%, -50%) rotate(0deg);
         }
 
         to {
-            stroke-dashoffset: 0;
+            transform: translate(-50%, -50%) rotate(360deg);
         }
     }
 </style>

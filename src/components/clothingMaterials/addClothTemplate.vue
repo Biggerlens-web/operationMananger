@@ -225,9 +225,11 @@
             ElMessage.warning('请至少上传一张大图和一张小图');
             return;
         }
-
+        if (showLoading.value) {
+            return ElMessage.warning('正在上传。。。');
+        }
         try {
-
+            showLoading.value = true
             const getBase64 = (file: UploadUserFile): Promise<string> => {
                 return new Promise((resolve, reject) => {
                     if (file.raw) {
@@ -255,6 +257,7 @@
                 clothingMaterialsId: parseInt(route.query.id as string)
             };
             const { type } = route.query
+            console.log('type', type);
             let url: string = ''
             switch (type) {
                 case 'clothing':
@@ -267,14 +270,28 @@
                     url = '/stickerDetail/saveBatch'
                     break;
                 case 'background':
+                    console.log('图库');
                     params.backId = parseInt(route.query.id as string)
                     url = '/backgroundDetail/saveBatch'
                     params.pay = formData.pay;
+                    break
+
+                case 'mask':
+                    console.log('遮罩');
+                    params.maskId = parseInt(route.query.id as string)
+                    url = '/maskDetail/saveBatch'
+                    break
+
+                case 'wallpapper':
+                    console.log('壁纸');
+                    params.wallpaperId = parseInt(route.query.id as string)
+                    url = ''
+                    break
             }
 
-            console.log('批量保存参数', params);
+            console.log('批量保存参数', params, type);
             const enData = desEncrypt(JSON.stringify(params));
-            showLoading.value = true
+
             const res = await service.post(url, { enData });
 
 

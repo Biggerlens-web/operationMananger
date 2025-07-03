@@ -102,6 +102,12 @@
                             </el-icon>
                             搜索
                         </el-button>
+                        <el-button @click="resetSearch">
+                            <el-icon>
+                                <Refresh />
+                            </el-icon>
+                            重置
+                        </el-button>
 
                     </div>
                 </div>
@@ -157,6 +163,7 @@
     import tutorialTemplateEdit from '@/components/tutorial/tutorialTemplateEdit.vue';
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
+    import { ElMessage } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion, regionList, OSlist, channelList, defaultAppNo, showLoading } = storeToRefs(counterStore)
 
@@ -181,7 +188,13 @@
             const res = await service.post('/tutorial/saveItem', {
                 enData
             })
-            console.log('保存改动', res);
+            console.log('保存改动', res)
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功');
+                getUserList()
+            } else {
+                ElMessage.error(res.data?.msg);
+            }
         } catch (err) {
             console.log('保存失败', err);
         } finally {

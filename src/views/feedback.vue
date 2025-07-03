@@ -94,16 +94,13 @@
                 os: searchParams.value.os,
             }
             console.log('导出参数', params);
-            const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
             const res = await service.get('/feedback/exportExcel', {
-                params: {
-                    enData
-                },
+                params,
                 responseType: 'blob'
             })
 
-            const blob = new Blob([res.data], { type: 'application/vnd.ms-excel' })
+            const blob = new Blob([res.data], { type: res.headers['content-type'] });
             const link = document.createElement('a')
             link.href = URL.createObjectURL(blob)
             link.download = 'feedback.xlsx'

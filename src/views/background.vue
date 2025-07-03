@@ -341,7 +341,7 @@
     //查看详情
     const viewDetail = (row: any) => {
         operationClass.value = row.operationClass
-        router.push('/templateMaterial?id=' + row.id + '&type=background')
+        router.push('/templateMaterial?id=' + row.id + '&type=background&title=图库')
 
 
         console.log('查看详情', row);

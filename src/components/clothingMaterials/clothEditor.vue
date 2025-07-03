@@ -19,6 +19,12 @@
                     <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
                 </el-select>
             </el-form-item>
+            <el-form-item label="壁纸类类型" prop="classType" v-if="type === 'wallpapper'">
+                <el-select v-model="formData.classType" placeholder="请选择壁纸类类型">
+                    <el-option v-for="item in wallpapperTypes" :key="item.value" :label="item.note"
+                        :value="item.value" />
+                </el-select>
+            </el-form-item>
             <el-form-item label="父分类" prop="tids" v-if="!noHaveParent">
                 <el-select v-model="formData.tids" placeholder="请选择父分类" multiple>
                     <el-option v-for="item in parentList" :key="item.id" :label="item.classType" :value="item.id" />
@@ -32,14 +38,29 @@
                 <el-input v-model="formData.field" />
             </el-form-item>
 
+
             <el-form-item label="类图" prop="classImage">
-                <el-upload v-model:file-list="formData.classImage" class="upload-demo" action="#"
-                    list-type="picture-card" :on-preview="handlePictureCardPreview" :on-remove="handleRemove"
-                    :auto-upload="false" :limit="1" :on-exceed="handleExceed" :on-change="handleChangeimge">
-                    <el-icon>
-                        <Plus />
-                    </el-icon>
-                </el-upload>
+
+                <div class="image-upload-container">
+                    <el-upload class="image-uploader" :show-file-list="false" action="#" :on-remove="handleRemove"
+                        :auto-upload="false" :on-change="handleChangeimge">
+                        <img v-if="formData.classImageBase64" :src="formData.classImageBase64" class="uploaded-image" />
+                        <div v-else class="upload-placeholder">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+                            <span>点击上传图片</span>
+                        </div>
+                    </el-upload>
+                    <el-button v-if="formData.classImageBase64" type="danger" size="small" class="delete-image-btn"
+                        @click="removeCoverImage">
+                        <el-icon>
+                            <Delete />
+                        </el-icon>
+                        删除
+                    </el-button>
+                </div>
+
             </el-form-item>
             <el-form-item label="国际化" prop="international">
                 <el-input :disabled="true" v-model="formData.international" />
@@ -113,6 +134,7 @@
         editorInfo: any
         noHaveParent?: boolean
         type: string
+        wallpapperTypes?: any
     }>()
 
 
@@ -127,7 +149,9 @@
                 formData.value.isOperationClass = props.editorInfo.operationClass === 1 ? true : false
                 formData.value.region = props.editorInfo.region === '国内' ? "domestic" : 'foreign'
                 formData.value.appNo = props.editorInfo.appNo
-                formData.value.os = props.editorInfo.os.value
+                formData.value.os = props.editorInfo.os?.value
+                formData.value.classType = props.editorInfo.classType
+
             } else {
                 formData.value.id = props.editorInfo.id
                 formData.value.name = props.editorInfo.name
@@ -142,40 +166,45 @@
         }
     }
 
+    const removeCoverImage = () => {
+        formData.value.classImage = [];
+        formData.value.classImageBase64 = '';
+    }
 
     watch(() => props.showEditor, async (newV) => {
         if (newV) {
 
             if (props.editorInfo && props.editorInfo.classImageUrl) {
-                try {
-                    const response = await fetch(props.editorInfo.classImageUrl);
-                    const blob = await response.blob();
-                    const fileName = props.editorInfo.classImageName || props.editorInfo.classImageUrl.substring(props.editorInfo.classImageUrl.lastIndexOf('/') + 1) || 'image.png';
-                    const file = new File([blob], fileName, { type: blob.type });
+                // try {
+                //     const response = await fetch(props.editorInfo.classImageUrl);
+                //     const blob = await response.blob();
+                //     const fileName = props.editorInfo.classImageName || props.editorInfo.classImageUrl.substring(props.editorInfo.classImageUrl.lastIndexOf('/') + 1) || 'image.png';
+                //     const file = new File([blob], fileName, { type: blob.type });
 
-                    // 构造 UploadFile 对象以在 el-upload 中显示
-                    const uploadFile: UploadUserFile = {
-                        name: file.name,
-                        size: file.size,
-                        status: 'success', // 标记为已上传成功状态
-                        uid: Date.now(), // 生成唯一ID
-                        url: props.editorInfo.classImageUrl, // 用于预览
-                        raw: Object.assign(file, { uid: Date.now() }), // 为File对象添加uid属性
-                    };
-                    formData.value.classImage = [uploadFile]; // 更新file-list
+                //     // 构造 UploadFile 对象以在 el-upload 中显示
+                //     const uploadFile: UploadUserFile = {
+                //         name: file.name,
+                //         size: file.size,
+                //         status: 'success', // 标记为已上传成功状态
+                //         uid: Date.now(), // 生成唯一ID
+                //         url: props.editorInfo.classImageUrl, // 用于预览
+                //         raw: Object.assign(file, { uid: Date.now() }), // 为File对象添加uid属性
+                //     };
+                //     formData.value.classImage = [uploadFile]; // 更新file-list
 
-                    // 将下载的文件转为Base64
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const base64 = e.target?.result as string
-                        formData.value.classImageBase64 = base64.split(',')[1]
-                    };
-                    reader.readAsDataURL(file);
+                //     // 将下载的文件转为Base64
+                //     const reader = new FileReader();
+                //     reader.onload = (e) => {
+                //         const base64 = e.target?.result as string
+                //         formData.value.classImageBase64 = base64.split(',')[1]
+                //     };
+                //     reader.readAsDataURL(file);
 
-                } catch (error) {
-                    console.error('Failed to fetch or process image from URL:', error);
-                    ElMessage.error('从URL加载图片失败');
-                }
+                // } catch (error) {
+                //     console.error('Failed to fetch or process image from URL:', error);
+                //     ElMessage.error('从URL加载图片失败');
+                // }
+                formData.value.classImageBase64 = props.editorInfo.classImageUrl
             } else {
                 // 如果没有图片URL，确保清空相关字段，以防上次编辑残留
                 formData.value.classImage = [];
@@ -213,6 +242,7 @@
         isOperationClass: false,
         region: '',
         os: '',
+        classType: '',
     })
 
 
@@ -278,6 +308,7 @@
                 isOperationClass: false,
                 region: '',
                 os: '',
+                classType: '',
             }
         } else {
             formData.value = {
@@ -323,7 +354,7 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 const fullBase64 = e.target?.result as string;
-                formData.value.classImageBase64 = fullBase64.split(',')[1]
+                formData.value.classImageBase64 = fullBase64
             };
             reader.readAsDataURL(uploadFile.raw);
         }
@@ -407,7 +438,10 @@
     }
     const addClothType = async () => {
         try {
-
+            if (showLoading.value) {
+                ElMessage.warning('正在保存。。。');
+                return
+            }
             const params: any = {
                 id: formData.value.id,
                 timestamp: Date.now(),
@@ -416,18 +450,20 @@
                 name: formData.value.name,
                 field: formData.value.field,
                 tids: formData.value.tids,
-                classImage: formData.value.classImageBase64, // 使用Base64字符串
+                classImage: formData.value.classImageBase64.includes('http') ? formData.value.classImageBase64 : formData.value.classImageBase64.split(',')[1], // 使用Base64字符串
+
                 international: formData.value.international,
                 isOperationClass: formData.value.isOperationClass,
 
+            }
+            if (formData.value.classImageBase64.includes('http')) {
+                params.classImageName = props.editorInfo.classImageName
             }
             if (props.noHaveParent) {
                 delete params.tids
                 params['type'] = params.id ? 'update' : 'add'
             }
-            if (props.type === 'template') {
-                params.os = formData.value.os.toLowerCase()
-            }
+
             let url: string = ''
             switch (props.type) {
                 case 'background':
@@ -441,12 +477,17 @@
                     break;
                 case 'template':
                     url = '/templateUp/save'
+                    params.os = formData.value.os.toLowerCase()
                     break
                 case 'mask':
                     url = '/mask/save'
                     break
                 case 'shape':
                     url = '/shape/save'
+                    break
+                case 'wallpapper':
+                    url = '/wallpaper/save'
+                    params.classType = formData.value.classType
                     break
             }
             console.log('参数', params);
@@ -458,6 +499,7 @@
             console.log('新增子分类', res);
             if (res.data.code === 200) {
                 ElMessage.success('新增成功')
+                handleClose()
             } else {
                 ElMessage.error(res.data.msg)
             }
@@ -475,8 +517,8 @@
                     ElMessage.warning('请选择父类')
                     return
                 }
-                await addClothType()
-                handleClose()
+                addClothType()
+
             }
         })
     }
@@ -501,5 +543,64 @@
                 margin-right: 10px;
             }
         }
+    }
+
+    .image-upload-container {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .image-uploader {
+        width: 100%;
+    }
+
+    .delete-image-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .image-upload-container:hover .delete-image-btn {
+        opacity: 1;
+    }
+
+    .image-uploader :deep(.el-upload) {
+        width: 100%;
+        border: 2px dashed var(--el-border-color);
+        border-radius: 8px;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: var(--el-transition-duration);
+    }
+
+    .image-uploader :deep(.el-upload:hover) {
+        border-color: var(--el-color-primary);
+    }
+
+    .uploaded-image {
+        width: 100%;
+        height: 200px;
+        object-fit: contain;
+        border-radius: 6px;
+        background-color: #f5f7fa;
+    }
+
+    .upload-placeholder {
+        height: 200px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--el-text-color-secondary);
+    }
+
+    .upload-placeholder .el-icon {
+        font-size: 28px;
+        margin-bottom: 8px;
     }
 </style>

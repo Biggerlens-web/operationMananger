@@ -1,29 +1,32 @@
 <template>
     <div class="view">
         <clothEditor v-model:show-editor="showEditor" :editorInfo="editorItemInfo" :noHaveParent='true'
-            :type="'wallpaper'" />
+            :type="'wallpapper'" :wallpapperTypes="wallpaperTypeList" />
 
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" @click="addWallpaper" class="add-button">
+                    <el-button style="margin: 0;" type="primary" @click="addWallpaper" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增
                     </el-button>
-                    <el-button type="primary" class="add-button">
+                    <el-button style="margin: 0;" type="primary" class="add-button" @click="exportExcel">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         导出
                     </el-button>
-                    <el-button type="primary" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        导入国际化
-                    </el-button>
+                    <el-upload ref="upload" action="#" :http-request="importInternation" :limit="1"
+                        :show-file-list="false">
+                        <el-button type="primary" class="add-button" style="margin: 0;">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+                            导入国际化
+                        </el-button>
+                    </el-upload>
                 </div>
                 <div class="right-actions">
                     <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -44,8 +47,8 @@
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.wallpaper" placeholder="壁纸类型" class="filter-select">
-                            <el-option v-for="item in regionList" :key="item.value" :label="item.label"
+                        <el-select filterable v-model="searchParams.classType" placeholder="壁纸类型" class="filter-select">
+                            <el-option v-for="item in wallpaperTypeList" :key="item.value" :label="item.note"
                                 :value="item.value" />
                         </el-select>
                     </div>
@@ -90,12 +93,13 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
-    import wallpaperEditor from '@/components/wallpaper/wallpaperEditor.vue';
+    import clothEditor from '@/components/clothingMaterials/clothEditor.vue';
     import { nextTick, onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import { ElMessage, ElMessageBox } from 'element-plus';
     import { desEncrypt } from '@/utils/des';
+    import type { UploadRequestOptions } from 'element-plus'
     import service from '@/axios';
     import { useRouter } from 'vue-router';
     const router = useRouter()
@@ -112,6 +116,77 @@
     //数据总数
     const totalData = ref<number>(0)
 
+    //导入国际化
+    const importInternation = async (options: UploadRequestOptions) => {
+
+        try {
+            const formData = new FormData()
+            formData.append('wallpapers', options.file)
+            formData.append('region', searchParams.value.region)
+            formData.append('appNo', defaultAppNo.value as string)
+            formData.append('classType', searchParams.value.classType)
+            showLoading.value = true
+            const res = await service.post('/wallpaper/importExcelInternationalization', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            console.log('导入国际化', res);
+            if (res.data.code === 200) {
+                ElMessage.success('导入成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('导入失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
+
+    //导出excel
+    const exportExcel = async () => {
+        try {
+            const res = await service.get('/wallpaper/exportExcel', {
+                params: {
+                    appNo: defaultAppNo.value,
+                    region: searchParams.value.region,
+                    query: searchParams.value.query,
+                    classType: searchParams.value.classType,
+                },
+                responseType: 'blob'
+            })
+            if (res.data) {
+                const blob = new Blob([res.data], { type: 'application/vnd.ms-excel' })
+                const url = window.URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = '壁纸.xlsx'
+                a.click()
+                window.URL.revokeObjectURL(url)
+            }
+
+        } catch (err) {
+            console.log('导出失败', err);
+        } finally { }
+
+    }
+
+
+    //获取壁纸类型
+    const wallpaperTypeList = ref<any>([])
+    const getWallpaperType = async () => {
+        try {
+            const res = await service.get('/wallpaper/index')
+            console.log('获取壁纸类型', res);
+            wallpaperTypeList.value = res.data.data.types
+        } catch (err) {
+
+        }
+    }
+
+
     //新增壁纸
     const showEditor = ref<boolean>(false)
     watch(() => showEditor.value, (newV) => {
@@ -121,6 +196,7 @@
         }
     })
     const addWallpaper = () => {
+        console.log('123123');
         showEditor.value = true
     }
     //编辑壁纸
@@ -140,13 +216,29 @@
                 cancelButtonText: '取消',
                 type: 'warning'
             }
-        )
+        ).then(async () => {
+            try {
+
+                showLoading.value = true
+                const res = await service.post(`/wallpaper/del/${item.id}`)
+                if (res.data.code === 200) {
+                    ElMessage.success('删除成功')
+                    getUserList()
+                } else {
+                    ElMessage.error(res.data.msg)
+                }
+            } catch (err) {
+                console.log('删除失败', err);
+            } finally {
+                showLoading.value = false
+            }
+        })
     }
 
     //查看详情
     const viewDetail = (row: any) => {
         operationClass.value = row.operationClass
-        router.push('/templateMaterial?id=' + row.id + '&type=wallpapper')
+        router.push('/templateMaterial?id=' + row.id + '&type=wallpapper&title=壁纸')
         console.log('查看详情', row);
     }
 
@@ -163,7 +255,7 @@
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
-            const res = await service.post('/sticker/move', {
+            const res = await service.post('/wallpaper/move', {
                 enData
             })
             console.log('移动', res);
@@ -193,7 +285,7 @@
     interface SearchParams {
         region: string
         query: string
-        wallpaper: string,
+        classType: string,
         pageNum: number,
         pageSize: number,
 
@@ -203,7 +295,7 @@
         {
             region: '',
             query: '',
-            wallpaper: '',
+            classType: '',
             pageNum: 1, pageSize: 10
 
         }
@@ -216,13 +308,9 @@
         }
         getUserList()
     })
-
-
-
     const searching = () => {
         searchParams.value.pageNum = 1; // 点击查询时，通常重置到第一页
         wallpaperFliterParams.value = {
-
             ...searchParams.value
         }
         console.log('wallpaperFliterParams', wallpaperFliterParams.value);
@@ -231,9 +319,9 @@
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            region: '',
+            region: regionList.value[0].value,
             query: '',
-            wallpaper: '',
+            classType: wallpaperTypeList.value[0].value,
             pageNum: 1, pageSize: 10
 
         }
@@ -243,27 +331,24 @@
         getUserList()
     }
     interface AppContentConfig {
-        appName: string;           // 所属应用
-        sequence: number;          // 序号
+        appAbbreviation: string;           // 所属应用
+        id: number;          // 序号
         name: string;              // 名称
         region: string;            // 地区
-        i18n: {                    // 国际化
-            enabled: boolean;
-            supportedLanguages: string[];
-        };
-        totalClicks: number;       // 总点击数
-        lastUpdateTime: string;    // 最近更新时间
+        international: string
+        viewNum: number;       // 总点击数
+        updateTime: string;    // 最近更新时间
     }
 
 
     const appNote: any = {
-        appName: '所属应用',
-        sequence: '序号',
+        appAbbreviation: '所属应用',
+        id: '序号',
         name: '名称',
         region: '地区',
-        i18n: '国际化',
-        totalClicks: '总点击数',
-        lastUpdateTime: '最近更新时间',
+        international: '国际化',
+        viewNum: '总点击数',
+        updateTime: '最近更新时间',
     }
 
 
@@ -294,18 +379,22 @@
                 pageSize: searchParams.value.pageSize,
                 region: searchParams.value.region,
                 query: searchParams.value.query,
-                wallpaper: searchParams.value.wallpaper,
+                classType: searchParams.value.classType,
 
             }
+            console.log('壁纸列表', params);
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
-            const res = await service.post('', {
+            const res = await service.post('/wallpaper/list', {
                 enData
             })
             totalData.value = res.data.total
             appData.value = res.data.rows
             console.log('获取壁纸列表', res);
-
+            res.data.rows.forEach((item: any) => {
+                item.regionObj = item.region
+                item.region = item.regionObj.note
+            })
             const keys = Object.keys(appNote)
             filterParams.value = keys.map((item) => {
                 return {
@@ -343,6 +432,7 @@
         console.log('keyItem', keyItem);
     }
     onMounted(async () => {
+        await getWallpaperType()
         if (Object.keys(wallpaperFliterParams.value).length > 0) {
             searchParams.value = {
                 ...wallpaperFliterParams.value
@@ -352,7 +442,7 @@
 
             searchParams.value = {
                 query: '',
-                wallpaper: '',
+                classType: wallpaperTypeList.value[0].value,
                 region: regionList.value[0].value,
 
                 pageNum: 1,
@@ -360,6 +450,7 @@
             }
         }
         await nextTick()
+
         getUserList();
         showPagestion.value = true
     })
@@ -378,6 +469,10 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+                    column-gap: 12px;
+
                     .add-button {
                         font-weight: 500;
 

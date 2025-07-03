@@ -1,15 +1,28 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 import service from '@/axios'
 import { pinia } from '@/main'
 import { useCounterStore } from '@/stores/counter'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
+
+// 配置NProgress
+NProgress.configure({
+  easing: 'ease',
+  speed: 500,
+  showSpinner: false,
+  trickleSpeed: 200,
+  minimum: 0.3,
+})
+// 删除这行静态导入
+// import HomeView from '../views/HomeView.vue'
+
 const routes = [
   {
     path: '/',
     name: 'home',
-    component: HomeView,
-    redirect: '/appConfig/index',
+    component: () => import('../views/HomeView.vue'), // 改为动态导入
+    redirect: '/system/menu/index',
     children: [] as RouteRecordRaw[],
   },
   {
@@ -169,6 +182,9 @@ const getCompanyList = async () => {
   }
 }
 router.beforeEach(async (to, from, next) => {
+  // 开始进度条
+  NProgress.start()
+
   const hasToken = localStorage.getItem('token')
   setMenuStore()
   if (hasToken) {
@@ -187,8 +203,18 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 })
+
 router.afterEach((to, from) => {
+  // 完成进度条
+  NProgress.done()
+
   getInternational()
   getTagList()
 })
+
+// 路由错误时也要结束进度条
+router.onError(() => {
+  NProgress.done()
+})
+
 export default router

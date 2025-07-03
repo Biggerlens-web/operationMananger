@@ -58,7 +58,6 @@
             </el-select>
           </div>
         </div>
-
         <div class="header-right">
           <el-dropdown>
             <span class="user-info">
@@ -169,7 +168,7 @@
     }
   }, {
     immediate: true
-    // 不使用 once: true，因为需要在公司切换时重新获取应用列表
+
   })
 
 

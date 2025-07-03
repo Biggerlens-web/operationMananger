@@ -15,7 +15,7 @@
                         <div class="card-actions">
                             <el-button size="small" type="primary" @click="handleEdit(element)">编辑</el-button>
                             <el-button size="small" @click="showSizeEdit(element)">其他尺寸</el-button>
-                            <el-button size="small" type="danger">模板前景</el-button>
+                            <el-button size="small" type="danger" @click="showForceTemplate(element)">模板前景</el-button>
                         </div>
                     </div>
                 </template>
@@ -26,17 +26,20 @@
             <el-button type="primary" @click="uploadPublic">同步上传至公共空间</el-button>
             <el-button type="primary" @click="assign">分配</el-button>
             <el-button type="primary" @click="checkALl">全部选中</el-button>
-            <el-button type="primary" @click="uploadPublic">保存改动</el-button>
+            <el-button type="danger" @click="deleteChosed">删除所选</el-button>
+            <el-button type="primary" @click="saveChange">保存改动</el-button>
             <el-button type="primary" @click="handleClose">取消</el-button>
         </template>
     </el-dialog>
     <sizeEdit v-model:dialogVisible="dialogSizeEdit" @addChildTemplate="addChildTemplate"
         @editChildTemplate="editChildTemplate" :isAddChild="isAddChild" />
-    <stickerTemplateEditor :editData="editInfo" v-model:dialogEditor="dialogEditor" />
+    <stickerTemplateEditor :editData="editInfo" v-model:dialogEditor="dialogEditor" :isAddChild="isAddChild" />
+    <forceTemplate v-model:dialogVisible="dialogForceTemplate" :parentTemplateId="parentTemplateId" />
 </template>
 
 <script lang="ts" setup>
     import service from '@/axios'
+    import forceTemplate from '@/components/templates/forceTemplate.vue'
     import sizeEdit from '@/components/templates/sizeEdit.vue'
     import { useCounterStore } from '@/stores/counter'
     import { desEncrypt } from '@/utils/des'
@@ -65,6 +68,14 @@
 
 
 
+    //模板前景
+    const dialogForceTemplate = ref<boolean>(false)
+    const parentTemplateId = ref<any>()
+    const showForceTemplate = (item: any) => {
+        parentTemplateId.value = item.id
+        dialogForceTemplate.value = true
+    }
+
     const checkall = ref(false)
     const checkALl = () => {
         checkall.value = !checkall.value
@@ -79,6 +90,13 @@
         }
 
     }
+
+    //删除所选
+    const deleteChosed = () => {
+        templateList.value = templateList.value.filter((item: any) => !item.isSelected)
+    }
+
+
 
     const getTemplateList = async () => {
         try {
@@ -112,6 +130,34 @@
     const handleClose = () => {
         dialogVisible.value = false
     }
+
+    //保存改动
+    const saveChange = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                templateUpId: templateUpId.value,
+                detailIds: templateList.value.map((item: any) => item.id)
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
+            const res = await service.post('/templateUpDetail/saveItem', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                getTemplateList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
+
+
 
     // 拖拽事件处理
     const onDragStart = () => {
@@ -156,9 +202,10 @@
         try {
             const params = {
                 timestamp: Date.now(),
-                templateUpId: templateUpId.value,
+                templateUpId: parseInt(route.query.id as string),
                 detailIds: templateList.value.filter((item: any) => item.isSelected).map((item: any) => item.id)
             }
+            console.log('分配参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
             const res = await service.post('/templateUpDetail/copyTemplate', {

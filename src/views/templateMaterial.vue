@@ -22,7 +22,6 @@
                             @change="handleCheckBoxChange($event, element.id)" class="custom-checkbox" />
                         <label :for="`checkbox-${element.id}`" class="checkbox-label"></label>
                     </div>
-
                     <div class="template_data" @click.stop>
                         <p class="p_id">ID:{{ element.id }}</p>
                         <p class="p_viewNum">点击数:{{ element.likeNum }}</p>
@@ -127,6 +126,15 @@
                     url = '/templateUpDetail/exportExcel'
                     params.templateUpId = parseInt(route.query.id as string)
                     break
+                case 'mask':
+                    url = '/maskDetail/exportExcel'
+                    params.maskId = parseInt(route.query.id as string)
+                    break
+
+                case 'wallpapper':
+                    url = ''
+                    params.wallpaperId = parseInt(route.query.id as string)
+                    break
             }
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
@@ -172,6 +180,12 @@
             } else if (type === 'template') {
                 params.templateUpId = parseInt(route.query.id as string)
                 url = '/templateUpDetail/list'
+            } else if (type === 'mask') {
+                params.maskId = parseInt(route.query.id as string)
+                url = '/maskDetail/list'
+            } else if (type === 'wallpapper') {
+                params.wallpaperId = parseInt(route.query.id as string)
+                url = '/wallpaperDetail/list'
             }
             console.log('参数', params)
             const enData = desEncrypt(JSON.stringify(params))
@@ -407,6 +421,28 @@
                             break;
                     }
                     break;
+
+
+                case 'mask':
+                    params.maskId = parseInt(route.query.id as string)
+                    switch (operationClass.value) {
+                        case 1:
+                            url = '/maskDetail/saveOperationItem'
+                            break;
+                        case 0:
+                            url = '/maskDetail/saveItem'
+                            break;
+                    }
+                case 'wallpapper':
+                    params.wallpaperId = parseInt(route.query.id as string)
+                    switch (operationClass.value) {
+                        case 1:
+                            url = ''
+                            break;
+                        case 0:
+                            url = ''
+                            break;
+                    }
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))

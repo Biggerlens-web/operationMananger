@@ -29,13 +29,9 @@
                         @changeView="changeView" />
                 </div>
             </div>
-
             <el-divider class="divider" />
-
             <div class="filter-container">
                 <div class="filter-row">
-
-
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
                             <el-option v-for="item in regionList" :key="item.value" :label="item.label"
@@ -140,7 +136,7 @@
     //查看详情
     const viewDetail = (row: any) => {
         operationClass.value = row.operationClass
-        router.push('/templateMaterial?id=' + row.id + '&type=shape')
+        router.push('/templateMaterial?id=' + row.id + '&type=shape&title=形状')
         console.log('查看详情', row);
     }
 

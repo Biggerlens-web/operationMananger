@@ -20,6 +20,11 @@
                 <el-switch v-model="formData.isRecommend" active-text="是" inactive-text="否" :active-value="true"
                     :inactive-value="false"></el-switch>
             </div>
+            <div class="dialog_input" v-if="route.query.type === 'mask'">
+                <span>vip资源</span>
+                <el-switch v-model="formData.isVip" active-text="是" inactive-text="否" :active-value="true"
+                    :inactive-value="false"></el-switch>
+            </div>
             <div class="dialog_input">
                 <span>是否付费</span>
                 <el-switch v-model="formData.pay" active-text="付费" inactive-text="免费" :active-value="1"
@@ -69,6 +74,7 @@
         pay: 0,
         version: '',
         isRecommend: false,
+        isVip: false
     })
     const handleClose = () => {
         formData.clothingMaterialsId = ''
@@ -82,11 +88,14 @@
     const handleComfirm = async () => {
 
         try {
+            if (showLoading.value) {
+                ElMessage.warning('正在保存。。。');
+                return
+            }
             const params: any = {
                 timestamp: Date.now(),
                 ids: toRaw(props.chosedItem),
                 pay: formData.pay,
-
                 operationClassId: formData.operationClassId.join(','),
             }
 
@@ -113,6 +122,15 @@
                     params.version = formData.version
                     params.isRecommend = formData.isRecommend
                     break
+
+                case 'mask':
+                    url = '/maskDetail/saveBatchUpdate'
+                    params.maskId = formData.clothingMaterialsId
+                    params.isVip = formData.isVip
+
+                case 'wallpapper':
+                    url = ''
+                    params.wallpaperId = formData.clothingMaterialsId
             }
 
             console.log('保存编辑啊参数', params);
@@ -172,6 +190,9 @@
                 case 'template':
                     url = '/templateUpDetail/batchUpdateEdit'
                     break;
+                case 'mask':
+                    url = '/maskDetail/batchUpdateEdit'
+                    break
             }
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
@@ -196,8 +217,10 @@
                 case 'template':
                     typeList.value = res.data.data.templateUps
                     formData.clothingMaterialsId = res.data.data.templateUpId
-
                     break;
+                case 'mask':
+                    typeList.value = res.data.data.masks
+                    formData.clothingMaterialsId = res.data.data.maskId
             }
 
             opreationType.value = res.data.data.operationClassArr
