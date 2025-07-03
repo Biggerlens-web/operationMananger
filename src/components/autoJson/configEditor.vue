@@ -70,7 +70,8 @@
     const counterStore = useCounterStore()
     const autoOprationStore = useAutoOpration()
     const { JSONEditorNote, JSONEditorValue } = storeToRefs(autoOprationStore)
-    const { appList, channelList, OSlist } = storeToRefs(counterStore)
+    const { appList, channelList, OSlist, showLoading } = storeToRefs(counterStore)
+
     const props = defineProps<{
         dialogEditor: boolean
         activeApp: string | number
@@ -200,6 +201,7 @@
 
     const saveConfig = async (params: any) => {
         try {
+            showLoading.value = true
             console.log('params', params);
             // const config = JSON.parse(params.config)
             // const configNote = JSON.parse(params.configNote)
@@ -220,6 +222,8 @@
         } catch (err) {
             ElMessage.error('保存失败')
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = async (formEl: any) => {

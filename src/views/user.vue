@@ -39,7 +39,7 @@
   import { desEncrypt } from '@/utils/des';
   import service from '@/axios';
   const counterStore = useCounterStore()
-  const { showPagestion } = storeToRefs(counterStore)
+  const { showPagestion, showLoading } = storeToRefs(counterStore)
   const components: any = {
     userTable,
     userList
@@ -82,6 +82,7 @@
   //删除用户
   const deleteUserFn = async (item: any) => {
     try {
+      showLoading.value = true
       const res = await service.post(`/system/user/del/${item.id}`)
 
       console.log('删除用户', res);
@@ -93,6 +94,8 @@
       }
     } catch (err) {
       console.log('删除失败', err);
+    } finally {
+      showLoading.value = false
     }
   }
   const deleteUser = (item: any) => {
@@ -132,6 +135,7 @@
 
       }
       const enData = desEncrypt(JSON.stringify(params))
+      showLoading.value = true
       const res = await service.post('/system/user/updateStatus', {
         enData
       })
@@ -143,6 +147,8 @@
       }
     } catch (err) {
       console.log('禁用/启动失败', err);
+    } finally {
+      showLoading.value = false
     }
 
   }
@@ -198,7 +204,7 @@
         pageSize: pageSize.value,
       }
       const enData = desEncrypt(JSON.stringify(params))
-
+      showLoading.value = true
       const res = await service.get('/system/user/list', {
         params: {
           enData
@@ -238,6 +244,8 @@
       console.log('filterParams', filterParams.value);
     } catch (err) {
       console.log('获取用户列表失败', err);
+    } finally {
+      showLoading.value = false
     }
 
 

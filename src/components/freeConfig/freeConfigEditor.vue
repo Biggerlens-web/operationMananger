@@ -52,7 +52,7 @@
     }>()
 
     const counterStore = useCounterStore()
-    const { appList, OSlist, defaultAppNo } = storeToRefs(counterStore)
+    const { appList, OSlist, defaultAppNo, showLoading } = storeToRefs(counterStore)
     const emit = defineEmits<{
         'update:showEditor': [value: boolean]
     }>()
@@ -97,6 +97,7 @@
                 ...formData.value
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/feeConfig/save', {
                 enData
             })
@@ -109,6 +110,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (ruleFormRef: any) => {

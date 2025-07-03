@@ -61,7 +61,7 @@
     import { storeToRefs } from 'pinia';
     import { ref, watch } from 'vue'
     const stores = useCounterStore()
-    const { appList, OSlist, international, channelList } = storeToRefs(stores)
+    const { appList, OSlist, international, channelList, showLoading } = storeToRefs(stores)
     const props = defineProps<{
         dialogVisible: boolean
         bannerPointInfo: any
@@ -115,6 +115,7 @@
 
     const saveChange = async () => {
         try {
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 ...formData.value,
@@ -135,6 +136,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 

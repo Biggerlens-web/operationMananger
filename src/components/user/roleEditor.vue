@@ -21,10 +21,13 @@
 
 <script lang="ts" setup>
     import service from '@/axios';
+    import { useCounterStore } from '@/stores/counter';
     import { desEncrypt } from '@/utils/des';
     import { ElMessage } from 'element-plus';
+    import { storeToRefs } from 'pinia';
     import { onMounted, ref, toRaw, watch } from 'vue';
-
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
 
     const props = defineProps<{
         dialogVisible: boolean
@@ -41,6 +44,7 @@
                 timestamp: Date.now()
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get('/system/userRole/assign', {
                 params: {
                     enData
@@ -62,6 +66,8 @@
             }
         } catch (err) {
             console.log('获取用户角色列表失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     watch(() => props.dialogVisible, (newVal) => {
@@ -92,6 +98,7 @@
             }
             console.log('保存参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/system/userRole/save', {
                 enData
             })
@@ -111,6 +118,8 @@
         } catch (err) {
             ElMessage.error('网络错误')
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = () => {
@@ -133,6 +142,7 @@
                 timestamp: Date.now()
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get('/system/role/list', {
                 params: {
                     enData
@@ -145,6 +155,8 @@
             }
         } catch (err) {
             console.log('获取角色列表失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 

@@ -104,7 +104,7 @@
     import { desEncrypt } from '@/utils/des';
     const counterStore = useCounterStore()
     const router = useRouter()
-    const { showPagestion, regionList, operationClass, backgroundFliterParams, defaultAppNo } = storeToRefs(counterStore)
+    const { showPagestion, regionList, operationClass, backgroundFliterParams, defaultAppNo, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -127,6 +127,7 @@
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/background/move', {
                 enData
             })
@@ -147,6 +148,8 @@
 
 
             console.log('移动失败', err);
+        } finally {
+            showLoading.value = false
         }
 
     }
@@ -166,6 +169,7 @@
                 timestamp: Date.now()
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res: any = await service.post('/background/list', {
                 enData
             })
@@ -182,6 +186,7 @@
             console.log('获取贴纸分类列表失败', err);
         } finally {
             loading.value = false
+            showLoading.value = false
         }
     }
 
@@ -198,6 +203,7 @@
                 query: searchParams.value.query,
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get('/background/exportExcel', {
                 params: {
                     enData
@@ -230,6 +236,8 @@
         } catch (err) {
             ElMessage.error('导出失败')
             console.log('导出失败', err);
+        } finally {
+            showLoading.value = false
         }
 
 
@@ -254,7 +262,7 @@
             formData.append('region', searchParams.value.region)
             formData.append('backs', fileInterNational.value)
 
-
+            showLoading.value = true
             const res = await service.post('/background/importExcelInternationalization', formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
@@ -266,6 +274,8 @@
             }
         } catch (err) {
             console.log('导入失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -292,7 +302,7 @@
     //删除分类
     const deleteId = async (id: number) => {
         try {
-
+            showLoading.value = true
             const res = await service.post(`/background/del/${id}`)
 
             if (res.data.code === 200) {
@@ -309,6 +319,8 @@
             }
         } catch (err) {
             console.log('删除失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const deleteSticker = (row: any) => {
@@ -499,6 +511,7 @@
                 region: searchParams.value.region,
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get('/clothingMaterialsType/list', {
                 params: {
                     enData
@@ -510,6 +523,8 @@
             parentList.value = res.data.data.list
         } catch (err) {
             console.log('获取父类列表失败', err);
+        } finally {
+            showLoading.value = false
         }
 
     }
@@ -517,15 +532,7 @@
 
 
     watch(() => defaultAppNo.value, () => {
-        searchParams.value = {
-            query: '',
-            appNo: defaultAppNo.value,
-            region: 'domestic',
-
-            pageNum: 1,
-            pageSize: 10
-        }
-        getClothList()
+        resetSearch()
     })
 
     onMounted(() => {

@@ -20,7 +20,7 @@
 
             <el-divider class="divider" />
 
-            <div class="filter-container">
+            <!-- <div class="filter-container">
                 <div class="filter-row">
 
                     <div class="filter-item">
@@ -48,7 +48,7 @@
                 </div>
 
 
-            </div>
+            </div> -->
         </el-card>
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
@@ -58,7 +58,8 @@
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                :total="1000" />
+                :total="totalData" v-model:current-page="searchParams.pageNum"
+                v-model:page-size="searchParams.pageSize" />
         </el-card>
     </div>
 </template>
@@ -72,14 +73,20 @@
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import { ElMessageBox } from 'element-plus';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, defaultAppNo, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
     }
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
+
+    //数据总数
+    const totalData = ref<number>(0)
+
 
     //新增标签
     const showLabelsEditor = ref<boolean>(false)
@@ -107,24 +114,24 @@
 
     //搜索参数
     interface SearchParams {
-        inputText: string
-        companyNo: string
+        pageNum: number
+        pageSize: number
 
 
 
     }
     const searchParams = ref<SearchParams>(
         {
-            inputText: '',
-            companyNo: '',
+            pageNum: 1,
+            pageSize: 10
 
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            inputText: '',
-            companyNo: '',
+            pageNum: 1,
+            pageSize: 10
 
         }
         getUserList()
@@ -148,146 +155,7 @@
     }
     // 生成用户数据
     const appData = ref<AppTagConfig[]>([
-        {
-            appName: "美图秀秀",
-            parentTag: "滤镜",
-            tagName: "人像",
-            tagNameEn: "Portrait",
-            order: 1
-        },
-        {
-            appName: "美图秀秀",
-            parentTag: "滤镜",
-            tagName: "风景",
-            tagNameEn: "Landscape",
-            order: 2
-        },
-        {
-            appName: "美图秀秀",
-            parentTag: "滤镜",
-            tagName: "美食",
-            tagNameEn: "Food",
-            order: 3
-        },
-        {
-            appName: "美图秀秀",
-            parentTag: "贴纸",
-            tagName: "可爱",
-            tagNameEn: "Cute",
-            order: 1
-        },
-        {
-            appName: "美图秀秀",
-            parentTag: "贴纸",
-            tagName: "节日",
-            tagNameEn: "Holiday",
-            order: 2
-        },
-        {
-            appName: "轻颜相机",
-            parentTag: "美颜",
-            tagName: "自然",
-            tagNameEn: "Natural",
-            order: 1
-        },
-        {
-            appName: "轻颜相机",
-            parentTag: "美颜",
-            tagName: "精致",
-            tagNameEn: "Delicate",
-            order: 2
-        },
-        {
-            appName: "轻颜相机",
-            parentTag: "特效",
-            tagName: "复古",
-            tagNameEn: "Vintage",
-            order: 1
-        },
-        {
-            appName: "轻颜相机",
-            parentTag: "特效",
-            tagName: "梦幻",
-            tagNameEn: "Dreamy",
-            order: 2
-        },
-        {
-            appName: "B612咔叽",
-            parentTag: "AR效果",
-            tagName: "动物",
-            tagNameEn: "Animal",
-            order: 1
-        },
-        {
-            appName: "B612咔叽",
-            parentTag: "AR效果",
-            tagName: "卡通",
-            tagNameEn: "Cartoon",
-            order: 2
-        },
-        {
-            appName: "B612咔叽",
-            parentTag: "场景",
-            tagName: "派对",
-            tagNameEn: "Party",
-            order: 1
-        },
-        {
-            appName: "B612咔叽",
-            parentTag: "场景",
-            tagName: "旅行",
-            tagNameEn: "Travel",
-            order: 2
-        },
-        {
-            appName: "Faceu激萌",
-            parentTag: "装饰",
-            tagName: "萌趣",
-            tagNameEn: "Cute",
-            order: 1
-        },
-        {
-            appName: "Faceu激萌",
-            parentTag: "装饰",
-            tagName: "潮流",
-            tagNameEn: "Trendy",
-            order: 2
-        },
-        {
-            appName: "Faceu激萌",
-            parentTag: "妆容",
-            tagName: "日常",
-            tagNameEn: "Daily",
-            order: 1
-        },
-        {
-            appName: "Faceu激萌",
-            parentTag: "妆容",
-            tagName: "舞台",
-            tagNameEn: "Stage",
-            order: 2
-        },
-        {
-            appName: "无他相机",
-            parentTag: "修图",
-            tagName: "基础",
-            tagNameEn: "Basic",
-            order: 1
-        },
-        {
-            appName: "无他相机",
-            parentTag: "修图",
-            tagName: "高级",
-            tagNameEn: "Advanced",
-            order: 2
-        },
-        {
-            appName: "无他相机",
-            parentTag: "滤镜",
-            tagName: "时尚",
-            tagNameEn: "Fashion",
-            order: 1
-        }
+
     ])
     interface filterParams {
         note: string
@@ -296,17 +164,37 @@
     }
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
+        try {
+            const params = {
+                timestamp: Date.now(),
+                pageNum: searchParams.value.pageNum,
+                pageSize: searchParams.value.pageSize,
+                appNo: defaultAppNo.value
             }
-        })
-        console.log('filterParams', filterParams.value);
+            const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
+            const res = await service.post('', {
+                enData
+            })
+            appData.value = res.data.rows
+            totalData.value = res.data.total
+            console.log('获取用户标签', res);
+
+            const keys = Object.keys(appNote)
+            filterParams.value = keys.map((item) => {
+                return {
+                    note: appNote[item],
+                    isShow: true,
+                    key: item
+                }
+            })
+            console.log('filterParams', filterParams.value);
+        } catch (err) {
+            console.log('获取用户标签失败', err);
+        } finally {
+            showLoading.value = false
+        }
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {

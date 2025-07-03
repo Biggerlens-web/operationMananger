@@ -59,7 +59,7 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
-    const { appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { appList, OSlist, channelList, showLoading } = storeToRefs(counterStore)
     const props = defineProps<{
         dialogVisible: boolean
         bannerInfo: any
@@ -184,7 +184,7 @@
     const saveChange = async () => {
         try {
 
-
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
                 ...formData.value,
@@ -208,6 +208,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (ruleFormRef: any) => {

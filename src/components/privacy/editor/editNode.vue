@@ -4,7 +4,7 @@
             <el-row :gutter="20">
                 <el-col :span="12">
                     <el-form-item label="系统" prop="os">
-                        <el-input v-model="formData.os" placeholder="请输入系统" />
+                        <el-input v-model="formData.os" placeholder="请输入系统" :disabled="true" />
                     </el-form-item>
                 </el-col>
                 <el-col :span="12">
@@ -197,7 +197,7 @@
     import service from '@/axios'
     const stores = useCounterStore()
 
-    const { channelList } = storeToRefs(stores)
+    const { channelList, showLoading } = storeToRefs(stores)
     const dialogVisable = defineModel('dialogVisable', {
         type: Boolean,
         default: false
@@ -205,17 +205,21 @@
 
     const props = defineProps<{
         nodeInfo: any
+        addInfo: any
     }>()
 
     const SDKList = ref<any>([])
     const getEditInfo = async () => {
         try {
+            showLoading.value = true
             const res = await service.get('/privacy/getDetail')
             console.log('获取编辑信息', res);
 
             SDKList.value = res.data.data.threeSDKS
         } catch (err) {
             console.log('获取编辑信息失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     onMounted(() => {
@@ -247,6 +251,9 @@
             if (props.nodeInfo.channelVos.length) {
                 formData.channels = props.nodeInfo.channelVos
             }
+        } else if (newV && props.addInfo) {
+            formData.os = props.addInfo.os
+            formData.appNo = props.addInfo.appNo
         }
     })
     const formRef = ref<FormInstance>()
@@ -519,14 +526,23 @@
 
             console.log('提交参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/privacy/saveDetail', {
                 enData
             }
 
             )
             console.log('保存编辑', res);
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                handleClose()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleSubmit = async () => {

@@ -4,7 +4,8 @@
 
             <template #default="{ node, data }">
                 <div class="root-node">
-                    <span :class="{ linkStyle: node.label.includes('http') }" @click="viewLink(node.label)">{{
+                    <span :class="{ linkStyle: node.label.includes('https') }" @click="viewLink(node.label)">{{
+
                         node.label }}</span>
                 </div>
             </template>
@@ -28,10 +29,11 @@
     import { storeToRefs } from 'pinia';
     import { ref, watch } from 'vue'
     const stores = useCounterStore()
-    const { OSlist } = storeToRefs(stores)
+    const { OSlist, showLoading } = storeToRefs(stores)
     const props = defineProps<{
         dialogVisible: boolean
         appNo: any
+        appName: string
     }>()
 
     const getAppInfo = async (os: string) => {
@@ -41,76 +43,104 @@
                 appNo: props.appNo,
                 os
             }
-            console.log('参数', params);
+
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post(`/appInfoDetail/findByAppNo`, {
                 enData
             })
-
             console.log('获取应用信息', res);
             if (res.data.rows.length) {
                 const appInfo: any = {
 
-                    label: res.data.rows[0].os
+                    label: res.data.rows[0].os,
+                    children: []
                 }
+                res.data.rows.forEach((item: any) => {
+                    console.log('语言', item);
+                    const child: any = {
+                        label: item.language,
+                        children: [
+                            {
+                                label: '隐私政策',
+                                value: 'privacy',
+                                children: []
+                            },
+                            {
+                                label: '用户协议',
+                                value: 'userAgreement',
+                                children: []
+                            },
+                            {
+                                label: '第三方共享清单',
+                                value: 'thirdSDK',
+                                children: []
+                            },
+                            {
+                                label: '个人信息收集清单',
+                                value: 'userInfo',
+                                children: []
+                            }
+                        ]
+                    }
+
+                    if (item.channelVos.length) {
+                        item.channelVos.forEach((channel: any) => {
+                            child.children.forEach((el: any) => {
+
+                                const url = `https://privacy.biggerlens.cn/app/${el.value}?name=${props.appName}&os=${os.toLowerCase()}&language=${item.language}&channelNo=${channel.channelNo}`
+                                el.children.push({
+                                    label: url,
+
+                                })
+                            })
+
+                        })
+
+
+                    } else {
+                        child.children.forEach((el: any) => {
+                            const url = `https://privacy.biggerlens.cn/app/${el.value}?name=${props.appName}&os=${os.toLowerCase()}&language=${item.language}`
+                            el.children.push({
+                                label: url,
+
+                            })
+                        })
+                    }
+                    appInfo.children.push(child)
+                })
                 data.value.push(appInfo)
             }
+            console.log('data,', data.value);
 
         } catch (err) {
             console.log('获取应用信息失败', err);
 
+        } finally {
+            showLoading.value = false
         }
     }
 
     watch(() => props.dialogVisible, (newV) => {
         if (newV && props.appNo) {
-            console.log('props.data', props.appNo);
+
             OSlist.value.forEach((item: string) => {
                 getAppInfo(item)
             })
         }
+        if (!newV) {
+            data.value = []
+        }
     })
     const data = ref<any>(
         [
-            // {
-            //     label: 'android',
-            //     children: [
-            //         {
-            //             label: 'zh',
-            //             children: [
-            //                 {
-            //                     label: '隐私政策',
-            //                     children: [
-            //                         {
-            //                             label: 'https://privacy.biggerlens.cn/app/privacy?name=fullstackPhoneMove&os=android&language=zh&channelNo=2',
-            //                         },
-            //                         {
-            //                             label: 'https://privacy.biggerlens.cn/app/privacy?name=fullstackPhoneMove&os=android&language=zh&channelNo=2',
-            //                         },
-            //                         {
-            //                             label: 'https://privacy.biggerlens.cn/app/privacy?name=fullstackPhoneMove&os=android&language=zh&channelNo=2',
-            //                         },
-            //                         {
-            //                             label: 'https://privacy.biggerlens.cn/app/privacy?name=fullstackPhoneMove&os=android&language=zh&channelNo=2',
-            //                         },
-            //                         {
-            //                             label: 'https://privacy.biggerlens.cn/app/privacy?name=fullstackPhoneMove&os=android&language=zh&channelNo=2',
-            //                         },
-            //                         {
-            //                             label: 'https://privacy.biggerlens.cn/app/privacy?name=fullstackPhoneMove&os=android&language=zh&channelNo=2',
-            //                         },
 
-            //                     ]
-            //                 }
-            //             ]
-            //         },
-            //     ]
-            // }
         ]
     )
 
     const viewLink = (label: string) => {
         if (!label.includes('http')) return
+        console.log('label', label);
         window.open(label)
     }
     const handleNodeClick = () => {

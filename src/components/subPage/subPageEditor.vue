@@ -53,7 +53,7 @@
     })
 
     const counterStore = useCounterStore()
-    const { appList, channelList, defaultAppNo } = storeToRefs(counterStore)
+    const { appList, channelList, defaultAppNo, showLoading } = storeToRefs(counterStore)
     const emit = defineEmits<{
         'update:showEditor': [value: boolean]
     }>()
@@ -113,6 +113,7 @@
             }
             console.log('新增参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/subPageConfig/save', {
                 enData
             })
@@ -126,6 +127,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (ruleFormRef: any) => {

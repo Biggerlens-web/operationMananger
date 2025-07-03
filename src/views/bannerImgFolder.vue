@@ -39,7 +39,7 @@
     import { desEncrypt } from '@/utils/des';
     const counterStore = useCounterStore()
     const router = useRouter()
-    const { showPagestion, menuList } = storeToRefs(counterStore)
+    const { showPagestion, menuList, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -78,6 +78,7 @@
     //删除轮播图路径
     const delBannerFolderFn = async (id: number) => {
         try {
+            showLoading.value = true
             const res = await service.post(`/base/bannerImgFolder/del/${id}`)
             if (res.data.code === 200) {
                 ElMessage.success('删除成功')
@@ -87,6 +88,8 @@
             }
         } catch (err) {
 
+        } finally {
+            showLoading.value = false
         }
     }
     const delelteBannerPath = (item: any) => {
@@ -151,6 +154,7 @@
                 pageSize: pageSize.value,
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get('/base/bannerImgFolder/list', {
                 params: {
                     enData
@@ -175,6 +179,8 @@
 
         } catch (err) {
             console.log('获取列表失败', err);
+        } finally {
+            showLoading.value = false
         }
 
     }

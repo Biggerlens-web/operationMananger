@@ -46,7 +46,7 @@
     import { useCounterStore } from '@/stores/counter'
     import { storeToRefs } from 'pinia'
     const stores = useCounterStore()
-    const { appList } = storeToRefs(stores)
+    const { appList, showLoading } = storeToRefs(stores)
     const props = defineProps<{
         dialogVisible: boolean
         permissionInfo: any
@@ -88,6 +88,7 @@
                 type: 'add',
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service('/system/permission/edit', {
                 params: {
                     enData,
@@ -98,6 +99,8 @@
             permissionType1List.value = res.data.data.permissions1
         } catch (err) {
             console.log('获取权限类型失败', err)
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -150,6 +153,7 @@
             }
             console.log('参数', params)
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/system/permission/save', {
                 enData,
             })
@@ -160,7 +164,11 @@
             } else {
                 ElMessage.error(res.data.msg)
             }
-        } catch (err) { }
+        } catch (err) {
+            console.log('保存失败', err)
+        } finally {
+            showLoading.value = false
+        }
     }
     const handleComfirm = (formEl: any) => {
         formEl.validate((valid: any) => {

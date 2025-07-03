@@ -38,7 +38,7 @@
     import { useRoute } from 'vue-router'
     const stores = useCounterStore()
 
-    const { tagList } = storeToRefs(stores)
+    const { tagList, showLoading } = storeToRefs(stores)
 
     const props = defineProps<{
         chosedItem: any
@@ -85,8 +85,12 @@
                 case 'background':
                     url = '/backgroundDetail/batchLabelSave'
                     break;
+                case 'template':
+                    url = '/templateUpDetail/batchLabelSave'
+                    break
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post(url, {
                 enData
             })
@@ -100,6 +104,8 @@
         } catch (err) {
             ElMessage.error('网络错误')
             console.log('批量编辑标签失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 

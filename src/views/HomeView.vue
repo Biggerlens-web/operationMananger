@@ -97,7 +97,7 @@
   const router = useRouter()
   const route = useRoute()
   const counterStore = useCounterStore()
-  const { userName, userAvatar, appList, menuList, companyList, defaultCompanyNo, defaultAppNo, appListInCom } = storeToRefs(counterStore)
+  const { userName, userAvatar, appList, menuList, companyList, defaultCompanyNo, defaultAppNo, appListInCom, showLoading } = storeToRefs(counterStore)
   const isCollapse = ref(false)
   const activeMenu = computed(() => route.path)
 
@@ -139,6 +139,7 @@
       }
       console.log('获取应用参数', params);
       const enData = desEncrypt(JSON.stringify(params))
+      showLoading.value = true
       const res = await service.post('/appInfo/listByCompanyNo', {
         enData
       })
@@ -155,6 +156,8 @@
       }
     } catch (err) {
       console.log('获取该公司下应用列表失败', err);
+    } finally {
+      showLoading.value = false
     }
   }
   watch(() => defaultCompanyNo.value, (newValue) => {

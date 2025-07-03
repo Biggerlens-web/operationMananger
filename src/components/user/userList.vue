@@ -201,7 +201,7 @@
     }
 
     //编辑按钮显示控制
-    const showMoveBtnPath = ['/clothingMaterials/index']
+    const showMoveBtnPath = ['/clothingMaterials/index', '/sticker/index', '/background/index', '/templateUp/index', '/mask/index', '/wallpaper/index']
     const isShowButton = (row: any, type: string) => {
         const path = route.path
         if (!showMoveBtnPath.includes(path)) {

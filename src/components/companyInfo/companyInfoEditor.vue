@@ -38,7 +38,7 @@
     import { storeToRefs } from 'pinia';
     import { ref, watch } from 'vue'
     const counterStore = useCounterStore()
-    const { appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { appList, OSlist, channelList, showLoading } = storeToRefs(counterStore)
     const props = defineProps<{
         dialogVisible: boolean
         companyInfo: any
@@ -98,6 +98,7 @@
                 type: formData.value.companyNo ? 'update' : 'add'
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/companyInfo/save', {
                 enData
             })
@@ -117,6 +118,8 @@
             }
         } catch (err) {
             console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const handleComfirm = (ruleFormRef: any) => {

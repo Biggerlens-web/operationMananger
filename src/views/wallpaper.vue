@@ -1,6 +1,8 @@
 <template>
     <div class="view">
-        <wallpaperEditor v-model:dialog-visible="showEditor" />
+        <clothEditor v-model:show-editor="showEditor" :editorInfo="editorItemInfo" :noHaveParent='true'
+            :type="'wallpaper'" />
+
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
@@ -34,27 +36,26 @@
             <div class="filter-container">
                 <div class="filter-row">
 
+
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="应用" class="filter-select">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
+                        <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
+                            <el-option v-for="item in regionList" :key="item.value" :label="item.label"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="国内外" class="filter-select">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
+                        <el-select filterable v-model="searchParams.wallpaper" placeholder="壁纸类型" class="filter-select">
+                            <el-option v-for="item in regionList" :key="item.value" :label="item.label"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-input v-model="searchParams.inputText" placeholder="类名"></el-input>
+                        <el-input v-model="searchParams.query" placeholder="类名"></el-input>
 
                     </div>
 
                     <div class="filter-item filter-actions">
-                        <el-button type="primary" @click="getUserList">
+                        <el-button type="primary" @click="searching">
                             <el-icon>
                                 <Search />
                             </el-icon>
@@ -76,10 +77,11 @@
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="appData"
-                    @editor="editorWallpaper" @delete="deleteWallpaper"></component>
+                    @editor="editorWallpaper" @delete="deleteWallpaper" @view="viewDetail" @moveIndex="moveIndex">
+                </component>
             </Transition>
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                :total="1000" />
+                :total="totalData" v-model:current-page="searchParams.pageNum" :page-size="searchParams.pageSize" />
         </el-card>
     </div>
 </template>
@@ -89,12 +91,16 @@
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import wallpaperEditor from '@/components/wallpaper/wallpaperEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { nextTick, onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { ElMessageBox } from 'element-plus';
+    import { ElMessage, ElMessageBox } from 'element-plus';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
+    import { useRouter } from 'vue-router';
+    const router = useRouter()
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, showLoading, regionList, defaultAppNo, operationClass, wallpaperFliterParams } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -103,13 +109,24 @@
     const componentName = ref<any>(userTable)
 
 
+    //数据总数
+    const totalData = ref<number>(0)
+
     //新增壁纸
     const showEditor = ref<boolean>(false)
+    watch(() => showEditor.value, (newV) => {
+        if (!newV) {
+            editorItemInfo.value = ''
+            getUserList()
+        }
+    })
     const addWallpaper = () => {
         showEditor.value = true
     }
     //编辑壁纸
+    const editorItemInfo = ref<any>()
     const editorWallpaper = (item: any) => {
+        editorItemInfo.value = item
         showEditor.value = true
     }
 
@@ -125,27 +142,103 @@
             }
         )
     }
+
+    //查看详情
+    const viewDetail = (row: any) => {
+        operationClass.value = row.operationClass
+        router.push('/templateMaterial?id=' + row.id + '&type=wallpapper')
+        console.log('查看详情', row);
+    }
+
+    //移动
+    const moveIndex = async (item: any) => {
+        console.log('移动', item);
+        try {
+
+            const params = {
+                timestamp: Date.now(),
+                id: item.id,
+                type: item.moveType
+            }
+            console.log('参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
+            const res = await service.post('/sticker/move', {
+                enData
+            })
+            console.log('移动', res);
+            if (res.data.code === 200) {
+
+                ElMessage({
+                    message: '移动成功',
+                    type: 'success'
+                })
+                getUserList()
+            } else {
+                ElMessage({
+                    message: res.data.msg,
+                    type: 'error'
+                })
+            }
+        } catch (err) {
+
+
+            console.log('移动失败', err);
+        } finally {
+            showLoading.value = false
+        }
+
+    }
     //搜索参数
     interface SearchParams {
-        inputText: string
-        companyNo: string
-
+        region: string
+        query: string
+        wallpaper: string,
+        pageNum: number,
+        pageSize: number,
 
 
     }
     const searchParams = ref<SearchParams>(
         {
-            inputText: '',
-            companyNo: '',
+            region: '',
+            query: '',
+            wallpaper: '',
+            pageNum: 1, pageSize: 10
 
         }
     )
+
+    watch(() => searchParams.value.pageNum, () => {
+        wallpaperFliterParams.value = {
+            ...searchParams.value,
+
+        }
+        getUserList()
+    })
+
+
+
+    const searching = () => {
+        searchParams.value.pageNum = 1; // 点击查询时，通常重置到第一页
+        wallpaperFliterParams.value = {
+
+            ...searchParams.value
+        }
+        console.log('wallpaperFliterParams', wallpaperFliterParams.value);
+        getUserList();
+    }
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            inputText: '',
-            companyNo: '',
+            region: '',
+            query: '',
+            wallpaper: '',
+            pageNum: 1, pageSize: 10
 
+        }
+        wallpaperFliterParams.value = {
+            ...searchParams.value
         }
         getUserList()
     }
@@ -172,128 +265,19 @@
         totalClicks: '总点击数',
         lastUpdateTime: '最近更新时间',
     }
+
+
+    //监听应用变化
+    watch(() => defaultAppNo.value, (newV) => {
+        if (newV) {
+            resetSearch()
+
+        }
+    })
+
     // 生成用户数据
     const appData = ref<AppContentConfig[]>([
-        {
-            appName: "美图秀秀",
-            sequence: 1,
-            name: "热门滤镜集",
-            region: "中国大陆",
-            i18n: {
-                enabled: true,
-                supportedLanguages: ["zh-CN", "en-US", "ja-JP"]
-            },
-            totalClicks: 1258463,
-            lastUpdateTime: "2023-06-15 09:30:22"
-        },
-        {
-            appName: "美图秀秀",
-            sequence: 2,
-            name: "人像美化工具",
-            region: "全球",
-            i18n: {
-                enabled: true,
-                supportedLanguages: ["zh-CN", "en-US", "ja-JP", "ko-KR", "fr-FR"]
-            },
-            totalClicks: 3452789,
-            lastUpdateTime: "2023-07-22 14:15:36"
-        },
-        {
-            appName: "轻颜相机",
-            sequence: 1,
-            name: "自然美颜",
-            region: "亚洲",
-            i18n: {
-                enabled: true,
-                supportedLanguages: ["zh-CN", "zh-TW", "ja-JP", "ko-KR"]
-            },
-            totalClicks: 978562,
-            lastUpdateTime: "2023-05-18 11:45:03"
-        },
-        {
-            appName: "轻颜相机",
-            sequence: 2,
-            name: "一键修图",
-            region: "中国大陆",
-            i18n: {
-                enabled: false,
-                supportedLanguages: ["zh-CN"]
-            },
-            totalClicks: 658942,
-            lastUpdateTime: "2023-08-03 16:20:45"
-        },
-        {
-            appName: "B612咔叽",
-            sequence: 1,
-            name: "AR贴纸包",
-            region: "全球",
-            i18n: {
-                enabled: true,
-                supportedLanguages: ["zh-CN", "en-US", "ja-JP", "ko-KR", "th-TH"]
-            },
-            totalClicks: 2564871,
-            lastUpdateTime: "2023-07-05 08:55:17"
-        },
-        {
-            appName: "B612咔叽",
-            sequence: 2,
-            name: "动态滤镜",
-            region: "东南亚",
-            i18n: {
-                enabled: true,
-                supportedLanguages: ["en-US", "th-TH", "vi-VN", "id-ID"]
-            },
-            totalClicks: 1236548,
-            lastUpdateTime: "2023-08-12 10:10:33"
-        },
-        {
-            appName: "Faceu激萌",
-            sequence: 1,
-            name: "趣味贴纸",
-            region: "中国大陆",
-            i18n: {
-                enabled: false,
-                supportedLanguages: ["zh-CN"]
-            },
-            totalClicks: 3987452,
-            lastUpdateTime: "2023-06-28 15:40:21"
-        },
-        {
-            appName: "Faceu激萌",
-            sequence: 2,
-            name: "特效相机",
-            region: "亚洲",
-            i18n: {
-                enabled: true,
-                supportedLanguages: ["zh-CN", "zh-TW", "ja-JP", "ko-KR"]
-            },
-            totalClicks: 2145698,
-            lastUpdateTime: "2023-07-30 12:25:48"
-        },
-        {
-            appName: "无他相机",
-            sequence: 1,
-            name: "专业修图工具",
-            region: "中国大陆",
-            i18n: {
-                enabled: false,
-                supportedLanguages: ["zh-CN"]
-            },
-            totalClicks: 856321,
-            lastUpdateTime: "2023-05-25 09:15:27"
-        },
-        {
-            appName: "无他相机",
-            sequence: 2,
-            name: "智能美颜",
-            region: "全球",
-            i18n: {
-                enabled: true,
-                supportedLanguages: ["zh-CN", "en-US", "ja-JP", "ko-KR", "ru-RU"]
-            },
-            totalClicks: 1458963,
-            lastUpdateTime: "2023-08-08 17:30:52"
-        }
+
     ])
     interface filterParams {
         note: string
@@ -302,17 +286,41 @@
     }
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
+        try {
+            const params = {
+                timestamp: Date.now(),
+                appNo: defaultAppNo.value,
+                pageNum: searchParams.value.pageNum,
+                pageSize: searchParams.value.pageSize,
+                region: searchParams.value.region,
+                query: searchParams.value.query,
+                wallpaper: searchParams.value.wallpaper,
+
             }
-        })
-        console.log('filterParams', filterParams.value);
+            const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
+            const res = await service.post('', {
+                enData
+            })
+            totalData.value = res.data.total
+            appData.value = res.data.rows
+            console.log('获取壁纸列表', res);
+
+            const keys = Object.keys(appNote)
+            filterParams.value = keys.map((item) => {
+                return {
+                    note: appNote[item],
+                    isShow: true,
+                    key: item
+                }
+            })
+            console.log('filterParams', filterParams.value);
+        } catch (err) {
+            console.log("获取壁纸列表失败", err);
+        } finally {
+            showLoading.value = false
+        }
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {
@@ -334,7 +342,24 @@
         }
         console.log('keyItem', keyItem);
     }
-    onMounted(() => {
+    onMounted(async () => {
+        if (Object.keys(wallpaperFliterParams.value).length > 0) {
+            searchParams.value = {
+                ...wallpaperFliterParams.value
+            }
+
+        } else {
+
+            searchParams.value = {
+                query: '',
+                wallpaper: '',
+                region: regionList.value[0].value,
+
+                pageNum: 1,
+                pageSize: 10
+            }
+        }
+        await nextTick()
         getUserList();
         showPagestion.value = true
     })

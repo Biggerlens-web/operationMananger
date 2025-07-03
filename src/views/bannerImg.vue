@@ -82,7 +82,7 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion } = storeToRefs(counterStore)
+    const { showPagestion, showLoading } = storeToRefs(counterStore)
 
 
 
@@ -129,6 +129,7 @@
 
     const delBannerImg = async (id: number) => {
         try {
+            showLoading.value = true
             const res = await service.post(`/base/bannerImg/del/${id}`)
             if (res.data.code === 200) {
                 ElMessage.success('删除成功')
@@ -138,6 +139,8 @@
             }
         } catch (err) {
             console.log('删除失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const deleteBannerImg = (item: any) => {
@@ -225,6 +228,7 @@
 
             console.log('轮播图列表参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/base/bannerImg/list',
                 {
                     enData
@@ -251,6 +255,8 @@
             console.log('filterParams', filterParams.value);
         } catch (err) {
             console.log('获取轮播图列表失败', err);
+        } finally {
+            showLoading.value = false
         }
 
     }
@@ -288,6 +294,7 @@
                 pageSize: 999999
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.get('/base/bannerImgFolder/list', {
                 params: {
                     enData
@@ -298,6 +305,8 @@
             console.log('bannerFolderList', bannerFolderList.value);
         } catch (err) {
             console.log('获取路径列表失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     const route = useRoute()

@@ -75,7 +75,7 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion, OSlist, defaultAppNo } = storeToRefs(counterStore)
+    const { showPagestion, OSlist, defaultAppNo, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -109,6 +109,7 @@
     //删除配置
     const delConfigFn = async (id: number) => {
         try {
+            showLoading.value = true
             const res = await service.post(`/feeConfig/del/${id}`)
             if (res.data.code === 200) {
                 ElMessage.success('删除成功')
@@ -118,6 +119,8 @@
             }
         } catch (err) {
 
+        } finally {
+            showLoading.value = false
         }
     }
     const deleteConfig = (item: any) => {
@@ -150,6 +153,7 @@
                 [key]: item[key]
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/feeConfig/save', {
                 enData
             })
@@ -162,6 +166,8 @@
             }
         } catch (err) {
             console.log('修改失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     //修改数字输入框
@@ -174,6 +180,7 @@
                 [key]: item[key]
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/feeConfig/save', {
                 enData
             })
@@ -186,6 +193,8 @@
             }
         } catch (err) {
             console.log('修改失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
     //搜索参数
@@ -285,6 +294,7 @@
                 os: searchParams.value.os
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/feeConfig/list', {
                 enData
             })
@@ -309,6 +319,8 @@
             console.log('filterParams', filterParams.value);
         } catch (err) {
             console.log('获取列表失败', err);
+        } finally {
+            showLoading.value = false
         }
 
 

@@ -39,7 +39,7 @@
   import service from '@/axios';
   import { desEncrypt } from '@/utils/des';
   const counterStore = useCounterStore()
-  const { showPagestion } = storeToRefs(counterStore)
+  const { showPagestion, showLoading } = storeToRefs(counterStore)
   const components: any = {
     userTable,
     userList
@@ -81,6 +81,7 @@
   //删除角色
   const deleteRoleFn = async (id: number) => {
     try {
+      showLoading.value = true
       const res = await service.post(`/system/role/del/${id}`)
       console.log('删除角色', res);
       if (res.data.code === 200) {
@@ -91,6 +92,8 @@
       }
     } catch (err) {
       console.log('删除失败', err);
+    } finally {
+      showLoading.value = false
     }
   }
   const deleteRole = (row: any) => {
@@ -153,6 +156,7 @@
         pageSize: pageSize.value,
       }
       const enData = desEncrypt(JSON.stringify(params))
+      showLoading.value = true
       const res = await service.get('/system/role/list', {
         params: {
           enData
@@ -172,6 +176,8 @@
       console.log('filterParams', filterParams.value);
     } catch (err) {
       console.log('获取用户列表失败', err);
+    } finally {
+      showLoading.value = false
     }
 
   }

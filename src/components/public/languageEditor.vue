@@ -39,6 +39,10 @@
     import { ref, watch } from 'vue';
     import service from '@/axios';
     import { ElMessage } from 'element-plus';
+    import { useCounterStore } from '@/stores/counter';
+    import { storeToRefs } from 'pinia';
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
     const props = defineProps<{
         dialogVisable: boolean
         configId: any
@@ -61,6 +65,7 @@
                 id: props.configId
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/helpMeRetouchDetail/list', {
                 enData
             })
@@ -82,6 +87,8 @@
 
         } catch (err) {
             console.log('获取明细列表失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -110,6 +117,7 @@
                 config: JSON.stringify(item.config)
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/helpMeRetouchDetail/save', {
                 enData
             })
@@ -121,6 +129,8 @@
             }
         } catch (err) {
             console.log('修改字段说明失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -143,6 +153,7 @@
             }
             console.log('保存国际化参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post('/helpMeRetouchDetail/save', {
                 enData
             })
@@ -156,6 +167,8 @@
             }
         } catch (err) {
             console.log('保存国际化失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 

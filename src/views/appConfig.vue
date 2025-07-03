@@ -139,7 +139,7 @@
   const autoOprationStore = useAutoOpration()
   const { JSONEditorValue, JSONEditorNote } = storeToRefs(autoOprationStore)
   const {
-    appList, channelList, OSlist
+    appList, channelList, OSlist, showLoading
   } = storeToRefs(counterStore)
   // 筛选相关
   const activeApp = ref<string | number>('')
@@ -165,6 +165,7 @@
       params.config = JSON.stringify(enCodeObj(config))
       params.configNote = JSON.stringify(enCodeObj(configNote))
       const paramStr = desEncrypt(JSON.stringify(params))
+      showLoading.value = true
       const res = await service.post('/appConfig/json/save', {
         enData: paramStr
       })
@@ -177,6 +178,8 @@
       }
     } catch (err) {
       console.log('修改失败', err);
+    } finally {
+      showLoading.value = false
     }
   }
   const changeSwitch = (item: any) => {
@@ -310,6 +313,7 @@
 
       console.log('保存参数', params);
       const paramStr = desEncrypt(JSON.stringify(params))
+      showLoading.value = true
       const res = await service.post('/appConfig/json/save', {
         enData: paramStr
       })
@@ -329,6 +333,8 @@
 
     } catch (err) {
       ElMessage.error('保存失败')
+    } finally {
+      showLoading.value = false
     }
 
   }
@@ -437,24 +443,28 @@
 
     // 遍历 jsonData 中的所有属性
     console.log('path', path);
+    console.log('Object.entries(noteObj)', Object.entries(noteObj));
     for (const [key, val] of Object.entries(noteObj)) {
       // 如果是直接匹配到顶层属性
       if (key.includes(',')) {
+
         if (key.includes(path)) {
           noteObj[key] = value;
           assaginOBj(key, value, noteObj)
-          return
+
+        }
+      } else {
+        if (key === path) {
+          noteObj[path] = value;
+          console.log(`更新顶层属性 ${path}:`, value);
+          console.log('noteObj', noteObj);
+          console.log('comments', comments.value);
+          assaginOBj(key, value, noteObj)
+          console.log('noteObj', comments.value);
+          return;
         }
       }
-      if (key === path) {
-        noteObj[path] = value;
-        console.log(`更新顶层属性 ${path}:`, value);
-        console.log('noteObj', noteObj);
-        console.log('comments', comments.value);
-        assaginOBj(key, value, noteObj)
-        console.log('noteObj', comments.value);
-        return;
-      }
+
 
 
     }
@@ -474,7 +484,7 @@
       }
       console.log('参数------', params);
       const paramStr = desEncrypt(JSON.stringify(params))
-
+      showLoading.value = true
       const res = await service.get(`/appConfig/json/list/${appNo}`, {
         params: {
           enData: paramStr
@@ -495,6 +505,7 @@
       console.log('获取自动化配置列表', err);
     } finally {
       loading.value = false
+      showLoading.value = false
     }
   }
   //编辑配置
@@ -512,6 +523,7 @@
 
   const deleteConfig = async (item: any) => {
     try {
+      showLoading.value = true
       const res = await service.post(`/appConfig/json/delete/${item.id}`)
       if (res.data.code === 200) {
         ElMessage.success('删除成功')
@@ -521,6 +533,8 @@
       }
     } catch (err) {
       ElMessage.error('删除失败')
+    } finally {
+      showLoading.value = false
     }
 
   }

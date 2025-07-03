@@ -6,8 +6,19 @@
                 <span>所属类</span>
                 <el-select v-model="formData.clothingMaterialsId" placeholder="请选择">
                     <el-option v-for="item in typeList" :label="item.name" :value="item.id" :key="item.id" />
-
                 </el-select>
+            </div>
+
+            <div class="dialog_input" v-if="route.query.type === 'template'">
+                <span>版本号</span>
+                <el-input v-model="formData.version" placeholder="请输入版本号">
+
+                </el-input>
+            </div>
+            <div class="dialog_input" v-if="route.query.type === 'template'">
+                <span>是否推荐模板</span>
+                <el-switch v-model="formData.isRecommend" active-text="是" inactive-text="否" :active-value="true"
+                    :inactive-value="false"></el-switch>
             </div>
             <div class="dialog_input">
                 <span>是否付费</span>
@@ -36,11 +47,14 @@
 
 <script lang="ts" setup>
     import service from '@/axios';
+    import { useCounterStore } from '@/stores/counter';
     import { desEncrypt } from '@/utils/des';
     import { ElMessage } from 'element-plus';
-    import { reactive, ref, watch, toRaw } from 'vue';
+    import { storeToRefs } from 'pinia';
+    import { reactive, ref, watch, toRaw, version } from 'vue';
     import { useRoute } from 'vue-router';
-
+    const stores = useCounterStore()
+    const { showLoading } = storeToRefs(stores)
     const dialogBatchEdite = defineModel('dialogBatchEdite')
 
     const props = defineProps<{
@@ -53,8 +67,15 @@
         clothingMaterialsId: '',
         operationClassId: [],
         pay: 0,
+        version: '',
+        isRecommend: false,
     })
     const handleClose = () => {
+        formData.clothingMaterialsId = ''
+        formData.operationClassId = []
+        formData.pay = 0
+        formData.version = ''
+        formData.isRecommend = false
         dialogBatchEdite.value = false
 
     }
@@ -85,10 +106,18 @@
                     url = '/backgroundDetail/saveBatchUpdate'
                     params.backId = formData.clothingMaterialsId
                     break;
+
+                case 'template':
+                    url = '/templateUpDetail/saveBatchUpdate'
+                    params.templateUpId = formData.clothingMaterialsId
+                    params.version = formData.version
+                    params.isRecommend = formData.isRecommend
+                    break
             }
 
             console.log('保存编辑啊参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post(url, {
                 enData
             })
@@ -108,6 +137,8 @@
             }
         } catch (err) {
 
+        } finally {
+            showLoading.value = false
         }
 
     }
@@ -138,8 +169,12 @@
                 case 'background':
                     url = '/backgroundDetail/batchUpdateEdit'
                     break;
+                case 'template':
+                    url = '/templateUpDetail/batchUpdateEdit'
+                    break;
             }
             const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res = await service.post(url, {
                 enData
             })
@@ -158,12 +193,19 @@
                     typeList.value = res.data.data.backgrounds
                     formData.clothingMaterialsId = res.data.data.backId
                     break;
+                case 'template':
+                    typeList.value = res.data.data.templateUps
+                    formData.clothingMaterialsId = res.data.data.templateUpId
+
+                    break;
             }
 
             opreationType.value = res.data.data.operationClassArr
         } catch (err) {
             console.log('获取选择信息失败', err);
 
+        } finally {
+            showLoading.value = false
         }
     }
 
