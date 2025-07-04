@@ -78,7 +78,7 @@
         <!-- 是否付费选择区域 -->
         <div class="form-item">
           <span class="label">是否付费</span>
-          <el-switch v-model="formData.pay" :active-value="1" :inactive-value="0" active-text="付费"
+          <el-switch v-model="formData.isPay" :active-value="true" :inactive-value="false" active-text="付费"
             inactive-text="免费"></el-switch>
         </div>
 
@@ -136,7 +136,7 @@
 
     smallUrl: '',
     keyword: '',
-    pay: 0,
+    isPay: false,
     backgroundWidth: 0,
     backgroundHeight: 0,
     version: '',
@@ -183,7 +183,7 @@
         bigUrl: formData.bigUrl.includes('http') ? formData.bigUrl : formData.bigUrl.split(',')[1],
         smallUrl: formData.smallUrl.includes('http') ? formData.smallUrl : formData.smallUrl.split(',')[1],
         keyword: formData.keyword,
-        pay: formData.pay,
+        isPay: formData.isPay,
         timestamp: Date.now(),
       }
       if (formData.bigUrl.includes('http')) {
@@ -216,7 +216,7 @@
           coverImage: formData.smallUrl.includes('http') ? formData.smallUrl : formData.smallUrl.split(',')[1],
           version: formData.version,
           keyword: formData.keyword,
-          pay: formData.pay,
+          isPay: formData.isPay,
           templateType: props.isAddChild ? 2 : 1,
           templateParentId: props.isAddChild,
           isRecommend: formData.isRecommend,
@@ -280,7 +280,7 @@
 
       smallUrl: '',
       keyword: '',
-      pay: 0,
+      isPay: false,
       backgroundWidth: 0,
       backgroundHeight: 0,
       version: '',
@@ -337,7 +337,7 @@
             bigUrl: props.editData.bigUrl ? props.editData.bigUrl : '',
             smallUrl: props.editData.smallUrl ? props.editData.smallUrl : '',
             keyword: props.editData.keyword || '',
-            pay: props.editData.pay === undefined ? 0 : props.editData.pay,
+            isPay: props.editData.isPay === undefined ? false : props.editData.isPay,
             isVip: props.editData.isVip || false,
 
           })
@@ -351,7 +351,7 @@
             bigUrl: props.editData.backgroundUrl ? props.editData.backgroundUrl : '',
             smallUrl: props.editData.coverUrl ? props.editData.coverUrl : '',
             keyword: props.editData.keyword || '',
-            pay: props.editData.pay === true ? 1 : 0,
+            isPay: props.editData.isPay,
             backgroundWidth: props.editData.backgroundWidth || 0,
             backgroundHeight: props.editData.backgroundHeight || 0,
             version: props.editData.version || '',
@@ -362,40 +362,9 @@
         }
 
 
-        // if (formData.bigUrl) {
-        //   try {
-        //     const res = await fetch(formData.bigUrl)
-        //     const blob = await res.blob()
-        //     const fileName = 'smallIMg' + Date.now()
-        //     const file = new File([blob], fileName, { type: blob.type })
-        //     const render = new FileReader()
-        //     render.onload = (e) => {
-        //       formData.bigUrl = e.target?.result as string
-        //     }
-        //     render.readAsDataURL(file)
-        //   } catch (err) {
-        //     formData.bigUrl = ''
-        //     console.log('获取图片失败', err)
-        //   }
-        // }
-        // if (formData.smallUrl) {
-        //   try {
-        //     const res = await fetch(formData.smallUrl)
-        //     const blob = await res.blob()
-        //     const fileName = 'smallIMg' + Date.now()
-        //     const file = new File([blob], fileName, { type: blob.type })
-        //     const render = new FileReader()
-        //     render.onload = (e) => {
-        //       formData.smallUrl = e.target?.result as string
-        //     }
-        //     render.readAsDataURL(file)
-        //   } catch (err) {
-        //     formData.smallUrl = ''
-        //     console.log('获取图片失败', err)
-        //   }
-        // }
+
       } else if (!isOpen) {
-        // 对话框关闭时不立即重置，由handleClose处理
+
       }
     },
     { immediate: true },

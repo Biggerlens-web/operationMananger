@@ -1,1256 +1,1254 @@
 {
-    "netip": "http://inapp.biggerlens.com/",
-    "individuationPiCutConfigBean": {
-        "hwPayId": "individuation_picut_count",
-        "isPayUnlock": true,
-        "paymentAmount": 3,
-        "paymentUnlockCount": 1,
-        "isNoLimit": true,
-        "freeNum": 2
+  "netip": "http://inapp.biggerlens.com/",
+  "individuationPiCutConfigBean": {
+    "hwPayId": "individuation_picut_count",
+    "isPayUnlock": true,
+    "paymentAmount": 3,
+    "paymentUnlockCount": 1,
+    "isNoLimit": true,
+    "freeNum": 2
+  },
+  "piCutConfigBean": {
+    "hwPayId": "picut_count",
+    "isPayUnlock": true,
+    "paymentAmount": 3,
+    "paymentUnlockCount": 1,
+    "isNoLimit": false,
+    "freeNum": 3
+  },
+  "questionnaireConfigBeanList": [
+    {
+      "language": "zh",
+      "isShow": true,
+      "version": 12,
+      "questionnaireString": "https://www.wjx.cn/vm/tpPFQ5B.aspx# "
     },
-    "piCutConfigBean": {
-        "hwPayId": "picut_count",
-        "isPayUnlock": true,
-        "paymentAmount": 3,
-        "paymentUnlockCount": 1,
-        "isNoLimit": false,
-        "freeNum": 3
+    {
+      "language": "en",
+      "isShow": true,
+      "version": 10,
+      "questionnaireString": "https://www.wjx.cn/vm/QgBdfPf.aspx#"
     },
-    "questionnaireConfigBeanList": [
-        {
-            "language": "zh",
-            "isShow": true,
-            "version": 12,
-            "questionnaireString": "https://www.wjx.cn/vm/tpPFQ5B.aspx# "
-        },
-        {
-            "language": "en",
-            "isShow": true,
-            "version": 10,
-            "questionnaireString": "https://www.wjx.cn/vm/QgBdfPf.aspx#"
-        },
-        {
-            "language": "ja",
-            "isShow": true,
-            "version": 9,
-            "questionnaireString": "https://www.wjx.cn/vm/rXV9kMz.aspx#"
-        },
-        {
-            "language": "ru",
-            "isShow": true,
-            "version": 9,
-            "questionnaireString": "https://www.wjx.cn/vm/PLRrzJD.aspx#"
-        }
-    ],
-    "xiaomiConfig": {
-        "xiaomiFirstPayDistanceOpen": false,
-        "xiaomiFirstPayDistanceOpenHide": false
+    {
+      "language": "ja",
+      "isShow": true,
+      "version": 9,
+      "questionnaireString": "https://www.wjx.cn/vm/rXV9kMz.aspx#"
     },
-    "adsConfig": {
-        "isShowAndLoadMainAdsView": true,
-        "loadAdsConfig": {
-            "xiaomi": "XIAOMI_ADS",
-            "oppo": "TT_ADS",
-            "hw": "HW_ADS",
-            "vivo": "",
-            "flyme": "TT_ADS",
-            "umeng": "TT_ADS"
-        },
-        "interactionConfig": {
-            "save_code": {
-                "hw": "a9zj3982dq",
-                "xiaomi": "d66677fa93b531204d782428c785906b",
-                "tt": "947344633",
-                "oppo": ""
-            },
-            "notLoadAfterDisplaySeveralTimes": 5,
-            "loadProgram": 1
-        },
-        "bannerConfig": {
-            "tt": [
-                {
-                    "codeId": "946484904",
-                    "bannerSize": "300*75"
-                },
-                {
-                    "codeId": "946484904",
-                    "bannerSize": "300*75"
-                },
-                {
-                    "codeId": "946484904",
-                    "bannerSize": "300*75"
-                },
-                {
-                    "codeId": "946484904",
-                    "bannerSize": "300*75"
-                },
-                {
-                    "codeId": "946484904",
-                    "bannerSize": "300*75"
-                },
-                {
-                    "codeId": "946484904",
-                    "bannerSize": "300*75"
-                },
-                {
-                    "codeId": "946484904",
-                    "bannerSize": "300*75"
-                },
-                {
-                    "codeId": "946484904",
-                    "bannerSize": "300*75"
-                },
-                {
-                    "codeId": "946484904",
-                    "bannerSize": "300*75"
-                },
-                {
-                    "codeId": "946484904",
-                    "bannerSize": "300*75"
-                },
-                {
-                    "codeId": "946484904",
-                    "bannerSize": "300*75"
-                },
-                {
-                    "codeId": "946484904",
-                    "bannerSize": "300*75"
-                },
-                {
-                    "codeId": "946484904",
-                    "bannerSize": "300*75"
-                }
-            ],
-            "xiaomi": [
-                {
-                    "codeId": "f3d9df6d337856c9b08520fee39b532a",
-                    "bannerSize": "375*81"
-                },
-                {
-                    "codeId": "451e40430b8ce48b7d51f2685752ad43",
-                    "bannerSize": "375*81"
-                },
-                {
-                    "codeId": "451e40430b8ce48b7d51f2685752ad43",
-                    "bannerSize": "375*81"
-                },
-                {
-                    "codeId": "451e40430b8ce48b7d51f2685752ad43",
-                    "bannerSize": "375*81"
-                },
-                {
-                    "codeId": "451e40430b8ce48b7d51f2685752ad43",
-                    "bannerSize": "375*81"
-                },
-                {
-                    "codeId": "451e40430b8ce48b7d51f2685752ad43",
-                    "bannerSize": "375*81"
-                },
-                {
-                    "codeId": "451e40430b8ce48b7d51f2685752ad43",
-                    "bannerSize": "375*81"
-                },
-                {
-                    "codeId": "451e40430b8ce48b7d51f2685752ad43",
-                    "bannerSize": "375*81"
-                },
-                {
-                    "codeId": "451e40430b8ce48b7d51f2685752ad43",
-                    "bannerSize": "375*81"
-                },
-                {
-                    "codeId": "451e40430b8ce48b7d51f2685752ad43",
-                    "bannerSize": "375*81"
-                },
-                {
-                    "codeId": "451e40430b8ce48b7d51f2685752ad43",
-                    "bannerSize": "375*81"
-                },
-                {
-                    "codeId": "451e40430b8ce48b7d51f2685752ad43",
-                    "bannerSize": "375*81"
-                }
-            ],
-            "hw": [
-                {
-                    "codeId": "w6nmvgfkx0",
-                    "bannerSize": "360*57"
-                },
-                {
-                    "codeId": "y8gggkikgv",
-                    "bannerSize": "360*57"
-                },
-                {
-                    "codeId": "x866wqb50c",
-                    "bannerSize": "360*57"
-                },
-                {
-                    "codeId": "e77hsjmcj0",
-                    "bannerSize": "360*57"
-                },
-                {
-                    "codeId": "l0dap8ppzb",
-                    "bannerSize": "360*57"
-                },
-                {
-                    "codeId": "n3yaim4bpa",
-                    "bannerSize": "360*57"
-                },
-                {
-                    "codeId": "u95d4elnim",
-                    "bannerSize": "360*57"
-                },
-                {
-                    "codeId": "y6m1o6y9q9",
-                    "bannerSize": "360*57"
-                },
-                {
-                    "codeId": "a2z3s7h31i",
-                    "bannerSize": "360*57"
-                },
-                {
-                    "codeId": "i58tjbshfm",
-                    "bannerSize": "360*57"
-                },
-                {
-                    "codeId": "c83hexzkiu",
-                    "bannerSize": "360*57"
-                },
-                {
-                    "codeId": "k2u9o4psvc",
-                    "bannerSize": "360*57"
-                }
-            ],
-            "oppo": [
-                {
-                    "codeId": "",
-                    "bannerSize": "1:1"
-                }
-            ]
-        },
-        "mainBannerConfig": {
-            "isShow": true
-        }
-    },
-    "vipConfig": {
-        "vipListSelectPid": 10,
-        "xiaomiVipListSelectPid": 10,
-        "xiaomiVipListSelectIndex": 2,
-        "xiaomiVipNewPeopleListSelectIndex": 1,
-        "xiaomiVipSubRecallProductId": "week_sub_vip2",
-        "xiaomiVipSubCloseProductId": "month_sub_vip",
-        "xiaomiProbabilityOfWinning": 50,
-        "huaweiProbabilityOfWinning": 50,
-        "xiaomiIsRecallPaySub": true,
-        "hauweiIsRecallPaySub": false,
-        "xiaomiIsCloseVipRecall": true,
-        "huaweiIsCloseVipRecall": false
-    },
+    {
+      "language": "ru",
+      "isShow": true,
+      "version": 9,
+      "questionnaireString": "https://www.wjx.cn/vm/PLRrzJD.aspx#"
+    }
+  ],
+  "xiaomiConfig": {
     "xiaomiFirstPayDistanceOpen": false,
-    "xiaomiFirstPayDistance": 9,
-    "huaweiConfig": {
-        "isShowDistance": true,
-        "distanceSubID": [
-            "vip_sub_month_distance",
-            "vip_sub_quarter_distance",
-            "vip_sub_year_distance1"
-        ],
-        "distancePermanentID": [
-            "vip_permanent_distance"
-        ],
-        "distanceTagCN": "*入夏狂欢，商城商品全场8折，限时一个月！",
-        "distanceTagEN": "*Summer Carnival, 20% off all the products in the mall, limited time for one month!"
+    "xiaomiFirstPayDistanceOpenHide": false
+  },
+  "adsConfig": {
+    "isShowAndLoadMainAdsView": true,
+    "loadAdsConfig": {
+      "xiaomi": "XIAOMI_ADS",
+      "oppo": "TT_ADS",
+      "hw": "HW_ADS",
+      "vivo": "",
+      "flyme": "TT_ADS",
+      "umeng": "TT_ADS"
     },
-    "feeConfig": [
+    "interactionConfig": {
+      "save_code": {
+        "hw": "a9zj3982dq",
+        "xiaomi": "d66677fa93b531204d782428c785906b",
+        "tt": "947344633",
+        "oppo": ""
+      },
+      "notLoadAfterDisplaySeveralTimes": 5,
+      "loadProgram": 1
+    },
+    "bannerConfig": {
+      "tt": [
         {
-            "feePoint": "idphoto_clothing",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
+          "codeId": "946484904",
+          "bannerSize": "300*75"
         },
         {
-            "feePoint": "batch_cutout_max_count",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": -1,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": -1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
+          "codeId": "946484904",
+          "bannerSize": "300*75"
         },
         {
-            "feePoint": "draft_delete",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
+          "codeId": "946484904",
+          "bannerSize": "300*75"
         },
         {
-            "feePoint": "draft_copy",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 5,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
+          "codeId": "946484904",
+          "bannerSize": "300*75"
         },
         {
-            "feePoint": "draft_unlock",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
+          "codeId": "946484904",
+          "bannerSize": "300*75"
         },
         {
-            "feePoint": "portrait_beauty_face",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
+          "codeId": "946484904",
+          "bannerSize": "300*75"
         },
         {
-            "feePoint": "portrait_beauty_skin",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
+          "codeId": "946484904",
+          "bannerSize": "300*75"
         },
         {
-            "feePoint": "portrait_beauty_wrinkle_killer",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
+          "codeId": "946484904",
+          "bannerSize": "300*75"
         },
         {
-            "feePoint": "superimpose_filter",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 1,
-            "paymentAmount": -1,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": -1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
+          "codeId": "946484904",
+          "bannerSize": "300*75"
         },
         {
-            "feePoint": "photoedit_filter",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 1,
-            "paymentAmount": -1,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": -1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
+          "codeId": "946484904",
+          "bannerSize": "300*75"
         },
         {
-            "feePoint": "portrait_beauty_filter",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 1,
-            "paymentAmount": -1,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": -1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
+          "codeId": "946484904",
+          "bannerSize": "300*75"
         },
         {
-            "feePoint": "id_card_hd",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
+          "codeId": "946484904",
+          "bannerSize": "300*75"
         },
         {
-            "feePoint": "idphoto_save_color",
-            "rightEnterVipUI": false,
-            "showUpdateVip": false,
-            "freeCount": 0,
-            "paymentAmount": 1,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "idphoto_clothing_save_color",
-            "rightEnterVipUI": false,
-            "showUpdateVip": false,
-            "freeCount": 0,
-            "paymentAmount": 6,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "superimpose_hd",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "portrait_beauty_hd",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "cutout_hd",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "batch_cutout_hd",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "photo_edit_hd",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "retouch_hd",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "collage_hd",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "sky_hd",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "shape_hd",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "erase_hd",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "ai_hd",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "batch_cutout_save",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 1,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "batch_cutout_import",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 3,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 3,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 3,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 3,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "old_photo_fix_save",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 2,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "picut_count",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 3,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "video_cutout_save",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 3,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 3,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "long_pictures_album",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "long_pictures_save_pixel_num",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "retouch_num",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 1,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "id_card_clarity_plus",
-            "rightEnterVipUI": false,
-            "showUpdateVip": false,
-            "freeCount": 0,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "idphoto_clothing_clarity_color",
-            "rightEnterVipUI": false,
-            "showUpdateVip": false,
-            "freeCount": 0,
-            "paymentAmount": 6,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "idphoto_hd_clarity_color",
-            "rightEnterVipUI": false,
-            "showUpdateVip": false,
-            "freeCount": 0,
-            "paymentAmount": 6,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "idphoto_clothing_hd_clarity_color",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 9,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "ai_painting_num",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 1,
-            "paymentAmount": 3,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "idphoto_clothing_hd_clarity_gradient",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 10,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "idphoto_hd_clarity_gradient",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 7,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "idphoto_clothing_clarity_gradient",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 7,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "idphoto_clothing_hd_gradient",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 7,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "idphoto_clarity_gradient",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 4,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "idphoto_hd_gradient",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 4,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "idphoto_clothing_gradient",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 4,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "idphoto_bg_color_gradient",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 2,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "idphoto_gradient",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 1,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 0,
-            "adsVideoUnlockCount": 0,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "ai_painting_watermark",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 1,
-            "paymentUseCount": -1,
-            "paymentUnlockCount": 1,
-            "rightShowAdsUnlock": true,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 1,
-            "shareAppUnlockCount": 1,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
-        },
-        {
-            "feePoint": "retoucher",
-            "rightEnterVipUI": false,
-            "showUpdateVip": true,
-            "freeCount": 0,
-            "paymentAmount": 0,
-            "paymentUseCount": 0,
-            "paymentUnlockCount": 0,
-            "rightShowAdsUnlock": false,
-            "adsVideoUseCount": 1,
-            "adsVideoUnlockCount": 1,
-            "shareAppUseCount": 0,
-            "shareAppUnlockCount": 0,
-            "questionnaireUseCount": 0,
-            "questionnaireUnlockCount": 0
+          "codeId": "946484904",
+          "bannerSize": "300*75"
         }
+      ],
+      "xiaomi": [
+        {
+          "codeId": "f3d9df6d337856c9b08520fee39b532a",
+          "bannerSize": "375*81"
+        },
+        {
+          "codeId": "451e40430b8ce48b7d51f2685752ad43",
+          "bannerSize": "375*81"
+        },
+        {
+          "codeId": "451e40430b8ce48b7d51f2685752ad43",
+          "bannerSize": "375*81"
+        },
+        {
+          "codeId": "451e40430b8ce48b7d51f2685752ad43",
+          "bannerSize": "375*81"
+        },
+        {
+          "codeId": "451e40430b8ce48b7d51f2685752ad43",
+          "bannerSize": "375*81"
+        },
+        {
+          "codeId": "451e40430b8ce48b7d51f2685752ad43",
+          "bannerSize": "375*81"
+        },
+        {
+          "codeId": "451e40430b8ce48b7d51f2685752ad43",
+          "bannerSize": "375*81"
+        },
+        {
+          "codeId": "451e40430b8ce48b7d51f2685752ad43",
+          "bannerSize": "375*81"
+        },
+        {
+          "codeId": "451e40430b8ce48b7d51f2685752ad43",
+          "bannerSize": "375*81"
+        },
+        {
+          "codeId": "451e40430b8ce48b7d51f2685752ad43",
+          "bannerSize": "375*81"
+        },
+        {
+          "codeId": "451e40430b8ce48b7d51f2685752ad43",
+          "bannerSize": "375*81"
+        },
+        {
+          "codeId": "451e40430b8ce48b7d51f2685752ad43",
+          "bannerSize": "375*81"
+        }
+      ],
+      "hw": [
+        {
+          "codeId": "w6nmvgfkx0",
+          "bannerSize": "360*57"
+        },
+        {
+          "codeId": "y8gggkikgv",
+          "bannerSize": "360*57"
+        },
+        {
+          "codeId": "x866wqb50c",
+          "bannerSize": "360*57"
+        },
+        {
+          "codeId": "e77hsjmcj0",
+          "bannerSize": "360*57"
+        },
+        {
+          "codeId": "l0dap8ppzb",
+          "bannerSize": "360*57"
+        },
+        {
+          "codeId": "n3yaim4bpa",
+          "bannerSize": "360*57"
+        },
+        {
+          "codeId": "u95d4elnim",
+          "bannerSize": "360*57"
+        },
+        {
+          "codeId": "y6m1o6y9q9",
+          "bannerSize": "360*57"
+        },
+        {
+          "codeId": "a2z3s7h31i",
+          "bannerSize": "360*57"
+        },
+        {
+          "codeId": "i58tjbshfm",
+          "bannerSize": "360*57"
+        },
+        {
+          "codeId": "c83hexzkiu",
+          "bannerSize": "360*57"
+        },
+        {
+          "codeId": "k2u9o4psvc",
+          "bannerSize": "360*57"
+        }
+      ],
+      "oppo": [
+        {
+          "codeId": "",
+          "bannerSize": "1:1"
+        }
+      ]
+    },
+    "mainBannerConfig": {
+      "isShow": true
+    }
+  },
+  "vipConfig": {
+    "vipListSelectPid": 10,
+    "xiaomiVipListSelectPid": 10,
+    "xiaomiVipListSelectIndex": 2,
+    "xiaomiVipNewPeopleListSelectIndex": 1,
+    "xiaomiVipSubRecallProductId": "week_sub_vip2",
+    "xiaomiVipSubCloseProductId": "month_sub_vip",
+    "xiaomiProbabilityOfWinning": 50,
+    "huaweiProbabilityOfWinning": 50,
+    "xiaomiIsRecallPaySub": true,
+    "hauweiIsRecallPaySub": false,
+    "xiaomiIsCloseVipRecall": true,
+    "huaweiIsCloseVipRecall": false
+  },
+  "xiaomiFirstPayDistanceOpen": false,
+  "xiaomiFirstPayDistance": 9,
+  "huaweiConfig": {
+    "isShowDistance": true,
+    "distanceSubID": [
+      "vip_sub_month_distance",
+      "vip_sub_quarter_distance",
+      "vip_sub_year_distance1"
     ],
-    "helpMeRetouchConfig": {
-        "version": "8.0",
-        "isCanPay": true,
-        "price": 100,
-        "isShowTaobao": true,
-        "helpMeTaobaoUri": "https://item.taobao.com/item.htm?ft=t&id=658000874494&spm=a21dvs.23580594.0.0.4fee3d0de9ZkMv",
-        "helpMeWxCustomerServiceUri": "https://work.weixin.qq.com/kfid/kfca926ff95cd4326f7",
-        "helpMeTitle": "帮我修图",
-        "helpMeTag1s": {
-            "ru": "Не можаце адрэтушаваць выявы? Добра",
-            "ja": "写真をレタッチできませんか？ 大丈夫です",
-            "en": "Know less about retouch? Don't worry.",
-            "zh": "不会修图？没关系"
-        },
-        "helpMeTag12s": {
-            "ru": "Дашл?це нам свае патрабаванн? ? матэрыялы, вы можаце папрас?ць эксперта навучыць вас, як выправ?ць малюнак, ц? вы можаце папрас?ць эксперта зраб?ць вам малюнак!",
-            "ja": "要件と資料をお送りください。専門家に写真の修正方法を教えてもらうか、専門家に写真の作成を依頼してください。",
-            "en": "Send your <font color=\"#38E1F8\">requirements</font> and <font color=\"#38E1F8\">materials</font> to us, then ask our expert to teach you how to edit, or pay to make pictures for you",
-            "zh": "发送你的<font color=\"#38E1F8\">要求</font>和<font color=\"#38E1F8\">素材</font>给我们，可以请专家手把手教你抠图，或者有偿请专家为您制作图片！"
-        },
-        "helpMeBtnBottomTags": {
-            "ru": "Защита конфиденциальности и поддержка повторного выполнения",
-            "ja": "プライバシーを保護し、やり直しをサポート",
-            "en": "Protect privacy and support redo",
-            "zh": "保护隐私，支持重做"
-        },
-        "helpMeNotes": {
-            "ru": "Примечание. Не принимайте более конфиденциальный контент, такой как различные типы документов, удостоверяющих личность, банковские переводы, банковские выписки, корпоративные счета, кредитные линии и другие финансовые кредиты, официальные печати и т. Д. ",
-            "ja": " 注：さまざまな種類の身分証明書、銀行送金、銀行取引明細書、企業の請求書、クレジットライン、その他の金融クレジット、公式シールなど、より機密性の高いコンテンツは受け入れないでください。",
-            "en": "Note: We do not accept sensitive content, such as identity documents, bank transfers, bank statements, corporate bills, credit lines, and other financial credit, official seals, etc. ",
-            "zh": "注意：10元起步，不接比较敏感的内容，例如各类身份证件，银行汇款、银行账单，企业账单，信用额度等金融信贷类，公章类 "
-        },
-        "helpMeTag3s": {
-            "ru": "Присылайте нам свои требования и материалы, и вы можете попросить специалистов сделать для вас фотографии за определенную плату!",
-            "ja": "あなたの要件と資料を私たちに送ってください、そしてあなたは有料であなたのためにあなたのために写真を作るように専門家に頼むことができます！",
-            "en": "Send your requirements and materials to us, then ask our expert  to make pictures for you",
-            "zh": "发送你的要求和素材给我们，可以请专家手把手教您修图，或者有偿请专家为您制作图片！"
-        },
-        "helpMeTag4s": {
-            "ru": "Режим работы: 10: 00-12: 00, 14: 00-19: 00.",
-            "ja": "勤務時間：10：00-12：00、14：00-19：00",
-            "en": "Working hours: 10:00-12:00, 14:00-19:00",
-            "zh": "· 上班时间：10:00&#8211;12:00，14:00&#8211;19:00 ·"
-        },
-        "helpMePublicIds": {
-            "ru": "Official Accounts",
-            "ja": "Official Accounts",
-            "en": "Official Accounts",
-            "zh": "公众号"
-        },
-        "helpMePublicIdValues": {
-            "ru": "Pro knockout智能抠图",
-            "ja": "Pro knockout智能抠图",
-            "en": "Pro knockout智能抠图",
-            "zh": "Pro knockout智能抠图"
-        },
-        "helpMeEmails": {
-            "ru": "Почта",
-            "ja": "郵便",
-            "en": "Mail",
-            "zh": "邮箱"
-        },
-        "helpMeEmailValues": {
-            "ru": "zhangchiszse@163.com",
-            "ja": "zhangchiszse@163.com",
-            "en": "zhangchiszse@163.com",
-            "zh": "zhangchiszse@163.com"
-        },
-        "helpMeTaobaos": {
-            "ru": "Taobao",
-            "ja": "淘宝",
-            "en": "Taobao",
-            "zh": "淘宝"
-        },
-        "helpMeTaobaoValues": {
-            "ru": "proknockout图片处理",
-            "ja": "proknockout图片处理",
-            "en": "proknockout图片处理",
-            "zh": "proknockout图片处理"
-        },
-        "helpMePayBtns": {
-            "ru": "Заплатить сейчас",
-            "ja": "今払う",
-            "en": "Pay now",
-            "zh": "立即支付 "
-        },
-        "helpMePaySuccessGuides": {
-            "ru": "Платеж прошел успешно, обратитесь в службу поддержки клиентов и отправьте свои требования, материалы и платежные ваучеры в службу поддержки клиентов.",
-            "ja": "支払いは成功しました。カスタマーサービスに連絡し、要件、資料、および支払いバウチャーをカスタマーサービスに送信してください。",
-            "en": "The payment is successful, please contact customer service and send your requirements, materials, and payment vouchers to customer service",
-            "zh": "支付成功，请联系客服并把您的要求、素材、支付凭证发给客服"
-        },
-        "helpMePayTags": {
-            "ru": "Депозит：?100.00",
-            "ja": "預り金：?100.00",
-            "en": "Deposit：?100.00",
-            "zh": "定金：100元"
-        },
-        "helpMePayTag1s": {
-            "ru": "Залог возвращается, цена договорная, 10CNY стартов",
-            "ja": "保証金は返金可能で、価格は交渉可能で、10CNYが始まります",
-            "en": "The deposit is refundable, the price is negotiable, 10CNY starts",
-            "zh": "定金可退、价格面谈、10元起步"
-        },
-        "helpMeContactCustomerServices": {
-            "ru": "Скопируйте контактную информацию выше и свяжитесь с нами",
-            "ja": "上記の連絡先情報をコピーして、お問い合わせください",
-            "en": "copy the contact information above and contact us",
-            "zh": "联系客服"
-        },
-        "helpMeNoPayDialogContents": {
-            "ru": "Сейчас праздничный период, персонал отдыхает, ответное сообщение не будет своевременным.Рекомендуется обращаться к нам в рабочие дни ~",
-            "ja": "現在は休業期間中ですので、スタッフ一同休憩中ですので、返信メッセージがタイムリーに届きませんので、営業日にお問い合わせいただくことをお勧めします?",
-            "en": "It is currently a holiday period, the staff are all resting, and the reply message will not be timely. It is recommended that you contact us on working days~",
-            "zh": "当前是节假日期间，工作人员都在休息，回复消息会不及时，建议您工作日联系我们～"
-        },
-        "helpMeConstan": {
-            "ru": "Сейчас праздничный период, персонал отдыхает, ответное сообщение не будет своевременным.Рекомендуется обращаться к нам в рабочие дни ~",
-            "ja": "現在は休業期間中ですので、スタッフ一同休憩中ですので、返信メッセージがタイムリーに届きませんので、営業日にお問い合わせいただくことをお勧めします?",
-            "en": "It is currently a holiday period, the staff are all resting, and the reply message will not be timely. It is recommended that you contact us on working days~",
-            "zh": "当前是节假日期间，工作人员都在休息，回复消息会不及时，建议您工作日联系我们～"
-        },
-        "bannerImgs": [
-            "C1B966EE329F4023B83560FA2382512B",
-            "AC543FE27C28446AABAD7EE2A4799E97",
-            "3133F6F7774E44E0873ECC2D589577C1",
-            "EA041FDB65994A39A74204E3D9BE23BE",
-            "531B62FA9C83486C86B76D3495E28685"
-        ],
-        "noPayTimes": [
-            "2022-01-27",
-            "2022-01-28",
-            "2022-01-29",
-            "2022-01-30",
-            "2022-01-31",
-            "2022-02-01",
-            "2022-02-02",
-            "2022-02-03",
-            "2022-02-04",
-            "2022-02-05",
-            "2022-02-06"
-        ]
+    "distancePermanentID": ["vip_permanent_distance"],
+    "distanceTagCN": "*入夏狂欢，商城商品全场8折，限时一个月！",
+    "distanceTagEN": "*Summer Carnival, 20% off all the products in the mall, limited time for one month!"
+  },
+  "feeConfig": [
+    {
+      "feePoint": "idphoto_clothing",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
     },
-    "limitActivityFont": {
-        "fontJsonUpdateTime": 1698116361199,
-        "limitEndTime": 1706716799000,
-        "limitStartTime": 1698681599000
+    {
+      "feePoint": "batch_cutout_max_count",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": -1,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": -1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
     },
-    "jsonUpdateTime": [
-        {
-            "jsonName": "app.knockout",
-            "updateTime": 1625253180000
-        },
-        {
-            "jsonName": "sky.json",
-            "updateTime": 1625598780000
-        },
-        {
-            "jsonName": "IDPhotoNorm.json",
-            "updateTime": 1640225220000
-        },
-        {
-            "jsonName": "BackMaterialsJsonFile.json",
-            "updateTime": -1
-        },
-        {
-            "jsonName": "TemplateMaterialsJsonFile.json",
-            "updateTime": 1649840160000
-        },
-        {
-            "jsonName": "TextJsonFile.json",
-            "updateTime": 1609400220000
-        },
-        {
-            "jsonName": "StickerMaterialsJsonFile.json",
-            "updateTime": -1
-        },
-        {
-            "jsonName": "HotMaterialsJsonFile.json",
-            "updateTime": 1635735960000
-        },
-        {
-            "jsonName": "identifierphoto.json",
-            "updateTime": 1638953820000
-        },
-        {
-            "jsonName": "biggerlens_fonts.json",
-            "updateTime": 1625253180000
-        },
-        {
-            "jsonName": "StickerLib.json",
-            "updateTime": 1604246880000
-        },
-        {
-            "jsonName": "mask.json",
-            "updateTime": -1
-        },
-        {
-            "jsonName": "BackGroundLib.json",
-            "updateTime": 1651075200000
-        },
-        {
-            "jsonName": "OutlineConfig.json",
-            "updateTime": 1625253180000
-        }
+    {
+      "feePoint": "draft_delete",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "draft_copy",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 5,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "draft_unlock",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "portrait_beauty_face",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "portrait_beauty_skin",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "portrait_beauty_wrinkle_killer",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "superimpose_filter",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 1,
+      "paymentAmount": -1,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": -1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "photoedit_filter",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 1,
+      "paymentAmount": -1,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": -1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "portrait_beauty_filter",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 1,
+      "paymentAmount": -1,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": -1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "id_card_hd",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "idphoto_save_color",
+      "rightEnterVipUI": false,
+      "showUpdateVip": false,
+      "freeCount": 0,
+      "paymentAmount": 1,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "idphoto_clothing_save_color",
+      "rightEnterVipUI": false,
+      "showUpdateVip": false,
+      "freeCount": 0,
+      "paymentAmount": 6,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "superimpose_hd",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "portrait_beauty_hd",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "cutout_hd",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "batch_cutout_hd",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "photo_edit_hd",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "retouch_hd",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "collage_hd",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "sky_hd",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "shape_hd",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "erase_hd",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "ai_hd",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "batch_cutout_save",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 1,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "batch_cutout_import",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 3,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 3,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 3,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 3,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "old_photo_fix_save",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 2,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "picut_count",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 3,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "video_cutout_save",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 3,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 3,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "long_pictures_album",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "long_pictures_save_pixel_num",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "retouch_num",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 1,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "id_card_clarity_plus",
+      "rightEnterVipUI": false,
+      "showUpdateVip": false,
+      "freeCount": 0,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "idphoto_clothing_clarity_color",
+      "rightEnterVipUI": false,
+      "showUpdateVip": false,
+      "freeCount": 0,
+      "paymentAmount": 6,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "idphoto_hd_clarity_color",
+      "rightEnterVipUI": false,
+      "showUpdateVip": false,
+      "freeCount": 0,
+      "paymentAmount": 6,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "idphoto_clothing_hd_clarity_color",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 9,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "ai_painting_num",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 1,
+      "paymentAmount": 3,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "idphoto_clothing_hd_clarity_gradient",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 10,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "idphoto_hd_clarity_gradient",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 7,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "idphoto_clothing_clarity_gradient",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 7,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "idphoto_clothing_hd_gradient",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 7,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "idphoto_clarity_gradient",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 4,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "idphoto_hd_gradient",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 4,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "idphoto_clothing_gradient",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 4,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "idphoto_bg_color_gradient",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 2,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "idphoto_gradient",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 1,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 0,
+      "adsVideoUnlockCount": 0,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "ai_painting_watermark",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 1,
+      "paymentUseCount": -1,
+      "paymentUnlockCount": 1,
+      "rightShowAdsUnlock": true,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 1,
+      "shareAppUnlockCount": 1,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    },
+    {
+      "feePoint": "retoucher",
+      "rightEnterVipUI": false,
+      "showUpdateVip": true,
+      "freeCount": 0,
+      "paymentAmount": 0,
+      "paymentUseCount": 0,
+      "paymentUnlockCount": 0,
+      "rightShowAdsUnlock": false,
+      "adsVideoUseCount": 1,
+      "adsVideoUnlockCount": 1,
+      "shareAppUseCount": 0,
+      "shareAppUnlockCount": 0,
+      "questionnaireUseCount": 0,
+      "questionnaireUnlockCount": 0
+    }
+  ],
+  "helpMeRetouchConfig": {
+    "version": "8.0",
+    "isCanPay": true,
+    "price": 100,
+    "isShowTaobao": true,
+    "helpMeTaobaoUri": "https://item.taobao.com/item.htm?ft=t&id=658000874494&spm=a21dvs.23580594.0.0.4fee3d0de9ZkMv",
+    "helpMeWxCustomerServiceUri": "https://work.weixin.qq.com/kfid/kfca926ff95cd4326f7",
+    "helpMeTitle": "帮我修图",
+    "helpMeTag1s": {
+      "ru": "Не можаце адрэтушаваць выявы? Добра",
+      "ja": "写真をレタッチできませんか？ 大丈夫です",
+      "en": "Know less about retouch? Don't worry.",
+      "zh": "不会修图？没关系"
+    },
+    "helpMeTag12s": {
+      "ru": "Дашл?це нам свае патрабаванн? ? матэрыялы, вы можаце папрас?ць эксперта навучыць вас, як выправ?ць малюнак, ц? вы можаце папрас?ць эксперта зраб?ць вам малюнак!",
+      "ja": "要件と資料をお送りください。専門家に写真の修正方法を教えてもらうか、専門家に写真の作成を依頼してください。",
+      "en": "Send your <font color=\"#38E1F8\">requirements</font> and <font color=\"#38E1F8\">materials</font> to us, then ask our expert to teach you how to edit, or pay to make pictures for you",
+      "zh": "发送你的<font color=\"#38E1F8\">要求</font>和<font color=\"#38E1F8\">素材</font>给我们，可以请专家手把手教你抠图，或者有偿请专家为您制作图片！"
+    },
+    "helpMeBtnBottomTags": {
+      "ru": "Защита конфиденциальности и поддержка повторного выполнения",
+      "ja": "プライバシーを保護し、やり直しをサポート",
+      "en": "Protect privacy and support redo",
+      "zh": "保护隐私，支持重做"
+    },
+    "helpMeNotes": {
+      "ru": "Примечание. Не принимайте более конфиденциальный контент, такой как различные типы документов, удостоверяющих личность, банковские переводы, банковские выписки, корпоративные счета, кредитные линии и другие финансовые кредиты, официальные печати и т. Д. ",
+      "ja": " 注：さまざまな種類の身分証明書、銀行送金、銀行取引明細書、企業の請求書、クレジットライン、その他の金融クレジット、公式シールなど、より機密性の高いコンテンツは受け入れないでください。",
+      "en": "Note: We do not accept sensitive content, such as identity documents, bank transfers, bank statements, corporate bills, credit lines, and other financial credit, official seals, etc. ",
+      "zh": "注意：10元起步，不接比较敏感的内容，例如各类身份证件，银行汇款、银行账单，企业账单，信用额度等金融信贷类，公章类 "
+    },
+    "helpMeTag3s": {
+      "ru": "Присылайте нам свои требования и материалы, и вы можете попросить специалистов сделать для вас фотографии за определенную плату!",
+      "ja": "あなたの要件と資料を私たちに送ってください、そしてあなたは有料であなたのためにあなたのために写真を作るように専門家に頼むことができます！",
+      "en": "Send your requirements and materials to us, then ask our expert  to make pictures for you",
+      "zh": "发送你的要求和素材给我们，可以请专家手把手教您修图，或者有偿请专家为您制作图片！"
+    },
+    "helpMeTag4s": {
+      "ru": "Режим работы: 10: 00-12: 00, 14: 00-19: 00.",
+      "ja": "勤務時間：10：00-12：00、14：00-19：00",
+      "en": "Working hours: 10:00-12:00, 14:00-19:00",
+      "zh": "· 上班时间：10:00&#8211;12:00，14:00&#8211;19:00 ·"
+    },
+    "helpMePublicIds": {
+      "ru": "Official Accounts",
+      "ja": "Official Accounts",
+      "en": "Official Accounts",
+      "zh": "公众号"
+    },
+    "helpMePublicIdValues": {
+      "ru": "Pro knockout智能抠图",
+      "ja": "Pro knockout智能抠图",
+      "en": "Pro knockout智能抠图",
+      "zh": "Pro knockout智能抠图"
+    },
+    "helpMeEmails": {
+      "ru": "Почта",
+      "ja": "郵便",
+      "en": "Mail",
+      "zh": "邮箱"
+    },
+    "helpMeEmailValues": {
+      "ru": "zhangchiszse@163.com",
+      "ja": "zhangchiszse@163.com",
+      "en": "zhangchiszse@163.com",
+      "zh": "zhangchiszse@163.com"
+    },
+    "helpMeTaobaos": {
+      "ru": "Taobao",
+      "ja": "淘宝",
+      "en": "Taobao",
+      "zh": "淘宝"
+    },
+    "helpMeTaobaoValues": {
+      "ru": "proknockout图片处理",
+      "ja": "proknockout图片处理",
+      "en": "proknockout图片处理",
+      "zh": "proknockout图片处理"
+    },
+    "helpMePayBtns": {
+      "ru": "Заплатить сейчас",
+      "ja": "今払う",
+      "en": "Pay now",
+      "zh": "立即支付 "
+    },
+    "helpMePaySuccessGuides": {
+      "ru": "Платеж прошел успешно, обратитесь в службу поддержки клиентов и отправьте свои требования, материалы и платежные ваучеры в службу поддержки клиентов.",
+      "ja": "支払いは成功しました。カスタマーサービスに連絡し、要件、資料、および支払いバウチャーをカスタマーサービスに送信してください。",
+      "en": "The payment is successful, please contact customer service and send your requirements, materials, and payment vouchers to customer service",
+      "zh": "支付成功，请联系客服并把您的要求、素材、支付凭证发给客服"
+    },
+    "helpMePayTags": {
+      "ru": "Депозит：?100.00",
+      "ja": "預り金：?100.00",
+      "en": "Deposit：?100.00",
+      "zh": "定金：100元"
+    },
+    "helpMePayTag1s": {
+      "ru": "Залог возвращается, цена договорная, 10CNY стартов",
+      "ja": "保証金は返金可能で、価格は交渉可能で、10CNYが始まります",
+      "en": "The deposit is refundable, the price is negotiable, 10CNY starts",
+      "zh": "定金可退、价格面谈、10元起步"
+    },
+    "helpMeContactCustomerServices": {
+      "ru": "Скопируйте контактную информацию выше и свяжитесь с нами",
+      "ja": "上記の連絡先情報をコピーして、お問い合わせください",
+      "en": "copy the contact information above and contact us",
+      "zh": "联系客服"
+    },
+    "helpMeNoPayDialogContents": {
+      "ru": "Сейчас праздничный период, персонал отдыхает, ответное сообщение не будет своевременным.Рекомендуется обращаться к нам в рабочие дни ~",
+      "ja": "現在は休業期間中ですので、スタッフ一同休憩中ですので、返信メッセージがタイムリーに届きませんので、営業日にお問い合わせいただくことをお勧めします?",
+      "en": "It is currently a holiday period, the staff are all resting, and the reply message will not be timely. It is recommended that you contact us on working days~",
+      "zh": "当前是节假日期间，工作人员都在休息，回复消息会不及时，建议您工作日联系我们～"
+    },
+    "helpMeConstan": {
+      "ru": "Сейчас праздничный период, персонал отдыхает, ответное сообщение не будет своевременным.Рекомендуется обращаться к нам в рабочие дни ~",
+      "ja": "現在は休業期間中ですので、スタッフ一同休憩中ですので、返信メッセージがタイムリーに届きませんので、営業日にお問い合わせいただくことをお勧めします?",
+      "en": "It is currently a holiday period, the staff are all resting, and the reply message will not be timely. It is recommended that you contact us on working days~",
+      "zh": "当前是节假日期间，工作人员都在休息，回复消息会不及时，建议您工作日联系我们～"
+    },
+    "bannerImgs": [
+      "C1B966EE329F4023B83560FA2382512B",
+      "AC543FE27C28446AABAD7EE2A4799E97",
+      "3133F6F7774E44E0873ECC2D589577C1",
+      "EA041FDB65994A39A74204E3D9BE23BE",
+      "531B62FA9C83486C86B76D3495E28685"
+    ],
+    "noPayTimes": [
+      "2022-01-27",
+      "2022-01-28",
+      "2022-01-29",
+      "2022-01-30",
+      "2022-01-31",
+      "2022-02-01",
+      "2022-02-02",
+      "2022-02-03",
+      "2022-02-04",
+      "2022-02-05",
+      "2022-02-06"
     ]
+  },
+  "limitActivityFont": {
+    "fontJsonUpdateTime": 1698116361199,
+    "limitEndTime": 1706716799000,
+    "limitStartTime": 1698681599000
+  },
+  "jsonUpdateTime": [
+    {
+      "jsonName": "app.knockout",
+      "updateTime": 1625253180000
+    },
+    {
+      "jsonName": "sky.json",
+      "updateTime": 1625598780000
+    },
+    {
+      "jsonName": "IDPhotoNorm.json",
+      "updateTime": 1640225220000
+    },
+    {
+      "jsonName": "BackMaterialsJsonFile.json",
+      "updateTime": -1
+    },
+    {
+      "jsonName": "TemplateMaterialsJsonFile.json",
+      "updateTime": 1649840160000
+    },
+    {
+      "jsonName": "TextJsonFile.json",
+      "updateTime": 1609400220000
+    },
+    {
+      "jsonName": "StickerMaterialsJsonFile.json",
+      "updateTime": -1
+    },
+    {
+      "jsonName": "HotMaterialsJsonFile.json",
+      "updateTime": 1635735960000
+    },
+    {
+      "jsonName": "identifierphoto.json",
+      "updateTime": 1638953820000
+    },
+    {
+      "jsonName": "biggerlens_fonts.json",
+      "updateTime": 1625253180000
+    },
+    {
+      "jsonName": "StickerLib.json",
+      "updateTime": 1604246880000
+    },
+    {
+      "jsonName": "mask.json",
+      "updateTime": -1
+    },
+    {
+      "jsonName": "BackGroundLib.json",
+      "updateTime": 1651075200000
+    },
+    {
+      "jsonName": "OutlineConfig.json",
+      "updateTime": 1625253180000
+    }
+  ]
 }

@@ -18,12 +18,7 @@
                 <el-upload class="uploader-instance" action="#" :show-file-list="false"
                     v-model:file-list="formData.bigFileList" :before-upload="beforeImageUpload" :auto-upload="false"
                     multiple>
-                    <!-- <div class="bigImg_upload upload-placeholder">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        <span>添加大图</span>
-                    </div> -->
+
                     <el-button type="primary">添加大图</el-button>
                 </el-upload>
             </div>
@@ -56,7 +51,8 @@
 
         </div>
         <el-form-item label="是否付费" v-if="showpayBtn()">
-            <el-switch v-model="formData.pay" :active-value="1" :inactive-value="0" active-text="是" inactive-text="否" />
+            <el-switch v-model="formData.isPay" :active-value="true" :inactive-value="false" active-text="是"
+                inactive-text="否" />
         </el-form-item>
         <div class="dialog_comfirm">
             <el-button type="primary" @click="handleComfirm">确认</el-button>
@@ -105,7 +101,7 @@
         smallImgs: string[], // For preview
         bigFileList: UploadUserFile[], // Bound to el-upload
         smallFileList: UploadUserFile[], // Bound to el-upload
-        pay: number
+        isPay: boolean
     }
 
     const formData = reactive<FormDataType>({
@@ -113,7 +109,7 @@
         smallImgs: [],
         bigFileList: [],
         smallFileList: [],
-        pay: 0
+        isPay: false
     })
 
     const resetFormData = () => {
@@ -121,7 +117,7 @@
         formData.smallImgs = [];
         formData.bigFileList = [];
         formData.smallFileList = [];
-        formData.pay = 0;
+        formData.isPay = false;
     };
 
     const handleClose = () => {
@@ -266,14 +262,14 @@
                     break;
                 case 'sitcker':
                     params.stickerId = parseInt(route.query.id as string)
-                    params.pay = formData.pay;
+                    params.isPay = formData.isPay;
                     url = '/stickerDetail/saveBatch'
                     break;
                 case 'background':
                     console.log('图库');
                     params.backId = parseInt(route.query.id as string)
                     url = '/backgroundDetail/saveBatch'
-                    params.pay = formData.pay;
+                    params.isPay = formData.isPay;
                     break
 
                 case 'mask':
@@ -285,7 +281,7 @@
                 case 'wallpapper':
                     console.log('壁纸');
                     params.wallpaperId = parseInt(route.query.id as string)
-                    url = ''
+                    url = '/wallpaperDetail/saveBatch'
                     break
             }
 

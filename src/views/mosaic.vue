@@ -4,31 +4,32 @@
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" @click="addMosaic" class="add-button">
+                    <customButton @click="addMosaic">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         批量新增
-                    </el-button>
-
-                    <el-button type="primary" @click="addMosaic" class="add-button">
+                    </customButton>
+                    <customButton @click="addMosaic">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增马赛克
-                    </el-button>
-                    <el-button type="primary" class="add-button">
+                    </customButton>
+                    <customButton @click="addMosaic">
                         全部选中
-                    </el-button>
-                    <el-button type="danger" class="add-button">
+                    </customButton>
+
+                    <customButton @click="addMosaic">
                         <el-icon>
                             <Minus />
                         </el-icon>
                         删除所选
-                    </el-button>
-                    <el-button type="primary" class="add-button">
+                    </customButton>
+                    <customButton @click="addMosaic">
                         保存改动
-                    </el-button>
+                    </customButton>
+
                 </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -121,6 +122,7 @@
     import { onMounted, ref } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import customButton from '@/components/button/customButton.vue';
     const counterStore = useCounterStore()
     const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
     const components: any = {
@@ -304,6 +306,10 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+                    column-gap: 12px;
+
                     .add-button {
                         font-weight: 500;
 

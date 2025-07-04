@@ -92,7 +92,7 @@
                     url = '/maskDetail/batchLabelSave'
                     break
                 case 'wallpapper':
-                    url = ''
+                    url = '/wallpaperDetail/batchLabelSave'
                     break
             }
             const enData = desEncrypt(JSON.stringify(params))

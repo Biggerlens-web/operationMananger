@@ -121,6 +121,8 @@
         subInfo.value = item
         showEditor.value = true
     }
+
+
     //删除配置
     const delConfigFn = async (id: number) => {
         try {

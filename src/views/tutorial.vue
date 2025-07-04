@@ -6,49 +6,49 @@
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" @click="addType" class="add-button">
+
+
+                    <customButton @click="addType">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增分类
-                    </el-button>
-                    <el-button type="danger" class="add-button">
+                    </customButton>
+                    <customButton @click="addType">
                         <el-icon>
                             <Minus />
                         </el-icon>
                         删除分类
-                    </el-button>
-                    <el-button type="primary" @click="addTutorial" class="add-button">
+                    </customButton>
+
+                    <customButton @click="addTutorial">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增教程
-                    </el-button>
-                    <el-button type="primary" class="add-button">
+                    </customButton>
+                    <customButton>
                         全部选中
-                    </el-button>
-                    <el-button type="danger" class="add-button">
-                        <el-icon>
-                            <Minus />
-                        </el-icon>
+                    </customButton>
+                    <customButton>
                         删除所选
-                    </el-button>
-                    <el-button type="primary" class="add-button">
+                    </customButton>
+                    <customButton>
                         <el-icon>
                             <Edit />
                         </el-icon>
                         批量编辑
-                    </el-button>
-                    <el-button type="primary" @click="addType" class="add-button">
+                    </customButton>
+                    <customButton>
                         <el-icon>
                             <Edit />
                         </el-icon>
-                        教程分类编辑
-                    </el-button>
-                    <el-button type="primary" class="add-button" @click="saveChange">
-
+                        教程编辑
+                    </customButton>
+                    <customButton>
                         保存改动
-                    </el-button>
+                    </customButton>
+
                 </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -164,6 +164,7 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     import { ElMessage } from 'element-plus';
+    import customButton from '@/components/button/customButton.vue';
     const counterStore = useCounterStore()
     const { showPagestion, regionList, OSlist, channelList, defaultAppNo, showLoading } = storeToRefs(counterStore)
 
@@ -341,6 +342,10 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+                    column-gap: 12px;
+
                     .add-button {
                         font-weight: 500;
 

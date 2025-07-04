@@ -27,8 +27,8 @@
             </div>
             <div class="dialog_input">
                 <span>是否付费</span>
-                <el-switch v-model="formData.pay" active-text="付费" inactive-text="免费" :active-value="1"
-                    :inactive-value="0"></el-switch>
+                <el-switch v-model="formData.isPay" active-text="付费" inactive-text="免费" :active-value="true"
+                    :inactive-value="false"></el-switch>
             </div>
             <div class="dialog_input">
                 <span>关联运营类</span>
@@ -71,7 +71,7 @@
     const formData = reactive<any>({
         clothingMaterialsId: '',
         operationClassId: [],
-        pay: 0,
+        isPay: false,
         version: '',
         isRecommend: false,
         isVip: false
@@ -79,7 +79,7 @@
     const handleClose = () => {
         formData.clothingMaterialsId = ''
         formData.operationClassId = []
-        formData.pay = 0
+        formData.isPay = false
         formData.version = ''
         formData.isRecommend = false
         dialogBatchEdite.value = false
@@ -95,7 +95,7 @@
             const params: any = {
                 timestamp: Date.now(),
                 ids: toRaw(props.chosedItem),
-                pay: formData.pay,
+                isPay: formData.isPay,
                 operationClassId: formData.operationClassId.join(','),
             }
 
@@ -192,6 +192,9 @@
                     break;
                 case 'mask':
                     url = '/maskDetail/batchUpdateEdit'
+                    break
+                case 'wallpapper':
+                    url = '/wallpaperDetail/batchUpdateEdit'
                     break
             }
             const enData = desEncrypt(JSON.stringify(params))

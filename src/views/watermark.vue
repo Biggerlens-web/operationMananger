@@ -4,33 +4,34 @@
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
+                    <customButton>
                         <el-icon>
                             <Plus />
                         </el-icon>
                         导入
-                    </el-button>
-                    <el-button type="primary" class="add-button">
+                    </customButton>
+                    <customButton>
                         公共空间
-                    </el-button>
-                    <el-button type="primary" @click="addWatermark" class="add-button">
+                    </customButton>
+                    <customButton>
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增水印
-                    </el-button>
-                    <el-button type="primary" class="add-button">
+                    </customButton>
+                    <customButton>
                         全部选中
-                    </el-button>
-                    <el-button type="danger" class="add-button">
+                    </customButton>
+                    <customButton>
                         <el-icon>
                             <Minus />
                         </el-icon>
                         删除所选
-                    </el-button>
-                    <el-button type="primary" class="add-button">
+                    </customButton>
+                    <customButton>
                         保存改动
-                    </el-button>
+                    </customButton>
+
                 </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -111,6 +112,7 @@
 </template>
 
 <script setup lang="ts">
+    import customButton from '@/components/button/customButton.vue';
     import draggable from 'vuedraggable'
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
@@ -300,6 +302,11 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+
+                    column-gap: 12px;
+
                     .add-button {
                         font-weight: 500;
 

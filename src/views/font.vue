@@ -4,31 +4,30 @@
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" @click="addFont" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        批量新增
-                    </el-button>
 
-                    <el-button type="primary" @click="addFont" class="add-button">
-                        <el-icon>
+                    <customButton @click="addFont"><el-icon>
                             <Plus />
                         </el-icon>
-                        新增字体
-                    </el-button>
-                    <el-button type="primary" class="add-button">
-                        全部选中
-                    </el-button>
-                    <el-button type="danger" class="add-button">
+                        批量新增</customButton>
+                    <customButton @click="addFont"><el-icon>
+                            <Plus />
+                        </el-icon>
+                        新增字体</customButton>
+
+                    <customButton @click="addFont">
+                        全部选中</customButton>
+                    <customButton @click="addFont">
                         <el-icon>
                             <Minus />
                         </el-icon>
                         删除所选
-                    </el-button>
-                    <el-button type="primary" class="add-button">
+                    </customButton>
+                    <customButton @click="addFont">
+
                         保存改动
-                    </el-button>
+                    </customButton>
+
+
                 </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -122,6 +121,7 @@
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import { ElMessageBox } from 'element-plus';
+    import customButton from '@/components/button/customButton.vue';
     const counterStore = useCounterStore()
     const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
     const components: any = {
@@ -309,6 +309,10 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+                    column-gap: 12px;
+
                     .add-button {
                         font-weight: 500;
 

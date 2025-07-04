@@ -29,7 +29,7 @@
                     </div>
 
                     <div class="img-wrapper">
-                        <img :src="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
+                        <img v-lazy="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
                             class="template-img" />
                     </div>
                     <p class="template-name">
@@ -132,10 +132,11 @@
                     break
 
                 case 'wallpapper':
-                    url = ''
+                    url = '/wallpaperDetail/exportExcel'
                     params.wallpaperId = parseInt(route.query.id as string)
                     break
             }
+
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
             const res = await service.get(url, {
@@ -248,7 +249,7 @@
         detailIndex: number //排位
         keyword: string //关键词
         likeNum: number //点赞数
-        pay: number //是否付费
+        isPay: boolean //是否付费
         smallName: string //小图名称
         smallUrl: string //小图
     }
@@ -437,10 +438,11 @@
                     params.wallpaperId = parseInt(route.query.id as string)
                     switch (operationClass.value) {
                         case 1:
-                            url = ''
+                            url = '/wallpaperDetail/saveOperationItem'
+
                             break;
                         case 0:
-                            url = ''
+                            url = '/wallpaperDetail/saveItem'
                             break;
                     }
             }
