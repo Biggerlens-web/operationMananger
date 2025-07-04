@@ -437,11 +437,12 @@
         languageDialogVisible.value = false;
     }
     const addClothType = async () => {
+        if (showLoading.value) {
+            ElMessage.warning('正在保存。。。');
+            return
+        }
         try {
-            if (showLoading.value) {
-                ElMessage.warning('正在保存。。。');
-                return
-            }
+
             const params: any = {
                 id: formData.value.id,
                 timestamp: Date.now(),

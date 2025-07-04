@@ -14,7 +14,7 @@
                             <span class="template-id">{{ 'ID:' + element.id }}</span>
                         </div>
                         <div class="card-image">
-                            <img :src="element.coverUrl" :alt="'模板'" />
+                            <img v-lazy="element.coverUrl" :alt="'模板'" />
                         </div>
 
                         <div class="card-actions">

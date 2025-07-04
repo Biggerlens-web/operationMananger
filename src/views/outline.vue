@@ -96,7 +96,7 @@
                         </div>
 
                         <div class="img-wrapper">
-                            <img :src="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
+                            <img v-lazy="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
                                 class="template-img" />
                         </div>
                         <p class="template-name">

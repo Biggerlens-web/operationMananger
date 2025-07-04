@@ -31,14 +31,7 @@
                 <div class="filter-row">
 
 
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.appNo" placeholder="应用" class="filter-select"
-                            @change="getBannerList">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
-                        </el-select>
-                    </div>
+
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.os" placeholder="系统" class="filter-select"
                             @change="getBannerList">
@@ -88,7 +81,7 @@
                 <template #item="{ element, index }">
                     <li :key="element.img.id" class="template-item" @click="editorTemplate(element.img.id)">
                         <div class="img-wrapper" @click.stop="templateViewDialog(element.img.id)">
-                            <img :src="element.img.imgUrl" alt="" class="template-img">
+                            <img v-lazy="element.img.imgUrl" alt="" class="template-img">
                             <div class="delete-icon" @click.stop="deleteTemplate(element.img.id)">
                                 <el-icon>
                                     <Delete />
@@ -126,7 +119,7 @@
     import { ElMessage } from 'element-plus';
     import { useRoute } from 'vue-router';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList, international, showLoading } = storeToRefs(counterStore)
+    const { showPagestion, defaultAppNo, OSlist, channelList, international, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -216,7 +209,7 @@
     }
     const searchParams = ref<SearchParams>(
         {
-            appNo: appList.value[0].appNo,
+            appNo: defaultAppNo.value,
             os: OSlist.value[0],
             lang: international.value[0].value,
             channelId: channelList.value[0].id,
@@ -227,7 +220,7 @@
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            appNo: '',
+            appNo: defaultAppNo.value,
             os: '',
             lang: '',
             channelId: '',
@@ -366,13 +359,18 @@
         const query = route.query
         console.log('query', query);
         if (query) {
-            searchParams.value.appNo = query.appNo ? Number(query.appNo) : appList.value[0].appNo
+            searchParams.value.appNo = query.appNo ? Number(query.appNo) : defaultAppNo.value
             searchParams.value.os = query.os?.toString() || OSlist.value[0]
             searchParams.value.channelId = query.channelId ? Number(query.channelId) : channelList.value[0].id
             searchParams.value.lang = query.lang?.toString() || international.value[0].value
             await getBannerList()
             searchParams.value.bannerId = query.bannerId ? Number(query.bannerId) : ''
-            getUserList()
+
+
+            if (searchParams.value.bannerId) {
+                getUserList()
+            }
+
         }
         showPagestion.value = true
     })

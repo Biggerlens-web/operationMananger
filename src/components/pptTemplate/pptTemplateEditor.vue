@@ -35,7 +35,7 @@
 
                 <template #item="{ element, index }">
                     <li :key="element.id" class="image-template-item">
-                        <img :src="element" alt="">
+                        <img v-lazy="element" alt="">
                     </li>
                 </template>
 

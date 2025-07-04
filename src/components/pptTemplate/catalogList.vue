@@ -11,7 +11,7 @@
                     </div>
 
                     <div class="item-icon">
-                        <img :src="element.img" alt="" class="template-icon">
+                        <img v-lazy="element.img" alt="" class="template-icon">
                     </div>
                     <div class="item-info">
                         <p class="item-name">

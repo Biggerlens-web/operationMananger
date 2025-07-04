@@ -86,12 +86,12 @@
 
     }
     const handleComfirm = async () => {
-
+        if (showLoading.value) {
+            ElMessage.warning('正在保存。。。');
+            return
+        }
         try {
-            if (showLoading.value) {
-                ElMessage.warning('正在保存。。。');
-                return
-            }
+
             const params: any = {
                 timestamp: Date.now(),
                 ids: toRaw(props.chosedItem),
@@ -129,7 +129,7 @@
                     params.isVip = formData.isVip
 
                 case 'wallpapper':
-                    url = ''
+                    url = '/wallpaperDetail/saveBatchUpdate'
                     params.wallpaperId = formData.clothingMaterialsId
             }
 
@@ -224,6 +224,10 @@
                 case 'mask':
                     typeList.value = res.data.data.masks
                     formData.clothingMaterialsId = res.data.data.maskId
+
+                case 'wallpapper':
+                    typeList.value = res.data.data.wallpapers
+                    formData.clothingMaterialsId = res.data.data.wallpaperId
             }
 
             opreationType.value = res.data.data.operationClassArr

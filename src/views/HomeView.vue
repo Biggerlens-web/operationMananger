@@ -101,7 +101,7 @@
   const activeMenu = computed(() => route.path)
 
   const showAppSelcet = () => {
-    const hotshowarr = ['/templateMaterial']
+    const hotshowarr = ['/templateMaterial', '/bannerImgConfig/index']
     const path = route.path
     console.log('path', path);
     if (hotshowarr.includes(path)) {

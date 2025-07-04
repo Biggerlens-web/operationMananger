@@ -10,7 +10,7 @@
                             <span class="template-id">{{ element.id }}</span>
                         </div>
                         <div class="card-image">
-                            <img :src="element.coverUrl" :alt="element.title" />
+                            <img v-lazy="element.coverUrl" :alt="element.title" />
                         </div>
                         <div class="card-actions">
                             <el-button size="small" type="primary" @click="handleEdit(element)">编辑</el-button>

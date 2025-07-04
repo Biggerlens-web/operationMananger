@@ -171,11 +171,14 @@
   // 处理确认
 
   const saveMaterial = async () => {
+    // 防止重复点击
+    if (showLoading.value) {
+      ElMessage.warning('正在保存。。。');
+      return false
+    }
+
     try {
-      if (showLoading.value) {
-        ElMessage.warning('正在保存。。。');
-        return
-      }
+      showLoading.value = true
       const { type } = route.query
       let params: any = {
         id: formData.id,
@@ -236,7 +239,6 @@
 
       console.log('参数', params)
       const enData = desEncrypt(JSON.stringify(params))
-      showLoading.value = true
       const res = await service.post(url, {
         enData,
       })

@@ -1,11 +1,10 @@
 <template>
     <el-dialog :model-value="dialogVisible" width="500" title="批量编辑标签" :before-close="handleClose">
         <el-form-item label="标签">
-            <el-select style="width: 330px;margin-right: 10px;" v-model="chosedTagList" multiple filterable
-                placeholder="请选择">
+            <el-select v-model="chosedTagList" multiple filterable placeholder="请选择">
                 <el-option v-for="tag in tagList" :key="tag" :label="tag" :value="tag"></el-option>
             </el-select>
-            <el-button type="primary" @click="openTagAdd">添加标签</el-button>
+            <!-- <el-button type="primary" @click="openTagAdd">添加标签</el-button> -->
         </el-form-item>
 
 
@@ -67,6 +66,10 @@
     const route = useRoute()
     const comfirmBatchTag = async () => {
         console.log('chosedTagList', chosedTagList.value);
+        if (showLoading.value) {
+            ElMessage.warning('正在保存。。。');
+            return
+        }
         try {
             const params = {
                 timestamp: Date.now(),
