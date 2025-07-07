@@ -147,11 +147,12 @@
             showLoading.value = true
             const params = {
                 timestamp: new Date().getTime(),
-                appNp: defaultAppNo.value,
+                appNo: defaultAppNo.value,
                 region: searchParams.value.region,
                 fontLanguage: searchParams.value.fontLanguage,
                 fontIds: appData.value.map((item: any) => item.id)
             }
+
             const enData = desEncrypt(JSON.stringify(params))
             const res = await service.post('/font/saveItem', {
                 enData
@@ -398,7 +399,7 @@
 
             .floating-actions {
                 position: fixed;
-                bottom: 20px;
+                bottom: 7px;
                 right: 20px;
                 display: flex;
 
@@ -406,7 +407,7 @@
                 z-index: 1000;
                 background: rgba(255, 255, 255, 0.95);
                 backdrop-filter: blur(10px);
-                padding: 15px;
+                padding: 8px;
                 border-radius: 12px;
                 box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
                 border: 1px solid rgba(255, 255, 255, 0.2);
@@ -449,8 +450,8 @@
         }
 
         .stickTp_manage {
-            /* position: relative;  不再需要，因为 back-icon 改为 fixed 定位 */
-            height: 820px;
+
+            height: 700px;
             overflow-y: scroll;
 
             .template-grid {
