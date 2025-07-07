@@ -157,6 +157,8 @@
       formData.maskId = parseInt(route.query.id as string) || ''
     } else if (type === 'wallpapper') {
       formData.wallpaperId = parseInt(route.query.id as string) || ''
+    } else if (type === 'shape') {
+      formData.shapeId = parseInt(route.query.id as string) || ''
     }
   }
   onMounted(() => {
@@ -235,6 +237,10 @@
         url = '/wallpaperDetail/save'
         params.type = formData.id ? 'update' : 'add'
         params.wallpaperId = formData.wallpaperId
+      } else if (type === 'shape') {
+        url = '/shapeDetail/save'
+        params.type = formData.id ? 'update' : 'add'
+        params.shapeId = formData.shapeId
       }
 
       console.log('参数', params)

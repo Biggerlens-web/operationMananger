@@ -283,6 +283,12 @@
                     params.wallpaperId = parseInt(route.query.id as string)
                     url = '/wallpaperDetail/saveBatch'
                     break
+
+                case 'shape':
+                    console.log('形状');
+                    params.shapeId = parseInt(route.query.id as string)
+                    url = '/shapeDetail/saveBatch'
+                    break
             }
 
             console.log('批量保存参数', params, type);

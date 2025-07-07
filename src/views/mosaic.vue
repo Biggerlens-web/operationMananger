@@ -3,34 +3,6 @@
         <mosaicEditor v-model:dialog-visible="showEditor" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
-                <div class="left-actions">
-                    <customButton @click="addMosaic">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        批量新增
-                    </customButton>
-                    <customButton @click="addMosaic">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        新增马赛克
-                    </customButton>
-                    <customButton @click="addMosaic">
-                        全部选中
-                    </customButton>
-
-                    <customButton @click="addMosaic">
-                        <el-icon>
-                            <Minus />
-                        </el-icon>
-                        删除所选
-                    </customButton>
-                    <customButton @click="addMosaic">
-                        保存改动
-                    </customButton>
-
-                </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" /> -->
@@ -98,7 +70,7 @@
                         </div>
 
                         <div class="img-wrapper">
-                            <img v-lazy="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
+                            <img :src="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
                                 class="template-img" />
                         </div>
                         <p class="template-name">
@@ -111,6 +83,34 @@
                 </template>
             </draggable>
         </el-card>
+        
+        <!-- 浮动操作栏 -->
+        <div class="floating-actions">
+            <customButton @click="addMosaic">
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                批量新增
+            </customButton>
+            <customButton @click="addMosaic">
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                新增马赛克
+            </customButton>
+            <customButton @click="addMosaic">
+                全部选中
+            </customButton>
+            <customButton @click="addMosaic">
+                <el-icon>
+                    <Minus />
+                </el-icon>
+                删除所选
+            </customButton>
+            <customButton @click="addMosaic">
+                保存改动
+            </customButton>
+        </div>
     </div>
 </template>
 
@@ -583,6 +583,29 @@
                 opacity: 0.8;
                 transform: rotate(3deg);
                 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            }
+        }
+        
+        /* 浮动操作栏样式 */
+        .floating-actions {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+                background: rgba(255, 255, 255, 0.98);
             }
         }
     }

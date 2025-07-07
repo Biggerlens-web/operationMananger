@@ -81,7 +81,7 @@
                 <template #item="{ element, index }">
                     <li :key="element.img.id" class="template-item" @click="editorTemplate(element.img.id)">
                         <div class="img-wrapper" @click.stop="templateViewDialog(element.img.id)">
-                            <img v-lazy="element.img.imgUrl" alt="" class="template-img">
+                            <img :src="element.img.imgUrl" alt="" class="template-img">
                             <div class="delete-icon" @click.stop="deleteTemplate(element.img.id)">
                                 <el-icon>
                                     <Delete />

@@ -29,7 +29,7 @@
                     </div>
 
                     <div class="img-wrapper">
-                        <img v-lazy="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
+                        <img :src="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
                             class="template-img" />
                     </div>
                     <p class="template-name">
@@ -135,6 +135,10 @@
                     url = '/wallpaperDetail/exportExcel'
                     params.wallpaperId = parseInt(route.query.id as string)
                     break
+                case 'shape':
+                    url = '/shapeDetail/exportExcel'
+                    params.shapeId = parseInt(route.query.id as string)
+                    break
             }
 
             const enData = desEncrypt(JSON.stringify(params))
@@ -187,6 +191,9 @@
             } else if (type === 'wallpapper') {
                 params.wallpaperId = parseInt(route.query.id as string)
                 url = '/wallpaperDetail/list'
+            } else if (type === 'shape') {
+                params.shapeId = parseInt(route.query.id as string)
+                url = '/shapeDetail/list'
             }
             console.log('参数', params)
             const enData = desEncrypt(JSON.stringify(params))
@@ -443,6 +450,16 @@
                             break;
                         case 0:
                             url = '/wallpaperDetail/saveItem'
+                            break;
+                    }
+                case 'shape':
+                    params.shapeId = parseInt(route.query.id as string)
+                    switch (operationClass.value) {
+                        case 1:
+                            url = '/shapeDetail/saveOperationItem'
+                            break;
+                        case 0:
+                            url = '/shapeDetail/saveItem'
                             break;
                     }
             }

@@ -119,7 +119,16 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, ref, watch } from 'vue'
+  import { onMounted, ref, watch, nextTick } from 'vue'
+
+  // 防抖函数
+  const debounce = (func: Function, delay: number) => {
+    let timeoutId: ReturnType<typeof setTimeout>
+    return (...args: any[]) => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => func.apply(null, args), delay)
+    }
+  }
   import { Plus } from '@element-plus/icons-vue'
   import jsonEditor from '../components/autoJson/jsonEditor.vue'
   import { getKeysAsObject } from '../utils/keyAsObj'
@@ -429,47 +438,47 @@
     return false;
   }
 
-  const updateNote = (note: any) => {
-    callChildMethod()
+  // 防抖函数
+  let updateNoteTimer: ReturnType<typeof setTimeout> | null = null
+
+  const updateNote = (note: { value: string; path: string }) => {
     const { value, path } = note
-    const hasPath = hasCommaNestedProperty(jsonData.value, path)
-    console.log('hasPath', hasPath);
-    // if (!hasPath) {
-    //   jsonData.value[path] = ''
-    // }
 
-    const noteObj = getKeysAsObject(jsonData.value)
-    console.log('noteObj', noteObj);
+    try {
+      const noteObj = getKeysAsObject(jsonData.value)
+      let isUpdated = false
 
-    // 遍历 jsonData 中的所有属性
-    console.log('path', path);
-    console.log('Object.entries(noteObj)', Object.entries(noteObj));
-    for (const [key, val] of Object.entries(noteObj)) {
-      // 如果是直接匹配到顶层属性
-      if (key.includes(',')) {
-
-        if (key.includes(path)) {
-          noteObj[key] = value;
+      // 优化路径匹配逻辑
+      for (const [key] of Object.entries(noteObj)) {
+        if (key === path || (key.includes(',') && key.includes(path))) {
+          noteObj[key] = value
           assaginOBj(key, value, noteObj)
+          isUpdated = true
 
-        }
-      } else {
-        if (key === path) {
-          noteObj[path] = value;
-          console.log(`更新顶层属性 ${path}:`, value);
-          console.log('noteObj', noteObj);
-          console.log('comments', comments.value);
-          assaginOBj(key, value, noteObj)
-          console.log('noteObj', comments.value);
-          return;
+          // 如果是顶层属性，直接返回
+          if (key === path) {
+            break
+          }
         }
       }
 
+      if (!isUpdated) {
+        console.warn(`未找到路径: ${path}`)
+        return
+      }
 
+      // 防抖延迟同步，避免频繁重渲染导致展开状态丢失
+      if (updateNoteTimer) {
+        clearTimeout(updateNoteTimer)
+      }
 
+      updateNoteTimer = setTimeout(() => {
+        callChildMethod()
+      }, 150)
+
+    } catch (error) {
+      console.error('更新注释失败:', error)
     }
-
-
   }
 
   const getAutoConfig = async () => {

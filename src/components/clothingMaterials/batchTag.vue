@@ -97,6 +97,9 @@
                 case 'wallpapper':
                     url = '/wallpaperDetail/batchLabelSave'
                     break
+                case 'shape':
+                    url = '/shapeDetail/batchLabelSave'
+                    break
             }
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true

@@ -7,7 +7,7 @@
         <template #item="{ element, index }">
             <li :key="element.id" class="template-item" @click="editorTemplate(element.id)">
                 <div class="img-wrapper" @click.stop="templateViewDialog(element.id)">
-                    <img v-lazy="element.img" alt="" class="template-img">
+                    <img :src="element.img" alt="" class="template-img">
                 </div>
                 <p class="template-name">
                     <el-tooltip :content="element.name" placement="top" :show-after="500" :enterable="false"

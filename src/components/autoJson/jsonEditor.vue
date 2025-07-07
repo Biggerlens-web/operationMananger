@@ -13,6 +13,15 @@
     import JSONEditor from 'jsoneditor'
     import 'jsoneditor/dist/jsoneditor.css'
     import dayjs from 'dayjs'
+
+    // 防抖函数
+    const debounce = (func: Function, delay: number) => {
+        let timeoutId: ReturnType<typeof setTimeout>
+        return (...args: any[]) => {
+            clearTimeout(timeoutId)
+            timeoutId = setTimeout(() => func.apply(null, args), delay)
+        }
+    }
     //检测是否为日期时间格式
     const isValidDateTime = (dateStr: string): boolean => {
         console.log('dateStr', dateStr);
@@ -391,8 +400,30 @@
         editor?.destroy()
     })
     const setJsonData = () => {
-        const value = editor.get()
-        emit('update:modelValue', value)
+        if (!editor) return
+
+        try {
+            // 保存当前展开状态
+            const currentExpanded = expendList.value
+            const value = editor.get()
+
+            // 更新数据但不触发重渲染
+            emit('update:modelValue', value)
+
+            // 延迟恢复展开状态，确保DOM更新完成
+            nextTick(() => {
+                if (currentExpanded && editor) {
+                    const options = {
+                        path: currentExpanded,
+                        isExpand: true,
+                        recursive: false
+                    }
+                    editor.expand(options)
+                }
+            })
+        } catch (error) {
+            console.error('同步JSON数据失败:', error)
+        }
     }
     defineExpose({
         setJsonData

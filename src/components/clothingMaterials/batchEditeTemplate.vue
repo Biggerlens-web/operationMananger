@@ -127,10 +127,16 @@
                     url = '/maskDetail/saveBatchUpdate'
                     params.maskId = formData.clothingMaterialsId
                     params.isVip = formData.isVip
+                    break
 
                 case 'wallpapper':
                     url = '/wallpaperDetail/saveBatchUpdate'
                     params.wallpaperId = formData.clothingMaterialsId
+                    break
+                case 'shape':
+                    url = '/shapeDetail/saveBatchUpdate'
+                    params.shapeId = formData.clothingMaterialsId
+                    break
             }
 
             console.log('保存编辑啊参数', params);
@@ -196,6 +202,9 @@
                 case 'wallpapper':
                     url = '/wallpaperDetail/batchUpdateEdit'
                     break
+                case 'shape':
+                    url = '/shapeDetail/batchUpdateEdit'
+                    break
             }
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
@@ -228,6 +237,11 @@
                 case 'wallpapper':
                     typeList.value = res.data.data.wallpapers
                     formData.clothingMaterialsId = res.data.data.wallpaperId
+                    break
+                case 'shape':
+                    typeList.value = res.data.data.shapes
+                    formData.clothingMaterialsId = res.data.data.shapeId
+                    break
             }
 
             opreationType.value = res.data.data.operationClassArr

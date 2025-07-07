@@ -39,6 +39,9 @@
       actionList.value = actionList.value.filter((item: any) => item.text !== '批量新增')
     } else {
       actionList.value = actionList.value.filter((item: any) => !item.isTemplate)
+      if (route.query.type === 'shape') {
+        actionList.value = actionList.value.filter((item: any) => item.text !== '批量标签')
+      }
       if (operationClass.value !== 0) {
         actionList.value = actionList.value.filter((item: any) => item.operationClass !== 0)
       }

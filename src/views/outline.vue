@@ -3,37 +3,6 @@
         <outlineEditor v-model:dialog-visible="showEditor" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
-                <div class="left-actions">
-
-
-
-                    <customButton @click="addOutline">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        批量新增
-                    </customButton>
-                    <customButton @click="addOutline">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        新增描边
-                    </customButton>
-                    <customButton @click="addOutline">
-                        全部选中
-                    </customButton>
-                    <customButton @click="addOutline">
-                        <el-icon>
-                            <Minus />
-                        </el-icon>
-                        删除所选
-                    </customButton>
-                    <customButton @click="addOutline">
-
-                        保存改动
-                    </customButton>
-
-                </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" /> -->
@@ -46,31 +15,31 @@
                 <div class="filter-row">
 
 
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="应用" class="filter-select">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
-                        </el-select>
-                    </div>
+
 
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="国内外" class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
+                        <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
+                            <el-option v-for="item in regionList" :key="item.value" :label="item.label"
+                                :value="item.value" />
                         </el-select>
                     </div>
 
 
 
-                    <!-- <div class="filter-item filter-actions">
+                    <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getUserList">
                             <el-icon>
                                 <Search />
                             </el-icon>
-                            批量添加
+                            查询
                         </el-button>
-
-                    </div> -->
+                        <el-button @click="resetSearch">
+                            <el-icon>
+                                <Refresh />
+                            </el-icon>
+                            重置
+                        </el-button>
+                    </div>
                 </div>
 
 
@@ -96,7 +65,7 @@
                         </div>
 
                         <div class="img-wrapper">
-                            <img v-lazy="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
+                            <img :src="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
                                 class="template-img" />
                         </div>
                         <p class="template-name">
@@ -109,6 +78,34 @@
                 </template>
             </draggable>
         </el-card>
+
+        <!-- 浮动操作栏 -->
+        <div class="floating-actions">
+            <customButton @click="addOutline">
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                批量新增
+            </customButton>
+            <customButton @click="addOutline">
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                新增描边
+            </customButton>
+            <customButton @click="addOutline">
+                全部选中
+            </customButton>
+            <customButton @click="addOutline">
+                <el-icon>
+                    <Minus />
+                </el-icon>
+                删除所选
+            </customButton>
+            <customButton @click="addOutline">
+                保存改动
+            </customButton>
+        </div>
     </div>
 </template>
 
@@ -117,12 +114,14 @@
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import outlineEditor from '@/components/outline/outlineEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import customButton from '@/components/button/customButton.vue'
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, regionList, defaultAppNo, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -160,24 +159,24 @@
 
     //搜索参数
     interface SearchParams {
-        inputText: string
-        companyNo: string
+        region: string
+
 
 
 
     }
     const searchParams = ref<SearchParams>(
         {
-            inputText: '',
-            companyNo: '',
+            region: '',
+
 
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            inputText: '',
-            companyNo: '',
+            region: '',
+
 
         }
         getUserList()
@@ -203,46 +202,7 @@
     }
     // 生成用户数据
     const appData = ref<AppItem[]>([
-        {
-            appId: 'APP_0001',
-            shortName: '商城系统',
-            companyName: '科技有限公司',
-            accessName: 'app1.example.com',
-            systemId: 'SYS_0001',
-            developer: '张三'
-        },
-        {
-            appId: 'APP_0002',
-            shortName: '会员系统',
-            companyName: '网络科技有限公司',
-            accessName: 'app2.example.com',
-            systemId: 'SYS_0002',
-            developer: '李四'
-        },
-        {
-            appId: 'APP_0003',
-            shortName: '支付系统',
-            companyName: '软件开发有限公司',
-            accessName: 'app3.example.com',
-            systemId: 'SYS_0003',
-            developer: '王五'
-        },
-        {
-            appId: 'APP_0004',
-            shortName: '管理系统',
-            companyName: '信息技术有限公司',
-            accessName: 'app4.example.com',
-            systemId: 'SYS_0004',
-            developer: '赵六'
-        },
-        {
-            appId: 'APP_0005',
-            shortName: '客服系统',
-            companyName: '科技有限公司',
-            accessName: 'app5.example.com',
-            systemId: 'SYS_0005',
-            developer: '钱七'
-        }
+
     ])
     interface filterParams {
         note: string
@@ -250,18 +210,30 @@
         key: string
     }
     const filterParams = ref<filterParams[]>()
+    watch(() => defaultAppNo.value, () => {
+        getUserList()
+
+    })
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
+        try {
+            showLoading.value = true
+            const params = {
+                timestamp: Date.now(),
+                region: searchParams.value.region,
+                appNo: defaultAppNo.value
             }
-        })
-        console.log('filterParams', filterParams.value);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/outline/list', {
+                enData
+            })
+            appData.value = res.data.data.list
+            console.log('获取描边列表', res);
+        } catch (err) {
+            console.log('获取描边列表失败', err);
+        } finally {
+            showLoading.value = false
+        }
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {
@@ -284,6 +256,7 @@
         console.log('keyItem', keyItem);
     }
     onMounted(() => {
+        searchParams.value.region = regionList.value[0].value
         getUserList();
         showPagestion.value = true
     })
@@ -579,6 +552,29 @@
                 opacity: 0.8;
                 transform: rotate(3deg);
                 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        /* 浮动操作栏样式 */
+        .floating-actions {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+                background: rgba(255, 255, 255, 0.98);
             }
         }
     }
