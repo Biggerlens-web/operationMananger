@@ -159,6 +159,8 @@
       formData.wallpaperId = parseInt(route.query.id as string) || ''
     } else if (type === 'shape') {
       formData.shapeId = parseInt(route.query.id as string) || ''
+    } else if (type === 'otherMaterial') {
+      formData.materialId = parseInt(route.query.id as string) || ''
     }
   }
   onMounted(() => {
@@ -241,6 +243,10 @@
         url = '/shapeDetail/save'
         params.type = formData.id ? 'update' : 'add'
         params.shapeId = formData.shapeId
+      } else if (type === 'otherMaterial') {
+        url = '/otherMaterialDetail/save'
+        params.type = formData.id ? 'update' : 'add'
+        params.materialId = formData.materialId
       }
 
       console.log('参数', params)

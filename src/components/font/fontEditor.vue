@@ -217,7 +217,6 @@
         }
         showLoading.value = true
         try {
-            console.log('formData.value.appNo', formData.value.appNo);
 
             const form = new FormData()
             form.append('fontLanguage', formData.value.fontLanguage)
@@ -234,21 +233,16 @@
             }
             if (formData.value.coverImgName) {
                 form.append('coverImgName', formData.value.coverImgName)
-            } else {
+            } else if (formData.value.coverImg.length > 0 && formData.value.coverImg[0].raw) {
                 form.append('coverImg', formData.value.coverImg[0].raw)
             }
             if (formData.value.fontName) {
                 form.append('fontName', formData.value.fontName)
-
-            } else {
+            } else if (formData.value.font.length > 0 && formData.value.font[0].raw) {
                 form.append('font', formData.value.font[0].raw)
             }
 
-            const res = await service.post('/font/save', form, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            })
+            const res = await service.post('/font/save', form)
             console.log('保存', res);
             if (res.data.code === 200) {
                 ElMessage.success('保存成功')
@@ -278,15 +272,17 @@
 
         try {
             const form = new FormData()
-            console.log('formData.value.coverImg', formData.value.coverImg);
-            console.log('formData.value.font', formData.value.font);
-            console.log(' formData.value.region', formData.value.region);
-            console.log('formData.value.fontLanguage', formData.value.fontLanguage);
-            const coverImgs = formData.value.coverImg.map((item: any) => item.raw)
-            const fonts = formData.value.font.map((item: any) => item.raw)
+
+            const coverImgs = formData.value.coverImg.map((item: any) => item.raw).filter(Boolean)
+            const fonts = formData.value.font.map((item: any) => item.raw).filter(Boolean)
+            
+            if (coverImgs.length === 0 || fonts.length === 0) {
+                ElMessage.error('请选择字体文件和预览图')
+                return
+            }
+            
             const fontList = createFileListFromArray(fonts)
             const coverImgList = createFileListFromArray(coverImgs)
-
 
             console.log('coverImgs', coverImgList);
             console.log('fonts', fontList);
@@ -295,19 +291,13 @@
             form.append('region', formData.value.region)
             form.append('fontLanguage', formData.value.fontLanguage)
 
-            coverImgs.forEach((item: any, index: number) => {
+            coverImgs.forEach((item: any) => {
                 form.append(`coverImgs`, item)
             })
-            fonts.forEach((item: any, index: number) => {
+            fonts.forEach((item: any) => {
                 form.append(`fonts`, item)
             })
-            form.append('fonts', fontList as any)
-            form.append('coverImgs', coverImgList as any)
-            const res = await service.post('/font/saveBatch', form, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            })
+            const res = await service.post('/font/saveBatch', form)
 
             if (res.data.code === 200) {
                 ElMessage.success('保存成功')

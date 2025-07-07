@@ -1,6 +1,6 @@
 <style scoped>
     button {
-        padding: 12.5px 20px;
+        padding: 7px 10px;
         border: 0;
         border-radius: 100px;
         background-color: #0e89db;

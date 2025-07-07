@@ -194,6 +194,8 @@
             } else if (type === 'shape') {
                 params.shapeId = parseInt(route.query.id as string)
                 url = '/shapeDetail/list'
+            } else if (type === 'otherMaterial') {
+                params.materialId = parseInt(route.query.id as string)
             }
             console.log('参数', params)
             const enData = desEncrypt(JSON.stringify(params))
@@ -460,6 +462,16 @@
                             break;
                         case 0:
                             url = '/shapeDetail/saveItem'
+                            break;
+                    }
+                case 'otherMaterial':
+                    params.materialId = parseInt(route.query.id as string)
+                    switch (operationClass.value) {
+                        case 1:
+                            url = '/otherMaterialDetail/saveOperationItem'
+                            break;
+                        case 0:
+                            url = '/otherMaterialDetail/saveItem'
                             break;
                     }
             }

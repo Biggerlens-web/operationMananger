@@ -1,6 +1,6 @@
 <template>
     <div class="view">
-        <outlineEditor v-model:dialog-visible="showEditor" />
+        <outlineEditor v-model:dialog-visible="showEditor" :isBatch="isBatch" :editInfo="editInfo" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="right-actions">
@@ -13,10 +13,6 @@
 
             <div class="filter-container">
                 <div class="filter-row">
-
-
-
-
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
                             <el-option v-for="item in regionList" :key="item.value" :label="item.label"
@@ -81,7 +77,7 @@
 
         <!-- 浮动操作栏 -->
         <div class="floating-actions">
-            <customButton @click="addOutline">
+            <customButton @click="addOutline('batch')">
                 <el-icon>
                     <Plus />
                 </el-icon>
@@ -93,16 +89,16 @@
                 </el-icon>
                 新增描边
             </customButton>
-            <customButton @click="addOutline">
+            <customButton @click="selectAll">
                 全部选中
             </customButton>
-            <customButton @click="addOutline">
+            <customButton @click="delSelected">
                 <el-icon>
                     <Minus />
                 </el-icon>
                 删除所选
             </customButton>
-            <customButton @click="addOutline">
+            <customButton @click="saveChange">
                 保存改动
             </customButton>
         </div>
@@ -120,6 +116,7 @@
     import customButton from '@/components/button/customButton.vue'
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
+    import { ElMessage } from 'element-plus';
     const counterStore = useCounterStore()
     const { showPagestion, regionList, defaultAppNo, showLoading } = storeToRefs(counterStore)
     const components: any = {
@@ -144,17 +141,69 @@
     }
 
     //编辑
-    const showTemplateEdit = ref<boolean>(false)
+    const editInfo = ref<any>()
     const editorTemplate = (item?: any) => {
-        showTemplateEdit.value = true
+        editInfo.value = item
+        showEditor.value = true
         console.log('item', item)
 
     }
 
     //新增描边
+    const isBatch = ref<boolean>(false)
     const showEditor = ref<boolean>(false)
-    const addOutline = () => {
+    watch(() => showEditor.value, (newV) => {
+        if (!newV) {
+            isBatch.value = false
+            editInfo.value = ''
+            getUserList()
+        }
+    })
+    const addOutline = (type?: string) => {
+
+        if (type === 'batch') {
+            isBatch.value = true
+        }
         showEditor.value = true
+    }
+
+
+
+    //全部选中
+    const selectAll = () => {
+        selectedList.value = appData.value.map((item: any) => item.id)
+    }
+
+    //删除所选
+    const delSelected = () => {
+        appData.value = appData.value.filter((item: any) => !selectedList.value.includes(item.id))
+    }
+    //保存改动
+    const saveChange = async () => {
+        try {
+            showLoading.value = true
+            const params = {
+                timestamp: Date.now(),
+                appNo: defaultAppNo.value,
+                region: searchParams.value.region,
+                ids: appData.value.map(item => item.id)
+            }
+            console.log('保存改动参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/outline/saveItem', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                getUserList()
+            } else {
+                ElMessage.error('保存失败')
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
+        }
     }
 
     //搜索参数
@@ -182,6 +231,7 @@
         getUserList()
     }
     interface AppItem {
+        id: number
         appId: string;        // 应用编号
         shortName: string;    // 应用简称
         companyName: string;  // 所属公司
@@ -326,7 +376,7 @@
 
         .stickTp_manage {
             /* position: relative;  不再需要，因为 back-icon 改为 fixed 定位 */
-            height: 820px;
+            height: 700px;
             overflow-y: scroll;
 
             .template-grid {
@@ -464,7 +514,7 @@
             .template-img {
                 width: 100%;
                 height: 100%;
-                object-fit: cover;
+                object-fit: contain;
                 /* 确保图片填充整个容器且不变形 */
             }
 
@@ -558,14 +608,14 @@
         /* 浮动操作栏样式 */
         .floating-actions {
             position: fixed;
-            bottom: 20px;
+            bottom: 7px;
             right: 20px;
             display: flex;
             gap: 12px;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 12px;
-            padding: 12px 16px;
+            padding: 8px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
             border: 1px solid rgba(255, 255, 255, 0.2);
             z-index: 1000;

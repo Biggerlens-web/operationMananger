@@ -137,6 +137,11 @@
                     url = '/shapeDetail/saveBatchUpdate'
                     params.shapeId = formData.clothingMaterialsId
                     break
+
+                case 'otherMaterial':
+                    url = '/otherMaterialDetail/saveBatchUpdate'
+                    params.materialId = formData.clothingMaterialsId
+                    break
             }
 
             console.log('保存编辑啊参数', params);
@@ -205,6 +210,9 @@
                 case 'shape':
                     url = '/shapeDetail/batchUpdateEdit'
                     break
+                case 'otherMaterial':
+                    url = '/otherMaterialDetail/batchUpdateEdit'
+                    break
             }
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
@@ -241,6 +249,10 @@
                 case 'shape':
                     typeList.value = res.data.data.shapes
                     formData.clothingMaterialsId = res.data.data.shapeId
+                    break
+                case 'otherMaterial':
+                    typeList.value = res.data.data.otherMaterials
+                    formData.clothingMaterialsId = res.data.data.otherMaterialId
                     break
             }
 

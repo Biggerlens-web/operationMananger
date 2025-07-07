@@ -1,6 +1,7 @@
 <template>
     <div class="view">
-        <mosaicEditor v-model:dialog-visible="showEditor" />
+
+        <mosaicEditor v-model:dialog-visible="showEditor" :isBatch="isBatch" :editInfo="editInfo" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="right-actions">
@@ -15,36 +16,31 @@
                 <div class="filter-row">
 
 
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="应用" class="filter-select">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
-                        </el-select>
-                    </div>
+
 
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="国内外" class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="语言" class="filter-select">
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
-                                :value="item.id" />
+                        <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
+                            <el-option v-for="item in regionList" :key="item.value" :label="item.label"
+                                :value="item.value" />
                         </el-select>
                     </div>
 
 
-                    <!-- <div class="filter-item filter-actions">
+
+                    <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getUserList">
                             <el-icon>
                                 <Search />
                             </el-icon>
-                            批量添加
+                            查询
                         </el-button>
-
-                    </div> -->
+                        <el-button @click="resetSearch">
+                            <el-icon>
+                                <Refresh />
+                            </el-icon>
+                            重置
+                        </el-button>
+                    </div>
                 </div>
 
 
@@ -83,10 +79,10 @@
                 </template>
             </draggable>
         </el-card>
-        
+
         <!-- 浮动操作栏 -->
-        <div class="floating-actions">
-            <customButton @click="addMosaic">
+        <div class="floating-actions" ref="actionRef" @mousedown="dragStart" @mouseup="dragEnd">
+            <customButton @click="addMosaic('isBatch')">
                 <el-icon>
                     <Plus />
                 </el-icon>
@@ -98,16 +94,16 @@
                 </el-icon>
                 新增马赛克
             </customButton>
-            <customButton @click="addMosaic">
+            <customButton @click="checkAll">
                 全部选中
             </customButton>
-            <customButton @click="addMosaic">
+            <customButton @click="delSelected">
                 <el-icon>
                     <Minus />
                 </el-icon>
                 删除所选
             </customButton>
-            <customButton @click="addMosaic">
+            <customButton @click="saveChange">
                 保存改动
             </customButton>
         </div>
@@ -115,16 +111,72 @@
 </template>
 
 <script setup lang="ts">
+    const actionRef = ref<HTMLElement>()
+    const dragOffset = ref<{ x: number, y: number }>({
+        x: 0,
+        y: 0
+    })
+    const isDraging = ref<boolean>(false)
+    const elementSize = ref<{ width: number, height: number }>({
+        width: 0,
+        height: 0
+    })
+    const dragStart = (e: MouseEvent) => {
+        if (actionRef.value) {
+            const rect = actionRef.value.getBoundingClientRect()
+            elementSize.value.width = rect.width
+            elementSize.value.height = rect.height
+            actionRef.value.style.right = 'auto'
+            actionRef.value.style.bottom = 'auto'
+            actionRef.value.style.left = rect.left + 'px'
+            actionRef.value.style.top = rect.top + 'px'
+            dragOffset.value.x = e.clientX - rect.left
+            dragOffset.value.y = e.clientY - rect.top
+            isDraging.value = true
+            window.addEventListener('mousemove', dragMove)
+        }
+    }
+    const dragMove = (e: MouseEvent) => {
+        if (isDraging.value && actionRef.value) {
+
+            const innerWidth = window.innerWidth
+            const innerHeight = window.innerHeight
+
+            const newX = Math.max(0, Math.min(e.clientX - dragOffset.value.x, innerWidth - elementSize.value.width))
+            const newY = Math.max(0, Math.min(e.clientY - dragOffset.value.y, innerHeight - elementSize.value.height))
+
+
+
+            actionRef.value.style.left = newX + 'px'
+            actionRef.value.style.top = newY + 'px'
+        }
+    }
+    const dragEnd = () => {
+        isDraging.value = false
+    }
+
+
+
+
+
+
+
+
+
+
     import draggable from 'vuedraggable'
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import mosaicEditor from '@/components/mosaic/mosaicEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import customButton from '@/components/button/customButton.vue';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
+    import { ElMessage } from 'element-plus';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, defaultAppNo, showLoading, regionList } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -132,6 +184,48 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+
+
+
+
+    //删除所选
+    const delSelected = () => {
+        appData.value = appData.value.filter((item: any) => !selectedList.value.includes(item.id))
+    }
+
+
+    //全部选中
+    const checkAll = () => {
+        selectedList.value = appData.value.map((item: any) => item.id)
+    }
+
+
+    //保存改动
+    const saveChange = async () => {
+        showLoading.value = true
+        try {
+            const params = {
+                timestamp: new Date().getTime(),
+                appNo: defaultAppNo.value,
+                region: searchParams.value.region,
+                ids: appData.value.map((item: any) => item.id)
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/mosaic/saveItem', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存改动失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
 
 
     //选中模板集合
@@ -148,45 +242,58 @@
     }
 
     //编辑
-    const showTemplateEdit = ref<boolean>(false)
+
+    const editInfo = ref<any>()
     const editorTemplate = (item?: any) => {
-        showTemplateEdit.value = true
+        editInfo.value = item
+        showEditor.value = true
         console.log('item', item)
 
     }
 
     //新增马赛克
     const showEditor = ref<boolean>(false)
-
-    const addMosaic = () => {
+    watch(() => showEditor.value, (newV) => {
+        if (!newV) {
+            editInfo.value = ''
+            getUserList()
+        }
+    })
+    const isBatch = ref<boolean>(false)
+    const addMosaic = (type?: string) => {
+        if (type === 'isBatch') {
+            isBatch.value = true
+        } else {
+            isBatch.value = false
+        }
         showEditor.value = true
     }
 
     //搜索参数
     interface SearchParams {
-        inputText: string
-        companyNo: string
+
+        region: string
 
 
 
     }
     const searchParams = ref<SearchParams>(
         {
-            inputText: '',
-            companyNo: '',
+            region: ''
+
 
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            inputText: '',
-            companyNo: '',
+            region: ''
 
         }
         getUserList()
     }
     interface AppItem {
+        id: number
         appId: string;        // 应用编号
         shortName: string;    // 应用简称
         companyName: string;  // 所属公司
@@ -197,6 +304,7 @@
 
 
     const appNote: any = {
+
         appId: '应用编号',
         shortName: '应用简称',
         companyName: '所属公司',
@@ -207,46 +315,7 @@
     }
     // 生成用户数据
     const appData = ref<AppItem[]>([
-        {
-            appId: 'APP_0001',
-            shortName: '商城系统',
-            companyName: '科技有限公司',
-            accessName: 'app1.example.com',
-            systemId: 'SYS_0001',
-            developer: '张三'
-        },
-        {
-            appId: 'APP_0002',
-            shortName: '会员系统',
-            companyName: '网络科技有限公司',
-            accessName: 'app2.example.com',
-            systemId: 'SYS_0002',
-            developer: '李四'
-        },
-        {
-            appId: 'APP_0003',
-            shortName: '支付系统',
-            companyName: '软件开发有限公司',
-            accessName: 'app3.example.com',
-            systemId: 'SYS_0003',
-            developer: '王五'
-        },
-        {
-            appId: 'APP_0004',
-            shortName: '管理系统',
-            companyName: '信息技术有限公司',
-            accessName: 'app4.example.com',
-            systemId: 'SYS_0004',
-            developer: '赵六'
-        },
-        {
-            appId: 'APP_0005',
-            shortName: '客服系统',
-            companyName: '科技有限公司',
-            accessName: 'app5.example.com',
-            systemId: 'SYS_0005',
-            developer: '钱七'
-        }
+
     ])
     interface filterParams {
         note: string
@@ -254,18 +323,32 @@
         key: string
     }
     const filterParams = ref<filterParams[]>()
+
+    //监听应用
+    watch(() => defaultAppNo.value, async () => {
+        getUserList()
+    })
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
+        showLoading.value = true
+        try {
+            const params = {
+                "appNo": defaultAppNo.value,
+                "region": searchParams.value.region,
+                timestamp: Date.now()
             }
-        })
-        console.log('filterParams', filterParams.value);
+            console.log('参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/mosaic/list', {
+                enData
+            })
+            console.log('马赛克列表', res);
+            appData.value = res.data.data.list
+        } catch (err) {
+            console.log('获取马赛克列表失败', err);
+        } finally {
+            showLoading.value = false
+        }
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {
@@ -288,12 +371,17 @@
         console.log('keyItem', keyItem);
     }
     onMounted(() => {
+        searchParams.value.region = regionList.value[0].value
+
+
         getUserList();
         showPagestion.value = true
     })
 </script>
 
 <style scoped lang="scss">
+
+
     .view {
         .filter-card {
             width: 100%;
@@ -357,7 +445,7 @@
 
         .stickTp_manage {
             /* position: relative;  不再需要，因为 back-icon 改为 fixed 定位 */
-            height: 820px;
+            height: 700px;
             overflow-y: scroll;
 
             .template-grid {
@@ -585,28 +673,23 @@
                 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             }
         }
-        
+
         /* 浮动操作栏样式 */
         .floating-actions {
             position: fixed;
-            bottom: 20px;
+            bottom: 7px;
             right: 20px;
             display: flex;
+            cursor: move;
             gap: 12px;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 12px;
-            padding: 12px 16px;
+            padding: 8px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
             border: 1px solid rgba(255, 255, 255, 0.2);
             z-index: 1000;
-            transition: all 0.3s ease;
-            
-            &:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-                background: rgba(255, 255, 255, 0.98);
-            }
+
         }
     }
 </style>

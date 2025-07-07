@@ -36,6 +36,7 @@ export const useCounterStore = defineStore(
     const templateFliterParams = ref<any>({}) // 模板筛选参数
     const wallpaperFliterParams = ref<any>({}) // 壁纸筛选参数
     const shapeFliterParams = ref<any>({}) // 形状筛选参数
+    const otherFliterParams = ref<any>({}) //其他素材筛选参数
     const updateChildTemplate = ref<boolean>(false)
     const showLoading = ref<boolean>(false) // 显示loading
     const changeSChildTemplate = (val: boolean) => {
@@ -68,6 +69,7 @@ export const useCounterStore = defineStore(
       changeSChildTemplate,
       shapeFliterParams,
       showLoading,
+      otherFliterParams,
     }
   },
   {

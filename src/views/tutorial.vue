@@ -401,7 +401,7 @@
 
         .stickTp_manage {
             /* position: relative;  不再需要，因为 back-icon 改为 fixed 定位 */
-            height: 820px;
+            height: 700px;
             overflow-y: scroll;
 
             .template-grid {

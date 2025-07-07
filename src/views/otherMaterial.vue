@@ -6,19 +6,24 @@
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" @click="addEditor" class="add-button">
+                    <el-button type="primary" @click="addEditor" style="margin: 0;" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增
                     </el-button>
+                    <el-upload>
 
-                    <el-button type="primary" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        导入国际化
-                    </el-button>
+                    </el-upload>
+                    <el-upload style="margin: 0;" action="#" :show-file-list="false" :on-change="handleInternational"
+                        :auto-upload="false">
+                        <el-button style="margin: 0;" type="primary" class="add-button">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+                            导入国际化
+                        </el-button>
+                    </el-upload>
                 </div>
                 <div class="right-actions">
                     <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -39,7 +44,7 @@
 
 
                     <div class="filter-item filter-actions">
-                        <el-button type="primary" @click="getUserList">
+                        <el-button type="primary" @click="searching">
                             <el-icon>
                                 <Search />
                             </el-icon>
@@ -61,7 +66,7 @@
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="appData" @editor="editorEditor"
-                    @delete="deleteEditor"></component>
+                    @delete="deleteEditor" @view="viewDetail" @moveIndex="moveIndex"></component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
@@ -80,11 +85,13 @@
     import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { ElMessageBox } from 'element-plus';
+    import { ElMessage, ElMessageBox } from 'element-plus';
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
+    import { useRouter } from 'vue-router';
     const counterStore = useCounterStore()
-    const { showPagestion, regionList, showLoading, defaultAppNo } = storeToRefs(counterStore)
+    const router = useRouter()
+    const { showPagestion, regionList, showLoading, operationClass, defaultAppNo, otherFliterParams } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -95,9 +102,101 @@
     //数据总数
     const totalData = ref<number>(0)
 
+    //移动
+    const moveIndex = async (item: any) => {
+        console.log('移动', item);
+        try {
+
+            const params = {
+                timestamp: Date.now(),
+                id: item.id,
+                type: item.moveType
+            }
+            console.log('参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
+            const res = await service.post('/background/move', {
+                enData
+            })
+            console.log('移动', res);
+            if (res.data.code === 200) {
+                ElMessage({
+                    message: '移动成功',
+                    type: 'success'
+                })
+                getUserList()
+            } else {
+                ElMessage({
+                    message: res.data.msg,
+                    type: 'error'
+                })
+            }
+        } catch (err) {
+
+
+            console.log('移动失败', err);
+        } finally {
+            showLoading.value = false
+        }
+
+    }
+
+
+    //查看详情
+    const viewDetail = (row: any) => {
+        operationClass.value = row.operationClass
+        router.push('/otherMaterialDetail?id=' + row.id + '&type=otherMaterial&title=其他素材')
+
+
+        console.log('查看详情', row);
+    }
+
+    //导入国际化
+    const fileInterNational = ref()
+
+    const handleInternational = (file: any) => {
+        console.log('file', file);
+
+
+
+        fileInterNational.value = file.raw
+        importInternation()
+    }
+    const importInternation = async () => {
+        try {
+            const formData = new FormData()
+            formData.append('appNo', String(defaultAppNo.value))
+            formData.append('region', searchParams.value.region)
+            formData.append('materials', fileInterNational.value)
+
+            showLoading.value = true
+            const res = await service.post('/otherMaterial/importExcelInternationalization', formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            })
+            console.log('导入成功', res);
+            if (res.data.code === 200) {
+                ElMessage.success('导入成功')
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('导入失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
+
 
     //新增其他素材配置
     const showEditor = ref<boolean>(false)
+    watch(() => showEditor.value, () => {
+        if (!showEditor.value) {
+            editorItemInfo.value = ''
+            getUserList()
+        }
+    })
     const addEditor = () => {
         showEditor.value = true
     }
@@ -122,15 +221,8 @@
 
     }
     //搜索参数
-    interface SearchParams {
-        region: string
-        pageNum: number
-        pageSize: number
 
-
-
-    }
-    const searchParams = ref<SearchParams>(
+    const searchParams = ref<any>(
         {
 
             region: '',
@@ -140,6 +232,7 @@
         }
     )
 
+
     watch(() => searchParams.value.pageNum, () => {
         getUserList()
 
@@ -147,6 +240,15 @@
     watch(() => defaultAppNo.value, () => {
         resetSearch()
     })
+
+
+    //搜索
+    const searching = () => {
+        Object.assign(otherFliterParams.value, searchParams.value)
+
+        getUserList()
+    }
+
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
@@ -201,7 +303,7 @@
                 region: searchParams.value.region,
             }
             const enData = desEncrypt(JSON.stringify(params))
-            const res = await service.post('', {
+            const res = await service.post('/otherMaterial/list', {
                 enData
             })
             console.log('获取其他素材列表', res);
@@ -245,6 +347,18 @@
         console.log('keyItem', keyItem);
     }
     onMounted(() => {
+
+        const keys = Object.keys(otherFliterParams.value)
+        if (keys.length > 0) {
+            searchParams.value.region = otherFliterParams.value.region
+        } else {
+            searchParams.value.region = regionList.value[0].value
+        }
+
+
+
+
+
         getUserList();
         showPagestion.value = true
     })
@@ -263,6 +377,10 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+                    column-gap: 12px;
+
                     .add-button {
                         font-weight: 500;
 

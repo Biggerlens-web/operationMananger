@@ -289,6 +289,12 @@
                     params.shapeId = parseInt(route.query.id as string)
                     url = '/shapeDetail/saveBatch'
                     break
+
+                case 'otherMaterial':
+                    console.log('其他素材');
+                    params.materialId = parseInt(route.query.id as string)
+                    url = '/otherMaterialDetail/saveBatch'
+                    break
             }
 
             console.log('批量保存参数', params, type);

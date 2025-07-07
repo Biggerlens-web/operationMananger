@@ -1,5 +1,6 @@
 <template>
     <div class="view">
+
         <fontEditor v-model:dialog-visible="showEditor" :fontTypeList="fontTypeList" :fontLanguage="fontLanguage"
             :editInfo="editInfo" :batchAdd="isBatch" />
         <el-card class="filter-card">
@@ -11,7 +12,7 @@
             </div>
 
             <!-- 固定在右下角的操作栏 -->
-            <div class="floating-actions">
+            <div class="floating-actions" ref="actionRef" @mousedown="dragStart" @mouseup="dragEnd">
                 <customButton @click="batchAddFont"><el-icon>
                         <Plus />
                     </el-icon>
@@ -115,6 +116,55 @@
 </template>
 
 <script setup lang="ts">
+    const isDraging = ref<boolean>(false)
+    const actionRef = ref<HTMLElement>()
+    const elementSize = ref<{ width: number, height: number }>({
+        width: 0,
+        height: 0
+    })
+    const drageOffSet = ref<{ x: number, y: number }>({
+        x: 0,
+        y: 0
+    })
+    const dragStart = (e: any) => {
+        if (actionRef.value) {
+            document.body.style.userSelect = 'none'
+            const rect = actionRef.value.getBoundingClientRect()
+            elementSize.value.width = rect.width
+            elementSize.value.height = rect.height
+            actionRef.value.style.right = 'auto'
+            actionRef.value.style.bottom = 'auto'
+            actionRef.value.style.left = rect.left + 'px'
+            actionRef.value.style.top = rect.top + 'px'
+            drageOffSet.value.x = e.clientX - rect.left
+            drageOffSet.value.y = e.clientY - rect.top
+            isDraging.value = true
+            window.addEventListener('mousemove', dragMove)
+        }
+
+    }
+    const dragMove = (e: any) => {
+        if (isDraging.value && actionRef.value) {
+            const innerWidth = window.innerWidth
+            const innerHeight = window.innerHeight
+            const newX = Math.max(0, Math.min(e.clientX - drageOffSet.value.x, innerWidth - elementSize.value.width))
+            const newY = Math.max(0, Math.min(e.clientY - drageOffSet.value.y, innerHeight - elementSize.value.height))
+            actionRef.value.style.left = newX + 'px'
+            actionRef.value.style.top = newY + 'px'
+        }
+    }
+    const dragEnd = () => {
+        isDraging.value = false
+        document.body.style.userSelect = ''
+    }
+
+
+
+
+
+
+
+
     import draggable from 'vuedraggable'
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
@@ -402,7 +452,7 @@
                 bottom: 7px;
                 right: 20px;
                 display: flex;
-
+                cursor: move;
                 gap: 10px;
                 z-index: 1000;
                 background: rgba(255, 255, 255, 0.95);
@@ -411,12 +461,7 @@
                 border-radius: 12px;
                 box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
                 border: 1px solid rgba(255, 255, 255, 0.2);
-                transition: all 0.3s ease;
 
-                &:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-                }
             }
 
             .divider {

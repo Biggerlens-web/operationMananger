@@ -490,6 +490,9 @@
                     url = '/wallpaper/save'
                     params.classType = formData.value.classType
                     break
+                case 'othermaterial':
+                    url = '/otherMaterial/save'
+                    break
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
