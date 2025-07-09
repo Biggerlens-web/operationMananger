@@ -1,7 +1,7 @@
 <template>
     <div class="view">
 
-        <watermarkEditor v-model:dialog-visible="showWatermarkEditor" />
+        <watermarkEditor v-model:dialog-visible="showWatermarkEditor" :editInfo="editInfo" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="right-actions">
@@ -82,12 +82,7 @@
 
         <!-- 浮动操作栏 -->
         <div class="floating-actions" ref="actionBox" @mousedown="dragStart" @mouseup="dragEnd">
-            <customButton @click="importWatermark">
-                <el-icon>
-                    <Plus />
-                </el-icon>
-                导入
-            </customButton>
+
             <customButton @click="openPublicSpace">
                 公共空间
             </customButton>
@@ -111,6 +106,7 @@
             </customButton>
         </div>
     </div>
+    <publicArea v-model:dialog-visible="showPublicSpace" />
 </template>
 
 <script setup lang="ts">
@@ -166,12 +162,14 @@
     import draggable from 'vuedraggable'
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import publicArea from '@/components/templates/publicArea.vue'
     import watermarkEditor from '@/components/watermark/watermarkEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
+    import { ElMessage } from 'element-plus'
     const counterStore = useCounterStore()
     const { showPagestion, defaultAppNo, regionList, showLoading } = storeToRefs(counterStore)
     const components: any = {
@@ -194,13 +192,7 @@
         }
     }
 
-    //编辑
-    const showTemplateEdit = ref<boolean>(false)
-    const editorTemplate = (item?: any) => {
-        showTemplateEdit.value = true
-        console.log('item', item)
 
-    }
 
 
     //新增水印
@@ -209,16 +201,32 @@
         showWatermarkEditor.value = true
     }
 
-    //导入水印
-    const importWatermark = () => {
-        console.log('导入水印')
-        // TODO: 实现导入功能
+
+    //编辑
+
+    watch(() => showWatermarkEditor.value, () => {
+        if (!showWatermarkEditor.value) {
+            editInfo.value = ''
+            getUserList()
+        }
+    })
+    const editInfo = ref<any>()
+    const editorTemplate = (item?: any) => {
+        editInfo.value = item
+        showWatermarkEditor.value = true
+        console.log('item', item)
+
     }
 
+
+
     //公共空间
+    const showPublicSpace = ref<boolean>(false)
     const openPublicSpace = () => {
         console.log('打开公共空间')
+
         // TODO: 实现公共空间功能
+        showPublicSpace.value = true
     }
 
     //全部选中
@@ -232,9 +240,33 @@
     }
 
     //保存改动
-    const saveChange = () => {
+    const saveChange = async () => {
         console.log('保存改动')
         // TODO: 实现保存功能
+        showLoading.value = true
+        try {
+            const params = {
+                timestamp: Date.now(),
+                ids: appData.value.map(item => item.id),
+                appNo: defaultAppNo.value,
+                region: searchParams.value.region
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/watermark/saveItem', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                getUserList()
+            } else {
+
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存改动失败', err);
+        } finally {
+            showLoading.value = false
+        }
     }
 
 
@@ -263,6 +295,7 @@
         getUserList()
     }
     interface AppItem {
+        id: number
         appId: string;        // 应用编号
         shortName: string;    // 应用简称
         companyName: string;  // 所属公司
@@ -290,19 +323,26 @@
         key: string
     }
     const filterParams = ref<filterParams[]>()
+
+    watch(() => defaultAppNo.value, () => {
+        getUserList()
+    })
+
     const getUserList = async () => {
         showLoading.value = true
         try {
             const params = {
                 timestamp: new Date().getTime(),
-                appId: defaultAppNo.value,
+                appNo: defaultAppNo.value,
                 region: searchParams.value.region,
                 isPublic: false
             }
+            console.log('获取水印参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             const res = await service.post('/watermark/list', {
                 enData
             })
+
             console.log('获取水印', res);
             appData.value = res.data.rows
         } catch (err) {
@@ -343,6 +383,7 @@
         console.log('keyItem', keyItem);
     }
     onMounted(() => {
+        searchParams.value.region = regionList.value[0].value
         getUserList();
         showPagestion.value = true
     })
@@ -572,7 +613,7 @@
             .template-img {
                 width: 100%;
                 height: 100%;
-                object-fit: cover;
+                object-fit: contain;
                 /* 确保图片填充整个容器且不变形 */
             }
 

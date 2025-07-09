@@ -195,6 +195,7 @@
                 params.shapeId = parseInt(route.query.id as string)
                 url = '/shapeDetail/list'
             } else if (type === 'otherMaterial') {
+                url = '/otherMaterialDetail/list'
                 params.materialId = parseInt(route.query.id as string)
             }
             console.log('参数', params)
@@ -222,7 +223,12 @@
             } else {
 
                 list.value.forEach((item: any) => {
-                    item.likeNum = item.labels[1].split(':')[1]
+                    if (route.query.type === 'otherMaterial') {
+                        item.likeNum = item.labels[0].split(':')[1]
+                    } else {
+                        item.likeNum = item.labels[1].split(':')[1]
+                    }
+
 
                 })
             }
@@ -802,7 +808,7 @@
         .template-img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             /* 确保图片填充整个容器且不变形 */
         }
 

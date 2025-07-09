@@ -100,6 +100,9 @@
                 case 'shape':
                     url = '/shapeDetail/batchLabelSave'
                     break
+                case 'otherMaterial':
+                    url = '/otherMaterialDetail/batchLabelSave'
+                    break
             }
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true

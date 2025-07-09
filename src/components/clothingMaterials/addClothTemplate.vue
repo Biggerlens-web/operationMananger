@@ -54,6 +54,10 @@
             <el-switch v-model="formData.isPay" :active-value="true" :inactive-value="false" active-text="是"
                 inactive-text="否" />
         </el-form-item>
+        <el-form-item label="会员" v-if="showVipBtn()">
+            <el-switch v-model="formData.vip" :active-value="true" :inactive-value="false" active-text="是"
+                inactive-text="否" />
+        </el-form-item>
         <div class="dialog_comfirm">
             <el-button type="primary" @click="handleComfirm">确认</el-button>
             <el-button @click="handleClose">取消</el-button>
@@ -93,6 +97,11 @@
         return showArr.includes(route.query.type as string)
     }
 
+    //显示会员
+    const showVipArr = ['otherMaterial']
+    const showVipBtn = () => {
+        return showVipArr.includes(route.query.type as string)
+    }
 
 
 
@@ -102,6 +111,7 @@
         bigFileList: UploadUserFile[], // Bound to el-upload
         smallFileList: UploadUserFile[], // Bound to el-upload
         isPay: boolean
+        vip: boolean
     }
 
     const formData = reactive<FormDataType>({
@@ -109,7 +119,8 @@
         smallImgs: [],
         bigFileList: [],
         smallFileList: [],
-        isPay: false
+        isPay: false,
+        vip: false
     })
 
     const resetFormData = () => {
@@ -118,6 +129,7 @@
         formData.bigFileList = [];
         formData.smallFileList = [];
         formData.isPay = false;
+        formData.vip = false;
     };
 
     const handleClose = () => {
@@ -215,7 +227,11 @@
         // Preview will be updated by the watcher
     };
 
-
+    const fileListTransform = (files: File[]): FileList => {
+        const dataTransfer = new DataTransfer()
+        files.forEach(file => dataTransfer.items.add(file))
+        return dataTransfer.files
+    }
     const handleComfirm = async () => {
         if (formData.bigFileList.length === 0 || formData.smallFileList.length === 0) {
             ElMessage.warning('请至少上传一张大图和一张小图');
@@ -226,81 +242,102 @@
         }
         try {
             showLoading.value = true
-            const getBase64 = (file: UploadUserFile): Promise<string> => {
-                return new Promise((resolve, reject) => {
-                    if (file.raw) {
-                        const reader = new FileReader();
-                        reader.onload = () => resolve((reader.result as string).split(',')[1]);
-                        reader.onerror = error => reject(error);
-                        reader.readAsDataURL(file.raw);
-                    } else {
-                        ElMessage.error(`文件 ${file.name} 缺少原始数据，无法转换。`);
-                        reject(new Error(`Raw file not found for ${file.name}`));
-                    }
-                });
-            };
+            // const getBase64 = (file: UploadUserFile): Promise<string> => {
+            //     return new Promise((resolve, reject) => {
+            //         if (file.raw) {
+            //             const reader = new FileReader();
+            //             reader.onload = () => resolve((reader.result as string).split(',')[1]);
+            //             reader.onerror = error => reject(error);
+            //             reader.readAsDataURL(file.raw);
+            //         } else {
+            //             ElMessage.error(`文件 ${file.name} 缺少原始数据，无法转换。`);
+            //             reject(new Error(`Raw file not found for ${file.name}`));
+            //         }
+            //     });
+            // };
+            // const bigImgBase64Promises = formData.bigFileList.map(file => getBase64(file));
+            // const smallImgBase64Promises = formData.smallFileList.map(file => getBase64(file));
+            // const bigImgsBase64 = await Promise.all(bigImgBase64Promises);
+            // const smallImgsBase64 = await Promise.all(smallImgBase64Promises);.
+            // const params: any = {
+            //     timestamp: Date.now(),
+            //     big: bigImgsBase64,
+            //     small: smallImgsBase64,
+            //     clothingMaterialsId: parseInt(route.query.id as string)
+            // };
 
-            const bigImgBase64Promises = formData.bigFileList.map(file => getBase64(file));
-            const smallImgBase64Promises = formData.smallFileList.map(file => getBase64(file));
 
-            const bigImgsBase64 = await Promise.all(bigImgBase64Promises);
-            const smallImgsBase64 = await Promise.all(smallImgBase64Promises);
+            const bigList = formData.bigFileList.map((item: any) => item.raw)
+            const smallList = formData.smallFileList.map((item: any) => item.raw)
 
-            const params: any = {
-                timestamp: Date.now(),
-                big: bigImgsBase64,
-                small: smallImgsBase64,
-                clothingMaterialsId: parseInt(route.query.id as string)
-            };
+            const bigFileList = fileListTransform(bigList)
+            const smallFileList = fileListTransform(smallList)
+
+            const form = new FormData()
+            form.append('big', bigFileList as any)
+            form.append('small', smallFileList as any)
+            bigList.forEach((element: any) => {
+                form.append('big', element)
+            });
+            smallList.forEach((element: any) => {
+                form.append('small', element)
+            });
+
+
             const { type } = route.query
-            console.log('type', type);
+            const id = route.query.id
             let url: string = ''
             switch (type) {
                 case 'clothing':
-                    params.clothingMaterialsId = parseInt(route.query.id as string)
+                    form.append('clothingMaterialsId', id as string)
                     url = '/clothingMaterialsDetail/saveBatch'
                     break;
                 case 'sitcker':
-                    params.stickerId = parseInt(route.query.id as string)
-                    params.isPay = formData.isPay;
+                    form.append('stickerId', id as string)
+                    form.append('isPay', String(formData.isPay))
                     url = '/stickerDetail/saveBatch'
                     break;
                 case 'background':
                     console.log('图库');
-                    params.backId = parseInt(route.query.id as string)
+                    form.append('backId', id as string)
                     url = '/backgroundDetail/saveBatch'
-                    params.isPay = formData.isPay;
+                    form.append('isPay', String(formData.isPay))
                     break
 
                 case 'mask':
                     console.log('遮罩');
-                    params.maskId = parseInt(route.query.id as string)
+                    form.append('maskId', id as string)
                     url = '/maskDetail/saveBatch'
                     break
 
                 case 'wallpapper':
                     console.log('壁纸');
-                    params.wallpaperId = parseInt(route.query.id as string)
+                    form.append('wallpaperId', id as string)
                     url = '/wallpaperDetail/saveBatch'
                     break
 
                 case 'shape':
                     console.log('形状');
-                    params.shapeId = parseInt(route.query.id as string)
+                    form.append('shapeId', id as string)
                     url = '/shapeDetail/saveBatch'
                     break
 
                 case 'otherMaterial':
                     console.log('其他素材');
-                    params.materialId = parseInt(route.query.id as string)
+                    form.append('materialId', id as string)
                     url = '/otherMaterialDetail/saveBatch'
+                    form.append('vip', String(formData.vip))
                     break
             }
 
-            console.log('批量保存参数', params, type);
-            const enData = desEncrypt(JSON.stringify(params));
 
-            const res = await service.post(url, { enData });
+
+
+            const res = await service.post(url, form, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
 
 
             if (res.data.code === 200) {

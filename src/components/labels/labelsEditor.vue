@@ -11,7 +11,8 @@
                 </el-select>
             </el-form-item>
             <el-form-item label="所属标签" prop="signName">
-                <el-input v-model="formData.signName" />
+                <el-cascader style="width: 100%;" v-model="formData.signName" :options="labelOptions"
+                    :props="cascaderProps" placeholder="请选择标签层级" clearable filterable @change="handleLabelChange" />
             </el-form-item>
             <ul class="labelsList">
                 <li class="label">
@@ -46,30 +47,89 @@
     import { useCounterStore } from '@/stores/counter';
     import type { FormInstance } from 'element-plus';
     import { storeToRefs } from 'pinia';
-    import { ref } from 'vue'
+    import { ref, watch } from 'vue'
     const counterStore = useCounterStore()
-    const { appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { appList, defaultAppNo } = storeToRefs(counterStore)
     const props = defineProps<{
         dialogVisible: boolean
+        editInfo: any
     }>()
+
+    watch(() => props.dialogVisible, (newV) => {
+        if (newV && props.editInfo) {
+
+        }
+    })
     const emit = defineEmits<{
         'update:dialogVisible': [value: boolean]
     }>()
 
     const formData = ref<any>({
         id: '',
-        appNo: "",
-        signName: '',
+        appNo: defaultAppNo.value,
+        signName: [],
         keyFile: [],
         keypassword: "",
         otherName: '',
         otherNamePassword: '',
         packName: ''
-
-
-
     })
 
+    watch(() => defaultAppNo.value, (newV) => {
+        formData.value.appNo = newV
+    })
+
+    // 级联选择器配置
+    const cascaderProps = ref({
+        expandTrigger: 'click' as const,
+        value: 'value',
+        label: 'label',
+        children: 'children',
+        checkStrictly: false, // 是否严格的遵守父子节点不互相关联
+        emitPath: true // 在选中节点改变时，是否返回由该节点所在的各级菜单的值所组成的数组
+    })
+
+    // 标签层级数据 - 模拟数据结构，实际应从接口获取
+    const labelOptions = ref([
+        {
+            value: '1',
+            label: '1 - 111',
+            children: [
+                {
+                    value: '1-1',
+                    label: '1 - new',
+                },
+                {
+                    value: '1-22',
+                    label: '1 - 22',
+                    children: [
+                        {
+                            value: '1-22-1',
+                            label: '2 - 33'
+                        }
+                    ]
+                },
+                {
+                    value: '1-123',
+                    label: '3 - 123'
+                }
+            ]
+        },
+        {
+            value: '111',
+            label: '111'
+        },
+        {
+            value: 'new-level',
+            label: '新增层级标签'
+        }
+    ])
+
+    // 处理级联选择器变化
+    const handleLabelChange = (value: any) => {
+        console.log('选中的标签层级:', value)
+        // 这里可以根据选中的值进行相应的处理
+    }
     const labelsList = ref<any>([
         {
             label: '',
@@ -89,10 +149,7 @@
     }
     const ruleFormRef = ref<FormInstance>()
     const rules = ref<any>({
-        bucket: [{ required: true, message: '请输入域', trigger: 'blur' }],
-        path: [{ required: true, message: '请选择路径', trigger: 'change' }],
-        img: [{ required: true, message: '请上传图片', trigger: 'blur' }],
-        bannerName: [{ required: true, message: '请输入轮播图名称', trigger: 'blur' }]
+
 
     })
 
@@ -100,13 +157,12 @@
         formData.value = {
             id: '',
             appNo: "",
-            signName: '',
+            signName: [],
             keyFile: [],
             keypassword: "",
             otherName: '',
             otherNamePassword: '',
             packName: ''
-
         }
         ruleFormRef.value?.resetFields()
     }

@@ -2,7 +2,7 @@
     <el-dialog :model-value="dialogBatchEdite" width="500" title="批量编辑素材" :before-close="handleClose">
 
         <div class="dialog-content">
-            <div class="dialog_input">
+            <div class="dialog_input" v-if="route.query.type !== 'otherMaterial'">
                 <span>所属类</span>
                 <el-select v-model="formData.clothingMaterialsId" placeholder="请选择">
                     <el-option v-for="item in typeList" :label="item.name" :value="item.id" :key="item.id" />
@@ -20,12 +20,12 @@
                 <el-switch v-model="formData.isRecommend" active-text="是" inactive-text="否" :active-value="true"
                     :inactive-value="false"></el-switch>
             </div>
-            <div class="dialog_input" v-if="route.query.type === 'mask'">
+            <div class="dialog_input" v-if="route.query.type === 'mask' || route.query.type === 'otherMaterial'">
                 <span>vip资源</span>
                 <el-switch v-model="formData.isVip" active-text="是" inactive-text="否" :active-value="true"
                     :inactive-value="false"></el-switch>
             </div>
-            <div class="dialog_input">
+            <div class="dialog_input" v-if="route.query.type !== 'otherMaterial'">
                 <span>是否付费</span>
                 <el-switch v-model="formData.isPay" active-text="付费" inactive-text="免费" :active-value="true"
                     :inactive-value="false"></el-switch>
@@ -140,7 +140,8 @@
 
                 case 'otherMaterial':
                     url = '/otherMaterialDetail/saveBatchUpdate'
-                    params.materialId = formData.clothingMaterialsId
+                    delete params.isPay
+                    params.vip = formData.isVip
                     break
             }
 

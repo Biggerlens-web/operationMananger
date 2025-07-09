@@ -53,7 +53,7 @@
         </div>
 
         <!-- 样式选择区域 -->
-        <div class="form-item" v-if="route.query.type !== 'template'">
+        <div class="form-item" v-if="route.query.type !== 'template' && route.query.type !== 'otherMaterial'">
           <span class="label">样式</span>
           <el-input-number v-model="formData.style" />
         </div>
@@ -76,7 +76,7 @@
         </div>
 
         <!-- 是否付费选择区域 -->
-        <div class="form-item">
+        <div class="form-item" v-if="route.query.type !== 'otherMaterial'">
           <span class="label">是否付费</span>
           <el-switch v-model="formData.isPay" :active-value="true" :inactive-value="false" active-text="付费"
             inactive-text="免费"></el-switch>
@@ -87,12 +87,18 @@
           <el-switch v-model="formData.isRecommend" :active-value="true" :inactive-value="false" active-text="是"
             inactive-text="否"></el-switch>
         </div>
-        <div class="form-item" v-if="route.query.type === 'mask'">
+        <div class="form-item" v-if="route.query.type === 'mask' || route.query.type === 'otherMaterial'">
           <span class="label">是否VIP资源</span>
           <el-switch v-model="formData.isVip" :active-value="true" :inactive-value="false" active-text="是"
             inactive-text="否"></el-switch>
         </div>
 
+        <div class="form-item" v-if="route.query.type === 'otherMaterial'">
+          <span class="label">关联运营类</span>
+          <el-select v-model="formData.operationClassId" placeholder="请选择关联运营类" multiple>
+            <el-option v-for="(item, index) in oprationClassList" :key="index" :label="item.name" :value="item.id" />
+          </el-select>
+        </div>
       </div>
     </div>
 
@@ -133,8 +139,8 @@
   const formData = reactive<any>({
     id: '',
     style: 0,
-
     smallUrl: '',
+    bigUrl: '',
     keyword: '',
     isPay: false,
     backgroundWidth: 0,
@@ -142,6 +148,7 @@
     version: '',
     isRecommend: false,
     isVip: false,
+    operationClassId: []
   })
   const initFormData = () => {
     const { type } = route.query
@@ -165,6 +172,9 @@
   }
   onMounted(() => {
     initFormData()
+
+    getEditSelectInfo()
+
   })
   // 处理关闭
   const handleClose = () => {
@@ -192,6 +202,7 @@
         keyword: formData.keyword,
         isPay: formData.isPay,
         timestamp: Date.now(),
+        type: formData.id ? 'update' : 'add',
       }
       if (formData.bigUrl.includes('http')) {
         params.bigName = props.editData?.bigName
@@ -203,13 +214,13 @@
       if (type === 'sitcker') {
         url = '/stickerDetail/save'
         params.stickerId = formData.stickerId
-        params.type = formData.id ? 'update' : 'add'
+
       } else if (type === 'clothing') {
         url = '/clothingMaterialsDetail/save'
         params.clothingMaterialsId = formData.clothingMaterialsId
       } else if (type === 'background') {
         url = '/backgroundDetail/save'
-        params.type = formData.id ? 'update' : 'add'
+
         params.backId = formData.backgroundId
       } else if (type === 'template') {
         url = '/templateUpDetail/save'
@@ -232,20 +243,23 @@
         }
       } else if (type === 'mask') {
         url = '/maskDetail/save'
-        params.type = formData.id ? 'update' : 'add'
+
         params.maskId = formData.maskId
         params.isVip = formData.isVip
       } else if (type === 'wallpapper') {
         url = '/wallpaperDetail/save'
-        params.type = formData.id ? 'update' : 'add'
+
         params.wallpaperId = formData.wallpaperId
       } else if (type === 'shape') {
         url = '/shapeDetail/save'
-        params.type = formData.id ? 'update' : 'add'
+
         params.shapeId = formData.shapeId
       } else if (type === 'otherMaterial') {
         url = '/otherMaterialDetail/save'
-        params.type = formData.id ? 'update' : 'add'
+        delete params.isPay
+        delete params.style
+        params.isVip = formData.isVip
+        params.operationClassId = formData.operationClassId.join(',')
         params.materialId = formData.materialId
       }
 
@@ -291,7 +305,7 @@
     Object.assign(formData, {
       id: '',
       style: 0,
-
+      bigUrl: '',
       smallUrl: '',
       keyword: '',
       isPay: false,
@@ -300,6 +314,7 @@
       version: '',
       isRecommend: false,
       isVip: false,
+      operationClassId: []
     })
     console.log('格式化数据');
     initFormData()
@@ -335,10 +350,46 @@
     formData.bigUrl = ''
   }
 
+  const oprationClassList = ref<any>([])
+  const getEditSelectInfo = async (id?: number) => {
+    try {
+      const params: any = {
+        timestamp: Date.now(),
+        type: id ? 'update' : 'add',
+        id
+      }
+      const { type } = route.query
+      if (type === 'otherMaterial') {
+        params.materialId = parseInt(route.query.id as string)
+      } else {
+        return
+      }
+      console.log('选项参数', params);
+      const enData = desEncrypt(JSON.stringify(params))
+      const res = await service.post('/otherMaterialDetail/edit', {
+        enData
+      })
+      console.log('获取选项', res);
+
+      oprationClassList.value = res.data.data.operationClassArr
+      if (id) {
+
+        for (let key in res.data.data.detailOperationClassArr) {
+          formData.operationClassId.push(parseInt(key))
+        }
+
+      }
+
+    } catch (err) {
+      console.log('获取选项失败', err);
+    }
+  }
+
   // 监听对话框打开状态和编辑数据变化
   watch(
     () => props.dialogEditor,
     async (isOpen) => {
+
       if (isOpen && props.editData) {
 
         // 对话框打开时，如果有编辑数据则回显
@@ -353,8 +404,11 @@
             keyword: props.editData.keyword || '',
             isPay: props.editData.isPay === undefined ? false : props.editData.isPay,
             isVip: props.editData.isVip || false,
+            operationClassId: props.editData.operationClassId || [],
+
 
           })
+          getEditSelectInfo(props.editData.id)
         } else {
 
           Object.assign(formData, {

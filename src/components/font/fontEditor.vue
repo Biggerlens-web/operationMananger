@@ -275,12 +275,12 @@
 
             const coverImgs = formData.value.coverImg.map((item: any) => item.raw).filter(Boolean)
             const fonts = formData.value.font.map((item: any) => item.raw).filter(Boolean)
-            
+
             if (coverImgs.length === 0 || fonts.length === 0) {
                 ElMessage.error('请选择字体文件和预览图')
                 return
             }
-            
+
             const fontList = createFileListFromArray(fonts)
             const coverImgList = createFileListFromArray(coverImgs)
 
