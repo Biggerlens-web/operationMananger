@@ -10,7 +10,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://inapp.iepose.cn/',
+        target: 'http://192.168.31.36:18097',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
@@ -23,6 +23,7 @@ export default defineConfig({
   },
   //打包配置
   build: {
+    target: 'esnext',
     chunkSizeWarningLimit: 1000,
     cssCodeSplit: true, // 启用 CSS 代码分割
     sourcemap: false, // 生产环境不生成 sourcemap
@@ -55,6 +56,9 @@ export default defineConfig({
         assetFileNames: '[ext]/[name].[hash].[ext]',
       },
     },
+  },
+  esbuild: {
+    target: 'esnext', // 或者至少 'es2022'
   },
   optimizeDeps: {
     include: ['vue', 'vue-router', 'pinia', 'axios', 'element-plus'],
