@@ -61,7 +61,7 @@
     import { useCounterStore } from '@/stores/counter.ts'
     import { storeToRefs } from 'pinia'
     const counterStore = useCounterStore()
-    const { userName, userAvatar } = storeToRefs(counterStore)
+    const { userName, userAvatar, showLoading } = storeToRefs(counterStore)
     interface AccountForm {
         username: string
         password: string,
@@ -95,6 +95,7 @@
     const verifyCodeUrl = ref<any>()
     const getVerifyCode = async () => {
         try {
+            showLoading.value
             const res = await service.get('/verifyCode')
             console.log('res', res);
 
@@ -104,6 +105,8 @@
 
         } catch (err) {
             console.log('获取失败', err);
+        } finally {
+            showLoading.value = false
         }
     }
 
@@ -166,6 +169,7 @@
                 }
             console.log('参数', params);
             const paramsStr = desEncrypt(JSON.stringify(params))
+            showLoading.value = true
             const res: any = await service.post('/loginAuth',
                 {
                     enData: paramsStr
@@ -177,7 +181,7 @@
                 localStorage.setItem('token', res.data.data.token ?? '')
                 userName.value = res.data.data.userName ?? '管理员'
                 userAvatar.value = res.data.data.userAvatar ?? ''
-                router.push('/autoOpration')
+                router.go(0)
             } else {
                 ElMessage.error(res.data.msg)
             }
@@ -185,6 +189,7 @@
             ElMessage.error('登录失败：' + (error as Error).message)
         } finally {
             loading.value = false
+            showLoading.value = false
         }
     }
 
