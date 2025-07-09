@@ -22,7 +22,6 @@
                             @change="handleCheckBoxChange($event, element.id)" class="custom-checkbox" />
                         <label :for="`checkbox-${element.id}`" class="checkbox-label"></label>
                     </div>
-
                     <div class="template_data" @click.stop>
                         <p class="p_id">ID:{{ element.id }}</p>
                         <p class="p_viewNum">点击数:{{ element.likeNum }}</p>
@@ -127,7 +126,21 @@
                     url = '/templateUpDetail/exportExcel'
                     params.templateUpId = parseInt(route.query.id as string)
                     break
+                case 'mask':
+                    url = '/maskDetail/exportExcel'
+                    params.maskId = parseInt(route.query.id as string)
+                    break
+
+                case 'wallpapper':
+                    url = '/wallpaperDetail/exportExcel'
+                    params.wallpaperId = parseInt(route.query.id as string)
+                    break
+                case 'shape':
+                    url = '/shapeDetail/exportExcel'
+                    params.shapeId = parseInt(route.query.id as string)
+                    break
             }
+
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
             const res = await service.get(url, {
@@ -172,6 +185,18 @@
             } else if (type === 'template') {
                 params.templateUpId = parseInt(route.query.id as string)
                 url = '/templateUpDetail/list'
+            } else if (type === 'mask') {
+                params.maskId = parseInt(route.query.id as string)
+                url = '/maskDetail/list'
+            } else if (type === 'wallpapper') {
+                params.wallpaperId = parseInt(route.query.id as string)
+                url = '/wallpaperDetail/list'
+            } else if (type === 'shape') {
+                params.shapeId = parseInt(route.query.id as string)
+                url = '/shapeDetail/list'
+            } else if (type === 'otherMaterial') {
+                url = '/otherMaterialDetail/list'
+                params.materialId = parseInt(route.query.id as string)
             }
             console.log('参数', params)
             const enData = desEncrypt(JSON.stringify(params))
@@ -198,7 +223,12 @@
             } else {
 
                 list.value.forEach((item: any) => {
-                    item.likeNum = item.labels[1].split(':')[1]
+                    if (route.query.type === 'otherMaterial') {
+                        item.likeNum = item.labels[0].split(':')[1]
+                    } else {
+                        item.likeNum = item.labels[1].split(':')[1]
+                    }
+
 
                 })
             }
@@ -234,7 +264,7 @@
         detailIndex: number //排位
         keyword: string //关键词
         likeNum: number //点赞数
-        pay: number //是否付费
+        isPay: boolean //是否付费
         smallName: string //小图名称
         smallUrl: string //小图
     }
@@ -407,6 +437,49 @@
                             break;
                     }
                     break;
+
+
+                case 'mask':
+                    params.maskId = parseInt(route.query.id as string)
+                    switch (operationClass.value) {
+                        case 1:
+                            url = '/maskDetail/saveOperationItem'
+                            break;
+                        case 0:
+                            url = '/maskDetail/saveItem'
+                            break;
+                    }
+                case 'wallpapper':
+                    params.wallpaperId = parseInt(route.query.id as string)
+                    switch (operationClass.value) {
+                        case 1:
+                            url = '/wallpaperDetail/saveOperationItem'
+
+                            break;
+                        case 0:
+                            url = '/wallpaperDetail/saveItem'
+                            break;
+                    }
+                case 'shape':
+                    params.shapeId = parseInt(route.query.id as string)
+                    switch (operationClass.value) {
+                        case 1:
+                            url = '/shapeDetail/saveOperationItem'
+                            break;
+                        case 0:
+                            url = '/shapeDetail/saveItem'
+                            break;
+                    }
+                case 'otherMaterial':
+                    params.materialId = parseInt(route.query.id as string)
+                    switch (operationClass.value) {
+                        case 1:
+                            url = '/otherMaterialDetail/saveOperationItem'
+                            break;
+                        case 0:
+                            url = '/otherMaterialDetail/saveItem'
+                            break;
+                    }
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
@@ -735,7 +808,7 @@
         .template-img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             /* 确保图片填充整个容器且不变形 */
         }
 

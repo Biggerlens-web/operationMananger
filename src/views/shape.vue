@@ -5,37 +5,36 @@
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" @click="addShape" class="add-button">
+                    <el-button type="primary" style="margin: 0;" @click="addShape" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增
                     </el-button>
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" style="margin: 0;" class="add-button" @click="exportExcel">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         导出
                     </el-button>
-                    <el-button type="primary" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        导入国际化
-                    </el-button>
+                    <el-upload ref="upload" action="#" :http-request="importInternation" :limit="1"
+                        :show-file-list="false">
+                        <el-button type="primary" class="add-button" style="margin: 0;">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+                            导入国际化
+                        </el-button>
+                    </el-upload>
                 </div>
                 <div class="right-actions">
                     <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" />
                 </div>
             </div>
-
             <el-divider class="divider" />
-
             <div class="filter-container">
                 <div class="filter-row">
-
-
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
                             <el-option v-for="item in regionList" :key="item.value" :label="item.label"
@@ -90,6 +89,7 @@
     import { ElMessage, ElMessageBox } from 'element-plus';
     import { useRouter } from 'vue-router';
     import { desEncrypt } from '@/utils/des';
+    import type { UploadRequestOptions } from 'element-plus'
     import service from '@/axios';
     const counterStore = useCounterStore()
     const { showPagestion, defaultAppNo, showLoading, regionList, shapeFliterParams, operationClass } = storeToRefs(counterStore)
@@ -102,7 +102,68 @@
 
     // 数据总数
     const totalData = ref<number>(0)
+    //导入国际化
+    const importInternation = async (options: UploadRequestOptions) => {
 
+        try {
+
+            const formData = new FormData()
+            formData.append('wallpapers', options.file)
+            formData.append('region', searchParams.value.region)
+            formData.append('appNo', defaultAppNo.value as string)
+
+            showLoading.value = true
+            const res = await service.post('/shape/importExcelInternationalization', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            console.log('导入国际化', res);
+            if (res.data.code === 200) {
+                ElMessage.success('导入成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('导入失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
+
+
+    //导出excel
+    const exportExcel = async () => {
+        try {
+            showLoading.value = true
+            const params = {
+                timestamp: Date.now(),
+                appNo: defaultAppNo.value,
+                region: searchParams.value.region,
+                query: searchParams.value.query
+            }
+            const res = await service.get('/shape/exportExcel', {
+                params,
+                responseType: 'blob'
+            })
+            if (res.data) {
+                const blob = new Blob([res.data], { type: res.config.headers['content-type'] })
+                const url = window.URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = '形状.xlsx'
+                a.click()
+                window.URL.revokeObjectURL(url)
+            } else {
+                ElMessage.error('导出失败')
+            }
+        } catch (err) {
+            console.log('导出失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
 
     //新增形状
     const showEditor = ref<boolean>(false)
@@ -133,14 +194,29 @@
                 cancelButtonText: '取消',
                 type: 'warning'
             }
-        )
+        ).then(async () => {
+            try {
+                showLoading.value = true
+                const res = await service.post(`/shape/del/${item.id}`)
+                if (res.data.code === 200) {
+                    ElMessage.success('删除成功')
+                    getUserList()
+                } else {
+                    ElMessage.error(res.data.msg)
+                }
+            } catch (err) {
+                console.log('删除失败', err);
+            } finally {
+                showLoading.value = false
+            }
+        })
     }
 
     const router = useRouter()
     //查看详情
     const viewDetail = (row: any) => {
         operationClass.value = row.operationClass
-        router.push('/templateMaterial?id=' + row.id + '&type=shape')
+        router.push('/templateMaterial?id=' + row.id + '&type=shape&title=形状')
         console.log('查看详情', row);
     }
 
@@ -157,7 +233,7 @@
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
-            const res = await service.post('/sticker/move', {
+            const res = await service.post('/shape/move', {
                 enData
             })
             console.log('移动', res);
@@ -195,7 +271,7 @@
     const searchParams = ref<SearchParams>(
         {
             query: '',
-            region: '',
+            region: regionList.value[0].value,
             pageNum: 1,
             pageSize: 10
 
@@ -226,7 +302,7 @@
     const resetSearch = () => {
         searchParams.value = {
             query: '',
-            region: '',
+            region: regionList.value[0].value,
             pageNum: 1,
             pageSize: 10
 
@@ -234,27 +310,24 @@
         getUserList()
     }
     interface AppContentConfig {
-        appName: string;           // 所属应用
-        sequence: number;          // 序号
+        appAbbreviation: string;           // 所属应用
+        id: number;          // 序号
         name: string;              // 名称
         region: string;            // 地区
-        i18n: {                    // 国际化
-            enabled: boolean;
-            supportedLanguages: string[];
-        };
-        totalClicks: number;       // 总点击数
-        lastUpdateTime: string;    // 最近更新时间
+        international: string,                   // 国际化
+        viewNum: number;       // 总点击数
+        updateTime: string;    // 最近更新时间
     }
 
 
     const appNote: any = {
-        appName: '所属应用',
-        sequence: '序号',
+        appAbbreviation: '所属应用',
+        id: '序号',
         name: '名称',
         region: '地区',
-        i18n: '国际化',
-        totalClicks: '总点击数',
-        lastUpdateTime: '最近更新时间',
+        international: '国际化',
+        viewNum: '总点击数',
+        updateTime: '最近更新时间',
     }
     // 生成用户数据
     const appData = ref<AppContentConfig[]>([
@@ -266,6 +339,16 @@
         key: string
     }
     const filterParams = ref<filterParams[]>()
+
+
+    //监听应用
+    watch(() => defaultAppNo.value, () => {
+        if (defaultAppNo.value) {
+            getUserList()
+        }
+    })
+
+
     const getUserList = async () => {
         try {
             const params = {
@@ -277,27 +360,31 @@
                 appNo: defaultAppNo.value
             }
             const enData = desEncrypt(JSON.stringify(params))
-            const res = await service.post('', {
+            const res = await service.post('/shape/list', {
                 enData
             })
+            console.log('获取形状列表', res);
+            res.data.rows.forEach((element: any) => {
+                element.regionObj = element.region
+                element.region = element.regionObj.note
+            });
             totalData.value = res.data.total
             appData.value = res.data.rows
+            const keys = Object.keys(appNote)
+            filterParams.value = keys.map((item) => {
+                return {
+                    note: appNote[item],
+                    isShow: true,
+                    key: item
+                }
+            })
+            console.log('filterParams', filterParams.value);
         } catch (err) {
             console.log('获取形状列表失败', err);
         } finally {
             showLoading.value = false
         }
-        console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
-            }
-        })
-        console.log('filterParams', filterParams.value);
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {
@@ -338,6 +425,10 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+                    column-gap: 12px;
+
                     .add-button {
                         font-weight: 500;
 

@@ -75,12 +75,12 @@
         </component>
 
       </Transition>
-
+      <el-pagination style="position: sticky; right: 0; margin-top: 10px;" v-show="showPagestion"
+        v-model:current-page="currentPage" :page-size="pageSize" class="pagesBox" background layout="prev, pager, next"
+        :total="totalData" />
 
     </el-card>
-    <el-pagination style="position: sticky; right: 0; margin-top: 10px;" v-show="showPagestion"
-      v-model:current-page="currentPage" :page-size="pageSize" class="pagesBox" background layout="prev, pager, next"
-      :total="totalData" />
+
   </div>
 </template>
 

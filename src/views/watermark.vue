@@ -1,37 +1,9 @@
 <template>
     <div class="view">
-        <watermarkEditor v-model:dialog-visible="showWatermarkEditor" />
+
+        <watermarkEditor v-model:dialog-visible="showWatermarkEditor" :editInfo="editInfo" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
-                <div class="left-actions">
-                    <el-button type="primary" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        导入
-                    </el-button>
-                    <el-button type="primary" class="add-button">
-                        公共空间
-                    </el-button>
-                    <el-button type="primary" @click="addWatermark" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        新增水印
-                    </el-button>
-                    <el-button type="primary" class="add-button">
-                        全部选中
-                    </el-button>
-                    <el-button type="danger" class="add-button">
-                        <el-icon>
-                            <Minus />
-                        </el-icon>
-                        删除所选
-                    </el-button>
-                    <el-button type="primary" class="add-button">
-                        保存改动
-                    </el-button>
-                </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" /> -->
@@ -44,31 +16,31 @@
                 <div class="filter-row">
 
 
+
+
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="应用" class="filter-select">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
+                        <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
+                            <el-option v-for="item in regionList" :key="item.value" :label="item.label"
+                                :value="item.value" />
                         </el-select>
                     </div>
 
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="国内外" class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
-                        </el-select>
-                    </div>
-
-
-
-                    <!-- <div class="filter-item filter-actions">
+                    <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getUserList">
                             <el-icon>
                                 <Search />
                             </el-icon>
-                            批量添加
+                            查询
                         </el-button>
+                        <el-button @click="resetSearch">
+                            <el-icon>
+                                <Refresh />
+                            </el-icon>
+                            重置
+                        </el-button>
+                    </div>
 
-                    </div> -->
+
                 </div>
 
 
@@ -107,19 +79,99 @@
                 </template>
             </draggable>
         </el-card>
+
+        <!-- 浮动操作栏 -->
+        <div class="floating-actions" ref="actionBox" @mousedown="dragStart" @mouseup="dragEnd">
+
+            <customButton @click="openPublicSpace">
+                公共空间
+            </customButton>
+            <customButton @click="addWatermark">
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                新增水印
+            </customButton>
+            <customButton @click="selectAll">
+                全部选中
+            </customButton>
+            <customButton @click="delSelected">
+                <el-icon>
+                    <Minus />
+                </el-icon>
+                删除所选
+            </customButton>
+            <customButton @click="saveChange">
+                保存改动
+            </customButton>
+        </div>
     </div>
+    <watermarkPublicArea v-model:dialog-visible="showPublicSpace" :region="searchParams.region" />
 </template>
 
 <script setup lang="ts">
+
+
+    const actionBox = ref<HTMLElement>()
+
+    const isDraging = ref<boolean>(false)
+    const dragOffset = ref<{ x: number, y: number }>({ x: 0, y: 0 })
+    const elementSize = ref<{ width: number, height: number }>({ width: 0, height: 0 })
+    const dragStart = (e: MouseEvent) => {
+        if (actionBox.value) {
+            const rect = actionBox.value.getBoundingClientRect()
+            // 缓存元素尺寸，避免重复计算
+            elementSize.value.width = rect.width
+            elementSize.value.height = rect.height
+
+            dragOffset.value.x = e.clientX - rect.left
+            dragOffset.value.y = e.clientY - rect.top
+            isDraging.value = true
+            actionBox.value.style.right = 'auto'
+            actionBox.value.style.bottom = 'auto'
+            actionBox.value.style.left = rect.left + 'px'
+            actionBox.value.style.top = rect.top + 'px'
+            window.addEventListener('mousemove', dragMove)
+            // 防止文本选择
+            document.body.style.userSelect = 'none'
+        }
+    }
+
+    const dragMove = (e: MouseEvent) => {
+        if (actionBox.value && isDraging.value) {
+            const innerWidth = window.innerWidth
+            const innerHeight = window.innerHeight
+            const newX = Math.max(0, Math.min(e.clientX - dragOffset.value.x, innerWidth - elementSize.value.width))
+            const newY = Math.max(0, Math.min(e.clientY - dragOffset.value.y, innerHeight - elementSize.value.height))
+            actionBox.value.style.left = newX + 'px'
+            actionBox.value.style.top = newY + 'px'
+        }
+    }
+
+
+
+
+    const dragEnd = (e: MouseEvent) => {
+        isDraging.value = false
+        document.body.style.userSelect = ''
+        window.removeEventListener('mousemove', dragMove)
+
+    }
+
+    import customButton from '@/components/button/customButton.vue';
     import draggable from 'vuedraggable'
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
+    import watermarkPublicArea from '@/components/watermark/watermarkPublicArea.vue'
     import watermarkEditor from '@/components/watermark/watermarkEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
+    import { ElMessage } from 'element-plus'
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, defaultAppNo, regionList, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -140,13 +192,7 @@
         }
     }
 
-    //编辑
-    const showTemplateEdit = ref<boolean>(false)
-    const editorTemplate = (item?: any) => {
-        showTemplateEdit.value = true
-        console.log('item', item)
 
-    }
 
 
     //新增水印
@@ -156,31 +202,100 @@
     }
 
 
+    //编辑
+
+    watch(() => showWatermarkEditor.value, () => {
+        if (!showWatermarkEditor.value) {
+            editInfo.value = ''
+            getUserList()
+        }
+    })
+    const editInfo = ref<any>()
+    const editorTemplate = (item?: any) => {
+        editInfo.value = item
+        showWatermarkEditor.value = true
+        console.log('item', item)
+
+    }
+
+
+
+    //公共空间
+    const showPublicSpace = ref<boolean>(false)
+    const openPublicSpace = () => {
+        console.log('打开公共空间')
+
+        // TODO: 实现公共空间功能
+        showPublicSpace.value = true
+    }
+
+    //全部选中
+    const selectAll = () => {
+        selectedList.value = appData.value.map((item: any) => item.id)
+    }
+
+    //删除所选
+    const delSelected = () => {
+        appData.value = appData.value.filter((item: any) => !selectedList.value.includes(item.id))
+    }
+
+    //保存改动
+    const saveChange = async () => {
+        console.log('保存改动')
+        // TODO: 实现保存功能
+        showLoading.value = true
+        try {
+            const params = {
+                timestamp: Date.now(),
+                ids: appData.value.map(item => item.id),
+                appNo: defaultAppNo.value,
+                region: searchParams.value.region
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/watermark/saveItem', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                getUserList()
+            } else {
+
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存改动失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
+
+
     //搜索参数
     interface SearchParams {
-        inputText: string
-        companyNo: string
+        region: string
+
 
 
 
     }
     const searchParams = ref<SearchParams>(
         {
-            inputText: '',
-            companyNo: '',
+
+            region: '',
 
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            inputText: '',
-            companyNo: '',
+            region: '',
+
 
         }
         getUserList()
     }
     interface AppItem {
+        id: number
         appId: string;        // 应用编号
         shortName: string;    // 应用简称
         companyName: string;  // 所属公司
@@ -201,46 +316,6 @@
     }
     // 生成用户数据
     const appData = ref<AppItem[]>([
-        {
-            appId: 'APP_0001',
-            shortName: '商城系统',
-            companyName: '科技有限公司',
-            accessName: 'app1.example.com',
-            systemId: 'SYS_0001',
-            developer: '张三'
-        },
-        {
-            appId: 'APP_0002',
-            shortName: '会员系统',
-            companyName: '网络科技有限公司',
-            accessName: 'app2.example.com',
-            systemId: 'SYS_0002',
-            developer: '李四'
-        },
-        {
-            appId: 'APP_0003',
-            shortName: '支付系统',
-            companyName: '软件开发有限公司',
-            accessName: 'app3.example.com',
-            systemId: 'SYS_0003',
-            developer: '王五'
-        },
-        {
-            appId: 'APP_0004',
-            shortName: '管理系统',
-            companyName: '信息技术有限公司',
-            accessName: 'app4.example.com',
-            systemId: 'SYS_0004',
-            developer: '赵六'
-        },
-        {
-            appId: 'APP_0005',
-            shortName: '客服系统',
-            companyName: '科技有限公司',
-            accessName: 'app5.example.com',
-            systemId: 'SYS_0005',
-            developer: '钱七'
-        }
     ])
     interface filterParams {
         note: string
@@ -248,10 +323,36 @@
         key: string
     }
     const filterParams = ref<filterParams[]>()
+
+    watch(() => defaultAppNo.value, () => {
+        getUserList()
+    })
+
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
+        showLoading.value = true
+        try {
+            const params = {
+                timestamp: new Date().getTime(),
+                appNo: defaultAppNo.value,
+                region: searchParams.value.region,
+                isPublic: false
+            }
+            console.log('获取水印参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/watermark/list', {
+                enData
+            })
+
+            console.log('获取水印', res);
+            appData.value = res.data.rows
+        } catch (err) {
+            console.log('获取水印失败', err);
+        } finally {
+            showLoading.value = false
+        }
+
+
+        const keys = Object.keys(appNote)
         filterParams.value = keys.map((item) => {
             return {
                 note: appNote[item],
@@ -281,13 +382,39 @@
         }
         console.log('keyItem', keyItem);
     }
+
+
+
     onMounted(() => {
+
+        searchParams.value.region = regionList.value[0].value
         getUserList();
         showPagestion.value = true
     })
 </script>
 
 <style scoped lang="scss">
+
+    .dragA,
+    .dragB {
+        position: fixed;
+        z-index: 9999999;
+        width: 100px;
+        height: 100px;
+        top: 0
+    }
+
+    .dragA {
+        background: red;
+        left: 0;
+
+    }
+
+    .dragB {
+        background: #409eff;
+        left: 200px;
+    }
+
     .view {
         .filter-card {
             width: 100%;
@@ -300,6 +427,11 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+
+                    column-gap: 12px;
+
                     .add-button {
                         font-weight: 500;
 
@@ -347,7 +479,7 @@
 
         .stickTp_manage {
             /* position: relative;  不再需要，因为 back-icon 改为 fixed 定位 */
-            height: 820px;
+            height: 700px;
             overflow-y: scroll;
 
             .template-grid {
@@ -485,7 +617,7 @@
             .template-img {
                 width: 100%;
                 height: 100%;
-                object-fit: cover;
+                object-fit: contain;
                 /* 确保图片填充整个容器且不变形 */
             }
 
@@ -574,6 +706,25 @@
                 transform: rotate(3deg);
                 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             }
+        }
+
+        /* 浮动操作栏样式 */
+        .floating-actions {
+            position: fixed;
+            user-select: none;
+            cursor: move;
+            bottom: 7px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+
         }
     }
 </style>

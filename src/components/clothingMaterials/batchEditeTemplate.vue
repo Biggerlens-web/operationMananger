@@ -2,7 +2,7 @@
     <el-dialog :model-value="dialogBatchEdite" width="500" title="批量编辑素材" :before-close="handleClose">
 
         <div class="dialog-content">
-            <div class="dialog_input">
+            <div class="dialog_input" v-if="route.query.type !== 'otherMaterial'">
                 <span>所属类</span>
                 <el-select v-model="formData.clothingMaterialsId" placeholder="请选择">
                     <el-option v-for="item in typeList" :label="item.name" :value="item.id" :key="item.id" />
@@ -20,10 +20,15 @@
                 <el-switch v-model="formData.isRecommend" active-text="是" inactive-text="否" :active-value="true"
                     :inactive-value="false"></el-switch>
             </div>
-            <div class="dialog_input">
+            <div class="dialog_input" v-if="route.query.type === 'mask' || route.query.type === 'otherMaterial'">
+                <span>vip资源</span>
+                <el-switch v-model="formData.isVip" active-text="是" inactive-text="否" :active-value="true"
+                    :inactive-value="false"></el-switch>
+            </div>
+            <div class="dialog_input" v-if="route.query.type !== 'otherMaterial'">
                 <span>是否付费</span>
-                <el-switch v-model="formData.pay" active-text="付费" inactive-text="免费" :active-value="1"
-                    :inactive-value="0"></el-switch>
+                <el-switch v-model="formData.isPay" active-text="付费" inactive-text="免费" :active-value="true"
+                    :inactive-value="false"></el-switch>
             </div>
             <div class="dialog_input">
                 <span>关联运营类</span>
@@ -66,27 +71,31 @@
     const formData = reactive<any>({
         clothingMaterialsId: '',
         operationClassId: [],
-        pay: 0,
+        isPay: false,
         version: '',
         isRecommend: false,
+        isVip: false
     })
     const handleClose = () => {
         formData.clothingMaterialsId = ''
         formData.operationClassId = []
-        formData.pay = 0
+        formData.isPay = false
         formData.version = ''
         formData.isRecommend = false
         dialogBatchEdite.value = false
 
     }
     const handleComfirm = async () => {
-
+        if (showLoading.value) {
+            ElMessage.warning('正在保存。。。');
+            return
+        }
         try {
+
             const params: any = {
                 timestamp: Date.now(),
                 ids: toRaw(props.chosedItem),
-                pay: formData.pay,
-
+                isPay: formData.isPay,
                 operationClassId: formData.operationClassId.join(','),
             }
 
@@ -112,6 +121,27 @@
                     params.templateUpId = formData.clothingMaterialsId
                     params.version = formData.version
                     params.isRecommend = formData.isRecommend
+                    break
+
+                case 'mask':
+                    url = '/maskDetail/saveBatchUpdate'
+                    params.maskId = formData.clothingMaterialsId
+                    params.isVip = formData.isVip
+                    break
+
+                case 'wallpapper':
+                    url = '/wallpaperDetail/saveBatchUpdate'
+                    params.wallpaperId = formData.clothingMaterialsId
+                    break
+                case 'shape':
+                    url = '/shapeDetail/saveBatchUpdate'
+                    params.shapeId = formData.clothingMaterialsId
+                    break
+
+                case 'otherMaterial':
+                    url = '/otherMaterialDetail/saveBatchUpdate'
+                    delete params.isPay
+                    params.vip = formData.isVip
                     break
             }
 
@@ -172,6 +202,18 @@
                 case 'template':
                     url = '/templateUpDetail/batchUpdateEdit'
                     break;
+                case 'mask':
+                    url = '/maskDetail/batchUpdateEdit'
+                    break
+                case 'wallpapper':
+                    url = '/wallpaperDetail/batchUpdateEdit'
+                    break
+                case 'shape':
+                    url = '/shapeDetail/batchUpdateEdit'
+                    break
+                case 'otherMaterial':
+                    url = '/otherMaterialDetail/batchUpdateEdit'
+                    break
             }
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
@@ -196,8 +238,23 @@
                 case 'template':
                     typeList.value = res.data.data.templateUps
                     formData.clothingMaterialsId = res.data.data.templateUpId
-
                     break;
+                case 'mask':
+                    typeList.value = res.data.data.masks
+                    formData.clothingMaterialsId = res.data.data.maskId
+
+                case 'wallpapper':
+                    typeList.value = res.data.data.wallpapers
+                    formData.clothingMaterialsId = res.data.data.wallpaperId
+                    break
+                case 'shape':
+                    typeList.value = res.data.data.shapes
+                    formData.clothingMaterialsId = res.data.data.shapeId
+                    break
+                case 'otherMaterial':
+                    typeList.value = res.data.data.otherMaterials
+                    formData.clothingMaterialsId = res.data.data.otherMaterialId
+                    break
             }
 
             opreationType.value = res.data.data.operationClassArr

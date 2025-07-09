@@ -85,14 +85,15 @@
                                     <el-table-column prop="notes" label="备注" />
                                     <el-table-column prop="usageScenario" label="使用场景" />
                                     <el-table-column prop="fileMD5" label="文件MD5" />
-                                    <el-table-column label="操作" width="300">
+                                    <el-table-column label="操作" width="300" fixed="right">
                                         <template #default="scope">
-                                            <el-button size="small" @click="handleView(scope.row)">查看</el-button>
-                                            <el-button size="small" type="primary"
+                                            <el-button size="small" style="margin: 0;margin-right:5px ;"
+                                                @click="handleView(scope.row)">查看</el-button>
+                                            <el-button size="small" type="primary" style="margin: 0;margin-right:5px ;"
                                                 @click="handleModify(scope.row)">修改</el-button>
-                                            <el-button size="small" type="success"
+                                            <el-button size="small" type="success" style="margin: 0;margin-right:5px ;"
                                                 @click="handleReinforce(scope.row)">加固</el-button>
-                                            <el-button size="small" type="warning"
+                                            <el-button size="small" type="warning" style="margin: 0;margin-right:5px ;"
                                                 @click="handleDownload(scope.row)">下载</el-button>
                                             <el-button size="small" type="danger"
                                                 @click="handleDelete(scope.row)">删除</el-button>
@@ -116,14 +117,15 @@
                                     <el-table-column prop="notes" label="备注" />
                                     <el-table-column prop="usageScenario" label="使用场景" />
                                     <el-table-column prop="fileMD5" label="文件MD5" />
-                                    <el-table-column label="操作" width="300">
+                                    <el-table-column label="操作" width="300" fixed="right">
                                         <template #default="scope">
-                                            <el-button size="small" @click="handleView(scope.row)">查看</el-button>
-                                            <el-button size="small" type="primary"
+                                            <el-button size="small" style="margin: 0;margin-right:5px ;"
+                                                @click="handleView(scope.row)">查看</el-button>
+                                            <el-button size="small" style="margin: 0;margin-right:5px ;" type="primary"
                                                 @click="handleModify(scope.row)">修改</el-button>
-                                            <el-button size="small" type="warning"
+                                            <el-button size="small" style="margin: 0;margin-right:5px ;" type="warning"
                                                 @click="handleDownload(scope.row)">下载</el-button>
-                                            <el-button size="small" type="danger"
+                                            <el-button size="small" style="margin: 0;margin-right:5px ;" type="danger"
                                                 @click="handleDelete(scope.row)">删除</el-button>
                                         </template>
                                     </el-table-column>

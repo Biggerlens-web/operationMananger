@@ -369,7 +369,7 @@
     //查看详情
     const viewDetail = (row: any) => {
         operationClass.value = row.operationClass
-        router.push('/templateMaterial?id=' + row.id + '&type=clothing')
+        router.push('/templateMaterial?id=' + row.id + '&type=clothing&title=服装')
 
 
         console.log('查看详情', row);

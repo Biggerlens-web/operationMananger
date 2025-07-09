@@ -345,7 +345,8 @@
     //查看详情
     const viewDetail = (row: any) => {
         operationClass.value = row.operationClass
-        router.push('/templateMaterial?id=' + row.id + '&type=sitcker')
+        router.push('/templateMaterial?id=' + row.id + '&type=sitcker&title=贴纸')
+
 
 
         console.log('查看详情', row);

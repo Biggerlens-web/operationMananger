@@ -206,7 +206,10 @@
             showLoading.value = true
             const res = await service.get('/templateUp/exportExcel', {
                 params: {
-                    enData
+                    timestamp: Date.now(),
+                    appNo: searchParams.value.appNo,
+                    region: searchParams.value.region,
+                    query: searchParams.value.query,
                 },
                 responseType: 'blob',
             })
@@ -346,7 +349,7 @@
     //查看详情
     const viewDetail = (row: any) => {
         operationClass.value = row.operationClass
-        router.push('/templateMaterial?id=' + row.id + '&type=template')
+        router.push('/templateMaterial?id=' + row.id + '&type=template&title=模板上传')
 
 
         console.log('查看详情', row);

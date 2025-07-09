@@ -45,7 +45,7 @@
 
   //分页
   const pageNum = ref<number>(1)
-  const pageSize = ref<number>(10)
+  const pageSize = ref<number>(15)
   const totalData = ref<number>(0)
   watch(() => pageNum.value, () => {
     getUserList()

@@ -1,35 +1,8 @@
 <template>
     <div class="view">
-        <outlineEditor v-model:dialog-visible="showEditor" />
+        <outlineEditor v-model:dialog-visible="showEditor" :isBatch="isBatch" :editInfo="editInfo" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
-                <div class="left-actions">
-                    <el-button type="primary" @click="addOutline" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        批量新增
-                    </el-button>
-
-                    <el-button type="primary" @click="addOutline" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        新增描边
-                    </el-button>
-                    <el-button type="primary" class="add-button">
-                        全部选中
-                    </el-button>
-                    <el-button type="danger" class="add-button">
-                        <el-icon>
-                            <Minus />
-                        </el-icon>
-                        删除所选
-                    </el-button>
-                    <el-button type="primary" class="add-button">
-                        保存改动
-                    </el-button>
-                </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" /> -->
@@ -40,33 +13,29 @@
 
             <div class="filter-container">
                 <div class="filter-row">
-
-
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="应用" class="filter-select">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
-                        </el-select>
-                    </div>
-
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="国内外" class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
+                        <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
+                            <el-option v-for="item in regionList" :key="item.value" :label="item.label"
+                                :value="item.value" />
                         </el-select>
                     </div>
 
 
 
-                    <!-- <div class="filter-item filter-actions">
+                    <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getUserList">
                             <el-icon>
                                 <Search />
                             </el-icon>
-                            批量添加
+                            查询
                         </el-button>
-
-                    </div> -->
+                        <el-button @click="resetSearch">
+                            <el-icon>
+                                <Refresh />
+                            </el-icon>
+                            重置
+                        </el-button>
+                    </div>
                 </div>
 
 
@@ -105,6 +74,34 @@
                 </template>
             </draggable>
         </el-card>
+
+        <!-- 浮动操作栏 -->
+        <div class="floating-actions">
+            <customButton @click="addOutline('batch')">
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                批量新增
+            </customButton>
+            <customButton @click="addOutline">
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                新增描边
+            </customButton>
+            <customButton @click="selectAll">
+                全部选中
+            </customButton>
+            <customButton @click="delSelected">
+                <el-icon>
+                    <Minus />
+                </el-icon>
+                删除所选
+            </customButton>
+            <customButton @click="saveChange">
+                保存改动
+            </customButton>
+        </div>
     </div>
 </template>
 
@@ -113,11 +110,15 @@
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import outlineEditor from '@/components/outline/outlineEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import customButton from '@/components/button/customButton.vue'
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
+    import { ElMessage } from 'element-plus';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, regionList, defaultAppNo, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -140,44 +141,97 @@
     }
 
     //编辑
-    const showTemplateEdit = ref<boolean>(false)
+    const editInfo = ref<any>()
     const editorTemplate = (item?: any) => {
-        showTemplateEdit.value = true
+        editInfo.value = item
+        showEditor.value = true
         console.log('item', item)
 
     }
 
     //新增描边
+    const isBatch = ref<boolean>(false)
     const showEditor = ref<boolean>(false)
-    const addOutline = () => {
+    watch(() => showEditor.value, (newV) => {
+        if (!newV) {
+            isBatch.value = false
+            editInfo.value = ''
+            getUserList()
+        }
+    })
+    const addOutline = (type?: string) => {
+
+        if (type === 'batch') {
+            isBatch.value = true
+        }
         showEditor.value = true
+    }
+
+
+
+    //全部选中
+    const selectAll = () => {
+        selectedList.value = appData.value.map((item: any) => item.id)
+    }
+
+    //删除所选
+    const delSelected = () => {
+        appData.value = appData.value.filter((item: any) => !selectedList.value.includes(item.id))
+    }
+    //保存改动
+    const saveChange = async () => {
+        try {
+            showLoading.value = true
+            const params = {
+                timestamp: Date.now(),
+                appNo: defaultAppNo.value,
+                region: searchParams.value.region,
+                ids: appData.value.map(item => item.id)
+            }
+            console.log('保存改动参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/outline/saveItem', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                getUserList()
+            } else {
+                ElMessage.error('保存失败')
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
+        }
     }
 
     //搜索参数
     interface SearchParams {
-        inputText: string
-        companyNo: string
+        region: string
+
 
 
 
     }
     const searchParams = ref<SearchParams>(
         {
-            inputText: '',
-            companyNo: '',
+            region: '',
+
 
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            inputText: '',
-            companyNo: '',
+            region: '',
+
 
         }
         getUserList()
     }
     interface AppItem {
+        id: number
         appId: string;        // 应用编号
         shortName: string;    // 应用简称
         companyName: string;  // 所属公司
@@ -198,46 +252,7 @@
     }
     // 生成用户数据
     const appData = ref<AppItem[]>([
-        {
-            appId: 'APP_0001',
-            shortName: '商城系统',
-            companyName: '科技有限公司',
-            accessName: 'app1.example.com',
-            systemId: 'SYS_0001',
-            developer: '张三'
-        },
-        {
-            appId: 'APP_0002',
-            shortName: '会员系统',
-            companyName: '网络科技有限公司',
-            accessName: 'app2.example.com',
-            systemId: 'SYS_0002',
-            developer: '李四'
-        },
-        {
-            appId: 'APP_0003',
-            shortName: '支付系统',
-            companyName: '软件开发有限公司',
-            accessName: 'app3.example.com',
-            systemId: 'SYS_0003',
-            developer: '王五'
-        },
-        {
-            appId: 'APP_0004',
-            shortName: '管理系统',
-            companyName: '信息技术有限公司',
-            accessName: 'app4.example.com',
-            systemId: 'SYS_0004',
-            developer: '赵六'
-        },
-        {
-            appId: 'APP_0005',
-            shortName: '客服系统',
-            companyName: '科技有限公司',
-            accessName: 'app5.example.com',
-            systemId: 'SYS_0005',
-            developer: '钱七'
-        }
+
     ])
     interface filterParams {
         note: string
@@ -245,18 +260,30 @@
         key: string
     }
     const filterParams = ref<filterParams[]>()
+    watch(() => defaultAppNo.value, () => {
+        getUserList()
+
+    })
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
+        try {
+            showLoading.value = true
+            const params = {
+                timestamp: Date.now(),
+                region: searchParams.value.region,
+                appNo: defaultAppNo.value
             }
-        })
-        console.log('filterParams', filterParams.value);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/outline/list', {
+                enData
+            })
+            appData.value = res.data.data.list
+            console.log('获取描边列表', res);
+        } catch (err) {
+            console.log('获取描边列表失败', err);
+        } finally {
+            showLoading.value = false
+        }
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {
@@ -279,6 +306,7 @@
         console.log('keyItem', keyItem);
     }
     onMounted(() => {
+        searchParams.value.region = regionList.value[0].value
         getUserList();
         showPagestion.value = true
     })
@@ -297,6 +325,10 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+                    column-gap: 12px;
+
                     .add-button {
                         font-weight: 500;
 
@@ -344,7 +376,7 @@
 
         .stickTp_manage {
             /* position: relative;  不再需要，因为 back-icon 改为 fixed 定位 */
-            height: 820px;
+            height: 700px;
             overflow-y: scroll;
 
             .template-grid {
@@ -482,7 +514,7 @@
             .template-img {
                 width: 100%;
                 height: 100%;
-                object-fit: cover;
+                object-fit: contain;
                 /* 确保图片填充整个容器且不变形 */
             }
 
@@ -570,6 +602,29 @@
                 opacity: 0.8;
                 transform: rotate(3deg);
                 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        /* 浮动操作栏样式 */
+        .floating-actions {
+            position: fixed;
+            bottom: 7px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+                background: rgba(255, 255, 255, 0.98);
             }
         }
     }
