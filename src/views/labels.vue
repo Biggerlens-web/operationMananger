@@ -72,7 +72,7 @@
     import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { ElMessageBox } from 'element-plus';
+    import { ElMessage, ElMessageBox } from 'element-plus';
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
@@ -111,7 +111,25 @@
                 cancelButtonText: '取消',
                 type: 'warning'
             }
-        )
+        ).then(async () => {
+            showLoading.value = true
+            try {
+
+                const res = await service.post(`/labels/del${item.id}`)
+                if (res.data.code === 200) {
+                    ElMessage.success('删除成功')
+                    getUserList()
+                } else {
+                    ElMessage.error(res.data.msg)
+
+                }
+            } catch (err) {
+
+                console.log('删除失败', err);
+            } finally {
+                showLoading.value = false
+            }
+        })
     }
 
     //搜索参数

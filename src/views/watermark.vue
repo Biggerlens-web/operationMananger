@@ -106,7 +106,7 @@
             </customButton>
         </div>
     </div>
-    <publicArea v-model:dialog-visible="showPublicSpace" />
+    <watermarkPublicArea v-model:dialog-visible="showPublicSpace" :region="searchParams.region" />
 </template>
 
 <script setup lang="ts">
@@ -162,7 +162,7 @@
     import draggable from 'vuedraggable'
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
-    import publicArea from '@/components/templates/publicArea.vue'
+    import watermarkPublicArea from '@/components/watermark/watermarkPublicArea.vue'
     import watermarkEditor from '@/components/watermark/watermarkEditor.vue';
     import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
@@ -382,7 +382,11 @@
         }
         console.log('keyItem', keyItem);
     }
+
+
+
     onMounted(() => {
+
         searchParams.value.region = regionList.value[0].value
         getUserList();
         showPagestion.value = true

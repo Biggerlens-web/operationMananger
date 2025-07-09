@@ -20,7 +20,7 @@
                 <el-input v-model="formData.version" />
             </el-form-item>
             <el-form-item label="水印Alpha" prop="watermarkAlph">
-                <el-input v-model="formData.watermarkAlph" />
+                <el-input v-model="formData.watermarkAlph" type="number" />
             </el-form-item>
             <el-form-item label="水印gap" prop="gap">
                 <el-input v-model="formData.gap" type="number" />
@@ -82,92 +82,104 @@
         </el-form>
         <ul class="fontList">
             <li class="fontItem" v-for="(item, index) in fontFormData" :key="index">
-                <el-button type="danger" size="small" class="delete-font-btn" @click="removeFontItem(index)"
-                    :icon="Delete" circle />
-                <el-form :model="item" label-position="top">
-                    <el-form-item label="文字内容" prop="text">
-                        <el-input v-model="item.text" />
-                    </el-form-item>
-                    <el-form-item label="文字rect" prop="rect">
-                        <el-input v-model="item.rect" />
-                    </el-form-item>
-                    <el-form-item label="字体颜色" prop="color">
-                        <el-color-picker v-model="item.color" />
-                    </el-form-item>
-                    <el-form-item label="颜色透明度" prop="colorAlpha">
-                        <el-input v-model="item.colorAlpha" type="number" />
-                    </el-form-item>
-                    <el-form-item label="阴影半径" prop="shadowRadius">
-                        <el-input v-model="item.shadowRadius" type="number" />
-                    </el-form-item>
-                    <el-form-item label="阴影透明度" prop="shadowAlpha">
-                        <el-input v-model="item.shadowAlpha" type="number" />
-                    </el-form-item>
-                    <el-form-item label="阴影颜色" prop="shadowColor">
-                        <el-color-picker v-model="item.shadowColor" />
-                    </el-form-item>
-                    <el-form-item label="阴影角度" prop="shadowAngle">
-                        <el-input v-model="item.shadowAngle" type="number" />
-                    </el-form-item>
-                    <el-form-item label="阴影水平偏移量" prop="shadowOffsetX">
-                        <el-input v-model="item.shadowOffsetX" type="number" />
-                    </el-form-item>
-                    <el-form-item label="边框宽" prop="borderWidth">
-                        <el-input v-model="item.borderWidth" type="number" />
-                    </el-form-item>
-                    <el-form-item label="边框颜色" prop="borderColor">
-                        <el-color-picker v-model="item.borderColor" />
-                    </el-form-item>
-                    <el-form-item label="边框透明度" prop="borderAlpha">
-                        <el-input v-model="item.borderAlpha" type="number" />
-                    </el-form-item>
-                    <el-form-item label="背景颜色" prop="backgroundColor">
-                        <el-color-picker v-model="item.backgroundColor" />
-                    </el-form-item>
-                    <el-form-item label="背景透明度" prop="backgroundAlpha">
-                        <el-input v-model="item.backgroundAlpha" type="number" />
-                    </el-form-item>
-                    <el-form-item label="背景半径" prop="backgroundRadius">
-                        <el-input v-model="item.backgroundRadius" type="number" />
-                    </el-form-item>
-                    <el-form-item label="字间距" prop="charSpacing">
-                        <el-input v-model="item.charSpacing" type="number" />
-                    </el-form-item>
-                    <el-form-item label="行间距" prop="lineSpacing">
-                        <el-input v-model="item.lineSpacing" type="number" />
-                    </el-form-item>
-                    <el-form-item label="气泡索引" prop="bubbleIndex">
-                        <el-input v-model="item.bubbleIndex" type="number" />
-                    </el-form-item>
-                    <el-form-item label="对齐" prop="alignment">
-                        <el-input v-model="item.alignment" type="number" />
-                    </el-form-item>
-                    <el-form-item label="字体" prop="textFont">
-                        <div style="display: flex;width: 100%;column-gap: 5px;">
-                            <el-input :disabled="true" v-model="item.textFont" style="flex: 2.5;" /> <el-button
-                                @click="editFont(index)" type="primary" style="flex: .5;">编辑</el-button>
-                        </div>
+                <div class="font-item-header" @click="toggleFontItem(index)">
+                    <span class="font-item-title">字体配置 {{ index + 1 }} - {{ item.text || '未设置文字' }}</span>
+                    <div class="header-actions">
+                        <el-icon class="collapse-icon" :class="{ 'is-expanded': !item._collapsed }">
+                            <ArrowDown />
+                        </el-icon>
+                        <el-button type="danger" size="small" class="delete-font-btn"
+                            @click.stop="removeFontItem(index)" :icon="Delete" circle />
+                    </div>
+                </div>
+                <el-collapse-transition>
+                    <div v-show="!item._collapsed" class="font-item-content">
+                        <el-form :model="item" label-position="top">
+                            <el-form-item label="文字内容" prop="text">
+                                <el-input v-model="item.text" />
+                            </el-form-item>
+                            <el-form-item label="文字rect" prop="rect">
+                                <el-input v-model="item.rect" />
+                            </el-form-item>
+                            <el-form-item label="字体颜色" prop="color">
+                                <el-color-picker v-model="item.color" />
+                            </el-form-item>
+                            <el-form-item label="颜色透明度" prop="colorAlpha">
+                                <el-input v-model="item.colorAlpha" type="number" />
+                            </el-form-item>
+                            <el-form-item label="阴影半径" prop="shadowRadius">
+                                <el-input v-model="item.shadowRadius" type="number" />
+                            </el-form-item>
+                            <el-form-item label="阴影透明度" prop="shadowAlpha">
+                                <el-input v-model="item.shadowAlpha" type="number" />
+                            </el-form-item>
+                            <el-form-item label="阴影颜色" prop="shadowColor">
+                                <el-color-picker v-model="item.shadowColor" />
+                            </el-form-item>
+                            <el-form-item label="阴影角度" prop="shadowAngle">
+                                <el-input v-model="item.shadowAngle" type="number" />
+                            </el-form-item>
+                            <el-form-item label="阴影水平偏移量" prop="shadowOffsetX">
+                                <el-input v-model="item.shadowOffsetX" type="number" />
+                            </el-form-item>
+                            <el-form-item label="边框宽" prop="borderWidth">
+                                <el-input v-model="item.borderWidth" type="number" />
+                            </el-form-item>
+                            <el-form-item label="边框颜色" prop="borderColor">
+                                <el-color-picker v-model="item.borderColor" />
+                            </el-form-item>
+                            <el-form-item label="边框透明度" prop="borderAlpha">
+                                <el-input v-model="item.borderAlpha" type="number" />
+                            </el-form-item>
+                            <el-form-item label="背景颜色" prop="backgroundColor">
+                                <el-color-picker v-model="item.backgroundColor" />
+                            </el-form-item>
+                            <el-form-item label="背景透明度" prop="backgroundAlpha">
+                                <el-input v-model="item.backgroundAlpha" type="number" />
+                            </el-form-item>
+                            <el-form-item label="背景半径" prop="backgroundRadius">
+                                <el-input v-model="item.backgroundRadius" type="number" />
+                            </el-form-item>
+                            <el-form-item label="字间距" prop="charSpacing">
+                                <el-input v-model="item.charSpacing" type="number" />
+                            </el-form-item>
+                            <el-form-item label="行间距" prop="lineSpacing">
+                                <el-input v-model="item.lineSpacing" type="number" />
+                            </el-form-item>
+                            <el-form-item label="气泡索引" prop="bubbleIndex">
+                                <el-input v-model="item.bubbleIndex" type="number" />
+                            </el-form-item>
+                            <el-form-item label="对齐" prop="alignment">
+                                <el-input v-model="item.alignment" type="number" />
+                            </el-form-item>
+                            <el-form-item label="字体" prop="textFont">
+                                <div style="display: flex;width: 100%;column-gap: 5px;">
+                                    <el-input :disabled="true" v-model="item.textFont" style="flex: 2.5;" /> <el-button
+                                        @click="editFont(index)" type="primary" style="flex: .5;">编辑</el-button>
+                                </div>
 
-                    </el-form-item>
-                    <el-form-item label="是否垂直显示" prop="verticalForm">
-                        <el-checkbox v-model="item.verticalForm" />
-                    </el-form-item>
-                    <el-form-item label="是否使用画笔颜色" prop="useStrokeColor">
-                        <el-checkbox v-model="item.useStrokeColor" />
-                    </el-form-item>
-                    <el-form-item label="是否显示删除线" prop="strikethrough">
-                        <el-checkbox v-model="item.strikethrough" />
-                    </el-form-item>
-                    <el-form-item label="是否变化字形" prop="glyphTransform">
-                        <el-checkbox v-model="item.glyphTransform" />
-                    </el-form-item>
-                    <el-form-item label="是否显示下划线" prop="underline">
-                        <el-checkbox v-model="item.underline" />
-                    </el-form-item>
-                    <el-form-item label="是否使用新的颜色格式" prop="newColorFormat">
-                        <el-checkbox v-model="item.newColorFormat" />
-                    </el-form-item>
-                </el-form>
+                            </el-form-item>
+                            <el-form-item label="是否垂直显示" prop="verticalForm">
+                                <el-checkbox v-model="item.verticalForm" />
+                            </el-form-item>
+                            <el-form-item label="是否使用画笔颜色" prop="useStrokeColor">
+                                <el-checkbox v-model="item.useStrokeColor" />
+                            </el-form-item>
+                            <el-form-item label="是否显示删除线" prop="strikethrough">
+                                <el-checkbox v-model="item.strikethrough" />
+                            </el-form-item>
+                            <el-form-item label="是否变化字形" prop="glyphTransform">
+                                <el-checkbox v-model="item.glyphTransform" />
+                            </el-form-item>
+                            <el-form-item label="是否显示下划线" prop="underline">
+                                <el-checkbox v-model="item.underline" />
+                            </el-form-item>
+                            <el-form-item label="是否使用新的颜色格式" prop="newColorFormat">
+                                <el-checkbox v-model="item.newColorFormat" />
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                </el-collapse-transition>
             </li>
             <li class="addFont-btn">
                 <el-button style="width: 100%;" @click="addFontItem">添加字体</el-button>
@@ -211,7 +223,7 @@
     import { storeToRefs } from 'pinia';
     import { ref, watch } from 'vue'
     import type { UploadUserFile, UploadProps } from 'element-plus'
-    import { Delete } from '@element-plus/icons-vue'
+    import { Delete, ArrowDown } from '@element-plus/icons-vue'
     import service from '@/axios';
     const counterStore = useCounterStore()
     const { appList, defaultAppNo, regionList, showLoading } = storeToRefs(counterStore)
@@ -239,7 +251,11 @@
             formData.value.backgroundName = props.editInfo.backgroundName
             formData.value.textRotate = props.editInfo.textRotate
             formData.value.version = props.editInfo.version
-            fontFormData.value = props.editInfo.watermarkDetailVos
+            // 为每个字体项添加折叠状态
+            fontFormData.value = props.editInfo.watermarkDetailVos.map((item: any) => ({
+                ...item,
+                _collapsed: true // 默认展开状态
+            }))
         }
     })
 
@@ -335,8 +351,14 @@
             strikethrough: false,
             glyphTransform: false,
             underline: false,
-            newColorFormat: false
+            newColorFormat: false,
+            _collapsed: false // 默认展开状态
         })
+    }
+
+    // 切换字体项的折叠状态
+    const toggleFontItem = (index: number) => {
+        fontFormData.value[index]._collapsed = !fontFormData.value[index]._collapsed
     }
 
 
@@ -476,19 +498,20 @@
             if (formData.value.coverName) {
                 form.append('coverName', formData.value.coverName)
             } else {
-                form.append('cover', coverList as any)
+                // form.append('cover', coverList as any)
+                console.log('formData.value.coverFile', formData.value.coverFile);
                 form.append('cover', formData.value.coverFile[0].raw)
             }
             if (formData.value.backgroundName) {
                 form.append('backgroundName', formData.value.backgroundName)
 
             } else {
-                form.append('background', backgroundList as any)
+                // form.append('background', backgroundList as any)
                 form.append('background', formData.value.backgroundFile[0].raw)
             }
             console.log('fontList', fontFormData.value);
             const detailDtoListStr = JSON.stringify(fontFormData.value)
-            form.append('detailDtoList', detailDtoListStr)
+            form.append('detailDtoListStr', detailDtoListStr)
             fontFormData.value.forEach((item: any) => {
                 for (let key in item) {
                     form.append(key, item[key])
@@ -593,22 +616,59 @@
         .fontItem {
             position: relative;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            padding: 20px 5px;
-            padding-top: 35px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
         }
     }
 
-    .delete-font-btn {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        z-index: 10;
-        opacity: 0;
-        transition: opacity 0.3s;
+    .font-item-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        cursor: pointer;
+        transition: background-color 0.3s;
+
+        &:hover {
+            background: #e9ecef;
+        }
+
+        .font-item-title {
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .collapse-icon {
+            transition: transform 0.3s ease;
+            color: #6c757d;
+
+            &.is-expanded {
+                transform: rotate(180deg);
+            }
+        }
+
+        .delete-font-btn {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        &:hover .delete-font-btn {
+            opacity: 1;
+        }
     }
 
-    .fontItem:hover .delete-font-btn {
-        opacity: 1;
+    .font-item-content {
+        padding: 20px 16px;
     }
 
 </style>

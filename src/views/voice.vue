@@ -1,5 +1,6 @@
 <template>
     <div class="view">
+        <voiceEdit v-model:dialog-visible="dialogVisible" :editData="editData" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
@@ -29,19 +30,17 @@
                 <div class="filter-row">
 
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="应用" class="filter-select">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="分类" class="filter-select">
+                        <el-select filterable v-model="searchParams.os" placeholder="系统" class="filter-select">
                             <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-input v-model="searchParams.inputText" placeholder="包名"></el-input>
+                        <el-select filterable v-model="searchParams.voiceCate" placeholder="分类" class="filter-select">
+                            <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
+                        </el-select>
+                    </div>
+                    <div class="filter-item">
+                        <el-input v-model="searchParams.query" placeholder="包名"></el-input>
 
                     </div>
 
@@ -67,11 +66,14 @@
         <el-card class="content-card">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
-                <component :is="componentName" :filterParams="filterParams" :tableData="appData"></component>
+                <component :is="componentName" :filterParams="filterParams" :tableData="appData" @editor="handleEdit"
+                    @delete="handleDelete">
+                </component>
             </Transition>
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
-                :total="1000" />
+                :total="totalData" v-model:current-page="searchParams.pageNum" v-model:page-size="searchParams.pageSize"
+                @change="getUserList" />
         </el-card>
     </div>
 </template>
@@ -80,11 +82,15 @@
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
-    import { onMounted, ref } from 'vue';
+    import voiceEdit from '@/components/voice/voiceEdit.vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    import service from '@/axios';
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage, ElMessageBox } from 'element-plus';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, OSlist, defaultAppNo, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -94,166 +100,113 @@
 
 
 
+
+
+
+    //编辑
+    const editData = ref<any>()
+    const dialogVisible = ref<boolean>(false)
+    watch(() => dialogVisible.value, (newV) => {
+        if (!newV) {
+            editData.value = ''
+            getUserList()
+        }
+    })
+    const handleEdit = (row: any) => {
+        editData.value = row
+        dialogVisible.value = true
+    }
+
+
+
+
+    //删除
+    const handleDelete = (item: any) => {
+        ElMessageBox.confirm('确定删除吗？', '删除确认', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }).then(async () => {
+            // 确认删除
+            showLoading.value = true
+            try {
+                const res = await service.post(`/voice/del${item.id}`)
+                if (res.data.code === 200) {
+                    ElMessage.success('删除成功')
+                    getUserList()
+                } else {
+
+                    ElMessage.error(res.data.msg)
+                }
+            } catch (err) {
+                console.log('删除失败', err);
+            } finally {
+                showLoading.value = false
+            }
+        })
+    }
+
+
     //搜索参数
     interface SearchParams {
-        inputText: string
-        companyNo: string
-
+        query: string
+        os: string
+        voiceCate: string
+        pageNum: number
+        pageSize: number
 
 
     }
+    const totalData = ref<number>()
     const searchParams = ref<SearchParams>(
         {
-            inputText: '',
-            companyNo: '',
+            query: '',
+            os: OSlist.value[0],
+            voiceCate: '',
+            pageNum: 1,
+            pageSize: 10
 
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            inputText: '',
-            companyNo: '',
+            query: '',
+            os: OSlist.value[0],
+            voiceCate: '',
+            pageNum: 1,
+            pageSize: 10
 
         }
         getUserList()
     }
     interface AppContentItem {
-        appName: string;       // 所属应用
-        type: string;          // 类型
-        level: number;         // 层级
-        name: string;          // 名称
-        thumbnail: string;     // 缩略图
-        clickCount: number;    // 点击量
-        favoriteCount: number; // 收藏量
+        appAbbreviation: string;       // 所属应用
+        os: string;          // 类型
+        aid: number;         // 层级
+        title: string;          // 名称
+        imageName: string;     // 缩略图
+        playCount: number;    // 点击量
+        likeCount: number; // 收藏量
         shareCount: number;    // 分享量
         createTime: string;    // 创建时间
     }
 
 
     const appNote: any = {
-        appName: '所属应用',
-        type: '类型',
-        level: '层级',
-        name: '名称',
-        thumbnail: '缩略图',
-        clickCount: '点击量',
-        favoriteCount: '收藏量',
+        appAbbreviation: '所属应用',
+        os: '类型',
+        aid: '层级',
+        title: '名称',
+        imageName: '缩略图',
+        playCount: '点击量',
+        likeCount: '收藏量',
         shareCount: '分享量',
         createTime: '创建时间',
     }
     // 生成用户数据
     const appData = ref<AppContentItem[]>([
-        {
-            appName: "美图秀秀",
-            type: "滤镜",
-            level: 1,
-            name: "自然阳光",
-            thumbnail: "https://cdn.meitu.com/filters/sunlight.jpg",
-            clickCount: 125846,
-            favoriteCount: 23651,
-            shareCount: 5423,
-            createTime: "2023-03-15 10:30:22"
-        },
-        {
-            appName: "美图秀秀",
-            type: "贴纸",
-            level: 2,
-            name: "夏日元素",
-            thumbnail: "https://cdn.meitu.com/stickers/summer.jpg",
-            clickCount: 98754,
-            favoriteCount: 15632,
-            shareCount: 3897,
-            createTime: "2023-05-20 14:45:36"
-        },
-        {
-            appName: "轻颜相机",
-            type: "美颜",
-            level: 1,
-            name: "精致妆容",
-            thumbnail: "https://cdn.qingyan.com/beauty/makeup.jpg",
-            clickCount: 187452,
-            favoriteCount: 45612,
-            shareCount: 12584,
-            createTime: "2023-01-10 09:15:48"
-        },
-        {
-            appName: "轻颜相机",
-            type: "特效",
-            level: 3,
-            name: "梦幻虚化",
-            thumbnail: "https://cdn.qingyan.com/effects/dreamy.jpg",
-            clickCount: 76523,
-            favoriteCount: 12453,
-            shareCount: 2874,
-            createTime: "2023-04-25 16:20:33"
-        },
-        {
-            appName: "B612咔叽",
-            type: "AR效果",
-            level: 2,
-            name: "可爱兔耳",
-            thumbnail: "https://cdn.b612.com/ar/rabbit.jpg",
-            clickCount: 234587,
-            favoriteCount: 56234,
-            shareCount: 15687,
-            createTime: "2023-02-14 11:40:15"
-        },
-        {
-            appName: "B612咔叽",
-            type: "场景",
-            level: 1,
-            name: "霓虹派对",
-            thumbnail: "https://cdn.b612.com/scenes/neon.jpg",
-            clickCount: 145672,
-            favoriteCount: 28456,
-            shareCount: 7856,
-            createTime: "2023-06-30 20:05:12"
-        },
-        {
-            appName: "Faceu激萌",
-            type: "装饰",
-            level: 2,
-            name: "童话花冠",
-            thumbnail: "https://cdn.faceu.com/decor/crown.jpg",
-            clickCount: 356982,
-            favoriteCount: 87423,
-            shareCount: 25478,
-            createTime: "2023-03-08 12:25:44"
-        },
-        {
-            appName: "Faceu激萌",
-            type: "妆容",
-            level: 1,
-            name: "清透水润",
-            thumbnail: "https://cdn.faceu.com/makeup/natural.jpg",
-            clickCount: 198754,
-            favoriteCount: 42365,
-            shareCount: 9874,
-            createTime: "2023-05-18 15:50:28"
-        },
-        {
-            appName: "无他相机",
-            type: "修图",
-            level: 3,
-            name: "专业修容",
-            thumbnail: "https://cdn.wuta.com/retouch/pro.jpg",
-            clickCount: 87456,
-            favoriteCount: 15632,
-            shareCount: 3254,
-            createTime: "2023-04-12 13:15:36"
-        },
-        {
-            appName: "无他相机",
-            type: "滤镜",
-            level: 2,
-            name: "复古电影",
-            thumbnail: "https://cdn.wuta.com/filters/vintage.jpg",
-            clickCount: 123456,
-            favoriteCount: 28765,
-            shareCount: 6543,
-            createTime: "2023-07-05 09:30:42"
-        }
+
     ])
     interface filterParams {
         note: string
@@ -261,18 +214,51 @@
         key: string
     }
     const filterParams = ref<filterParams[]>()
+
+    watch(() => defaultAppNo.value, () => {
+        searchParams.value.pageNum = 1
+        searchParams.value.os = OSlist.value[0]
+        searchParams.value.voiceCate = ''
+        searchParams.value.query = ''
+        getUserList()
+    })
     const getUserList = async () => {
         console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
+        showLoading.value = true
+        try {
+
+            const params = {
+                timestamp: Date.now(),
+                appNo: defaultAppNo.value,
+                os: searchParams.value.os,
+                voiceCate: searchParams.value.voiceCate,
+                query: searchParams.value.query,
+                pageNum: searchParams.value.pageNum,
+                pageSize: searchParams.value.pageSize,
+
             }
-        })
-        console.log('filterParams', filterParams.value);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/voice/list', {
+                enData
+            })
+            console.log('获取语音包列表', res);
+            totalData.value = res.data.total
+            appData.value = res.data.rows
+            const keys = Object.keys(appNote)
+            filterParams.value = keys.map((item) => {
+                return {
+                    note: appNote[item],
+                    isShow: true,
+                    key: item
+                }
+            })
+            console.log('filterParams', filterParams.value);
+        } catch (err) {
+
+        } finally {
+            showLoading.value = false
+        }
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {
