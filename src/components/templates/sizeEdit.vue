@@ -51,7 +51,10 @@
     const { updateChildTemplate, showLoading } = storeToRefs(stores)
     watch(() => updateChildTemplate.value, () => {
         console.log('更新子模版');
-        getChildList()
+        if (dialogVisible.value) {
+            getChildList()
+        }
+
     })
     const dialogVisible = defineModel('dialogVisible', {
         type: Boolean,

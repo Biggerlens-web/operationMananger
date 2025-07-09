@@ -1,6 +1,6 @@
 <template>
     <div class="view">
-        <labelsEditor v-model:dialog-visible="showLabelsEditor" />
+        <labelsEditor v-model:dialog-visible="showLabelsEditor" :editInfo="editInfo" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
@@ -69,10 +69,10 @@
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import labelsEditor from '@/components/labels/labelsEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { ElMessageBox } from 'element-plus';
+    import { ElMessage, ElMessageBox } from 'element-plus';
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
@@ -95,7 +95,9 @@
     }
 
     //编辑标签
+    const editInfo = ref<any>()
     const editorLabels = (item: any) => {
+        editInfo.value = item
         showLabelsEditor.value = true
     }
 
@@ -109,7 +111,25 @@
                 cancelButtonText: '取消',
                 type: 'warning'
             }
-        )
+        ).then(async () => {
+            showLoading.value = true
+            try {
+
+                const res = await service.post(`/labels/del${item.id}`)
+                if (res.data.code === 200) {
+                    ElMessage.success('删除成功')
+                    getUserList()
+                } else {
+                    ElMessage.error(res.data.msg)
+
+                }
+            } catch (err) {
+
+                console.log('删除失败', err);
+            } finally {
+                showLoading.value = false
+            }
+        })
     }
 
     //搜索参数
@@ -137,20 +157,20 @@
         getUserList()
     }
     interface AppTagConfig {
-        appName: string;       // 所属应用
-        parentTag: string;     // 父标签
-        tagName: string;       // 标签名
-        tagNameEn: string;     // 标签名（英）
-        order: number;         // 排序
+        appAbbreviation: string;       // 所属应用
+        pidName: string;     // 父标签
+        label: string;       // 标签名
+        labelEn: string;     // 标签名（英）
+        labelIndex: number;         // 排序
     }
 
 
     const appNote: any = {
-        appName: '所属应用',
-        parentTag: '父标签',
-        tagName: '标签名',
-        tagNameEn: '标签名（英）',
-        order: '排序',
+        appAbbreviation: '所属应用',
+        pidName: '父标签',
+        label: '标签名',
+        labelEn: '标签名（英）',
+        labelIndex: '排序',
 
     }
     // 生成用户数据
@@ -163,6 +183,10 @@
         key: string
     }
     const filterParams = ref<filterParams[]>()
+
+    watch(() => defaultAppNo.value, () => {
+        resetSearch()
+    })
     const getUserList = async () => {
         try {
             const params = {
@@ -173,7 +197,7 @@
             }
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
-            const res = await service.post('', {
+            const res = await service.post('/labels/list', {
                 enData
             })
             appData.value = res.data.rows

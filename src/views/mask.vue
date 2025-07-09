@@ -6,24 +6,29 @@
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" @click="addEditor" class="add-button">
+                    <el-button type="primary" style="margin: 0;" @click="addEditor" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增
                     </el-button>
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" style="margin: 0;" class="add-button" @click="exportExcell">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         导出
                     </el-button>
-                    <el-button type="primary" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        导入国际化
-                    </el-button>
+                    <el-upload ref="upload" action="#" :http-request="importInternation" :limit="1"
+                        :show-file-list="false">
+                        <el-button type="primary" class="add-button" style="margin: 0;">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+                            导入国际化
+                        </el-button>
+                    </el-upload>
+
+
                 </div>
                 <div class="right-actions">
                     <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -92,6 +97,7 @@
     import { ElMessage, ElMessageBox } from 'element-plus';
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
+    import type { UploadRequestOptions } from 'element-plus';
     import { useRouter } from 'vue-router';
     const counterStore = useCounterStore()
     const { showPagestion, defaultAppNo, regionList, operationClass, maskFliterParams, showLoading } = storeToRefs(counterStore)
@@ -102,6 +108,63 @@
     const router = useRouter()
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
+
+    //导入国际化
+    const importInternation = async (options: UploadRequestOptions) => {
+
+        try {
+            const formData = new FormData()
+            formData.append('masks', options.file)
+            formData.append('region', searchParams.value.region)
+            formData.append('appNo', defaultAppNo.value as string)
+            showLoading.value = true
+            const res = await service.post('/mask/importExcelInternationalization', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            console.log('导入国际化', res);
+            if (res.data.code === 200) {
+                ElMessage.success('导入成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('导入失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
+
+    //导出excel
+    const exportExcell = async () => {
+        try {
+            const res = await service.get('/mask/exportExcel', {
+                params: {
+                    appNo: defaultAppNo.value,
+                    region: searchParams.value.region,
+                    query: searchParams.value.query,
+                    timestamp: Date.now()
+                },
+                responseType: 'blob'
+            })
+
+            const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mask_${Date.now()}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            ElMessage.success('导出成功')
+        } catch (err) {
+            ElMessage.error('导出失败')
+            console.log('导出失败', err);
+        }
+    }
+
 
 
     //监听应用变化
@@ -139,6 +202,13 @@
 
     //新增遮罩
     const showEditor = ref<boolean>(false)
+
+    watch(() => showEditor.value, (newV) => {
+        if (!newV) {
+            editorItemInfo.value = ''
+            getUserList()
+        }
+    })
     const addEditor = () => {
         showEditor.value = true
     }
@@ -183,9 +253,7 @@
     //查看详情
     const viewDetail = (row: any) => {
         operationClass.value = row.operationClass
-        router.push('/templateMaterial?id=' + row.id + '&type=mask')
-
-
+        router.push('/templateMaterial?id=' + row.id + '&type=mask&title=遮罩')
         console.log('查看详情', row);
     }
 
@@ -203,7 +271,7 @@
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
-            const res = await service.post('/sticker/move', {
+            const res = await service.post('/mask/move', {
                 enData
             })
             console.log('移动', res);
@@ -381,6 +449,10 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+                    column-gap: 12px;
+
                     .add-button {
                         font-weight: 500;
 

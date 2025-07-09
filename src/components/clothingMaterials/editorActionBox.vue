@@ -1,5 +1,5 @@
 <template>
-  <div class="action-box">
+  <div class="action-box" ref="actionBox" @mousedown="dragStart" @mouseup="dragEnd">
     <template v-for="item in actionList" :key="item.action">
       <el-badge :is-dot="item.action === 'save' && hasUnsavedChanges" class="action-item-badge">
         <el-button :type="getButtonType(item.action)" :icon="item.icon" @click="handleAction(item.action)"
@@ -18,6 +18,57 @@
   import { useRoute } from 'vue-router';
   const stores = useCounterStore()
   const { operationClass } = storeToRefs(stores)
+
+
+
+  const actionBox = ref<HTMLElement>()
+  const isDragging = ref<boolean>(false)
+  const elementSize = ref<{ width: number, height: number }>({
+    width: 0,
+    height: 0
+  })
+  const dragOffSet = ref<{ x: number, y: number }>(
+    {
+      x: 0,
+      y: 0
+    }
+  )
+  const dragStart = (e: MouseEvent) => {
+    if (actionBox.value) {
+      const rect = actionBox.value.getBoundingClientRect()
+      elementSize.value.width = rect.width
+      elementSize.value.height = rect.height
+      actionBox.value.style.right = 'auto'
+      actionBox.value.style.bottom = 'auto'
+      actionBox.value.style.left = rect.left + 'px'
+      actionBox.value.style.top = rect.top + 'px'
+      dragOffSet.value.x = e.clientX - rect.left
+      dragOffSet.value.y = e.clientY - rect.top
+
+      document.body.style.userSelect = 'none'
+      isDragging.value = true
+      window.addEventListener('mousemove', dragMove)
+    }
+  }
+
+  const dragMove = (e: MouseEvent) => {
+    if (isDragging.value && actionBox.value) {
+      const newX = Math.max(0, Math.min(e.clientX - dragOffSet.value.x, window.innerWidth - elementSize.value.width))
+      const newY = Math.max(0, Math.min(e.clientY - dragOffSet.value.y, window.innerHeight - elementSize.value.height))
+      actionBox.value.style.left = `${newX}px`
+      actionBox.value.style.top = `${newY}px`
+    }
+  }
+
+  const dragEnd = () => {
+    isDragging.value = false
+    document.body.style.userSelect = ''
+    window.removeEventListener('mousemove', dragMove)
+
+  }
+
+
+
   // 定义 props
   const props = defineProps<{
     hasUnsavedChanges?: boolean
@@ -39,8 +90,14 @@
       actionList.value = actionList.value.filter((item: any) => item.text !== '批量新增')
     } else {
       actionList.value = actionList.value.filter((item: any) => !item.isTemplate)
+      if (route.query.type === 'shape') {
+        actionList.value = actionList.value.filter((item: any) => item.text !== '批量标签')
+      }
       if (operationClass.value !== 0) {
         actionList.value = actionList.value.filter((item: any) => item.operationClass !== 0)
+      }
+      if (route.query.type === 'otherMaterial') {
+        actionList.value = actionList.value.filter((item: any) => item.text !== '导出')
       }
     }
 
@@ -158,6 +215,7 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin-bottom: 16px;
     flex-wrap: wrap;
+    cursor: grab;
 
     .action-item-badge {
       // 如果需要，可以为 el-badge 添加特定样式

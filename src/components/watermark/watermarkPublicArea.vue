@@ -23,12 +23,18 @@
         </div>
 
         <template #footer>
-            <el-button type="primary" @click="uploadPublic">同步上传至公共空间</el-button>
-            <el-button type="primary" @click="assign">分配</el-button>
-            <el-button type="primary" @click="checkALl">全部选中</el-button>
-            <el-button type="danger" @click="deleteChosed">删除所选</el-button>
-            <el-button type="primary" @click="saveChange">保存改动</el-button>
-            <el-button type="primary" @click="handleClose">取消</el-button>
+            <div style="display: flex;flex: 1;justify-content: flex-end;column-gap: 12px;">
+                <el-upload action="#" :show-file-list="false" :http-request="importTemplate">
+                    <el-button style="margin: 0;" type="primary">导入</el-button>
+                </el-upload>
+
+                <el-button style="margin: 0;" type="primary" @click="assign">分配</el-button>
+                <el-button style="margin: 0;" type="primary" @click="checkALl">全部选中</el-button>
+                <el-button style="margin: 0;" type="danger" @click="deleteChosed">删除所选</el-button>
+                <el-button style="margin: 0;" type="primary" @click="saveChange">保存改动</el-button>
+                <el-button style="margin: 0;" type="primary" @click="handleClose">取消</el-button>
+            </div>
+
         </template>
     </el-dialog>
     <sizeEdit v-model:dialogVisible="dialogSizeEdit" @addChildTemplate="addChildTemplate"
@@ -49,6 +55,7 @@
     import draggable from 'vuedraggable'
     import stickerTemplateEditor from '../clothingMaterials/stickerTemplateEditor.vue'
     import { ElMessage } from 'element-plus'
+    import type { UploadRequestOptions } from 'element-plus'
     const route = useRoute()
 
     const stores = useCounterStore()
@@ -57,7 +64,9 @@
         type: Boolean,
         default: false
     })
-
+    const props = defineProps<{
+        region: string
+    }>()
     // 拖拽相关状态
     const isDragging = ref(false)
 
@@ -100,19 +109,22 @@
 
     const getTemplateList = async () => {
         try {
+            showLoading.value = true
             const params = {
                 timestamp: Date.now(),
-                templateUpId: templateUpId.value
+                appNo: defaultAppNo.value,
+                region: props.region,
+                isPublic: true,
             }
             const enData = desEncrypt(JSON.stringify(params))
-            showLoading.value = true
-            const res = await service.post('/templateUpDetail/list', {
+
+            const res = await service.post('/watermark/list', {
                 enData
             })
-            res.data.data.list.forEach((item: any) => {
+            res.data.data.rows.forEach((item: any) => {
                 item.isSelected = false
             })
-            templateList.value = res.data.data.list
+            templateList.value = res.data.data.rows
         } catch (err) {
 
         } finally {
@@ -120,10 +132,34 @@
         }
     }
 
+
+
+
+
+
     const templateUpId = ref<number>(0)
+    const getPublicAreaInfo = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                appNo: defaultAppNo.value,
+                region: props.region,
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/templateUp/getPublicAreaInfo', {
+                enData
+            })
+            templateUpId.value = res.data.data.templateUpId
+        } catch (err) {
+
+        }
+    }
+
+
+
     watch(dialogVisible, async (newVal, oldVal) => {
         if (newVal) {
-            await getPublicAreaInfo()
+            // await getPublicAreaInfo()
             getTemplateList()
         }
     })
@@ -136,12 +172,14 @@
         try {
             const params = {
                 timestamp: Date.now(),
-                templateUpId: templateUpId.value,
-                detailIds: templateList.value.map((item: any) => item.id)
+                appNo: defaultAppNo.value,
+                isPublic: true,
+                region: props.region,
+                templateIds: templateList.value.map((item: any) => item.id)
             }
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
-            const res = await service.post('/templateUpDetail/saveItem', {
+            const res = await service.post('/watermark/saveItem', {
                 enData
             })
             if (res.data.code === 200) {
@@ -169,46 +207,56 @@
         console.log('拖拽结束，新的排序:', templateList.value.map((item: any) => item.id))
     }
 
-    let region: string = ''
-    const getPublicAreaInfo = async () => {
+    //导入
+    const importTemplate = async (options: UploadRequestOptions) => {
+        console.log('options', options);
+        const { file } = options
+        showLoading.value = true
         try {
-            const params = {
-                timestamp: Date.now(),
-                templateUpId: parseInt(route.query.id as string)
-            }
-            const enData = desEncrypt(JSON.stringify(params))
-            showLoading.value = true
-            const res = await service.get('/templateUpDetail/publicIndex',
-                {
-                    params: {
-                        enData
-                    }
+            const form = new FormData()
+            form.append('templates', file)
+            form.append('region', props.region)
+            form.append('appNo', defaultAppNo.value as string)
+
+            const res = await service.post('/watermark/importWatermark', form, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
                 }
-            )
-            console.log('获取公共空间', res);
-            region = res.data.data.region
-            templateUpId.value = res.data.data.publicTemplate.id
+            })
+            console.log('导入模板');
+            if (res.data.code === 200) {
+                ElMessage.success('导入成功')
+                getTemplateList()
+            } else {
+                ElMessage.error(res.data.msg)
+
+            }
         } catch (err) {
-            console.log('获取公共空间失败', err);
+            console.log('导入失败', err);
         } finally {
             showLoading.value = false
         }
     }
 
 
-
     //分配
     const assign = async () => {
         try {
+            showLoading.value = true
+            const isSelectedList = templateList.value.filter((item: any) => item.isSelected)
+            if (isSelectedList.length === 0) {
+                ElMessage.error('请选择模板')
+                return
+            }
             const params = {
                 timestamp: Date.now(),
-                templateUpId: parseInt(route.query.id as string),
-                detailIds: templateList.value.filter((item: any) => item.isSelected).map((item: any) => item.id)
+                region: props.region,
+                templateIds: isSelectedList.map((item: any) => item.id),
             }
             console.log('分配参数', params);
             const enData = desEncrypt(JSON.stringify(params))
-            showLoading.value = true
-            const res = await service.post('/templateUpDetail/copyTemplate', {
+
+            const res = await service.post('/watermark/copyTemplate', {
                 enData
             })
             console.log('分配', res);
@@ -225,33 +273,8 @@
         }
     }
 
-    //同步至云空间
-    const uploadPublic = async () => {
-        try {
-            const params = {
-                timestamp: Date.now(),
-                appNo: defaultAppNo.value,
-                region: region.toLowerCase()
-            }
-            console.log('参数', params);
-            const enData = desEncrypt(JSON.stringify(params))
-            showLoading.value = true
-            const res = await service.post('/templateUp/syncPublic', {
-                enData
-            })
-            console.log('上传公共空间', res);
-            if (res.data.code === 200) {
-                ElMessage.success('上传成功')
-                getTemplateList()
-            } else {
-                ElMessage.error(res.data.msg)
-            }
-        } catch (err) {
-            console.log('上传失败', err);
-        } finally {
-            showLoading.value = false
-        }
-    }
+
+
 
 
     //编辑

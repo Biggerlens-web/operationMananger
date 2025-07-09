@@ -4,43 +4,43 @@
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" @click="addTutorialGroup" class="add-button">
+                    <customButton @click="addTutorialGroup">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增教程组
-                    </el-button>
-                    <el-button @click="addTutorialGroup" type="primary" class="add-button">
+                    </customButton>
+                    <customButton @click="addTutorialGroup">
                         <el-icon>
                             <Edit />
                         </el-icon>
                         编辑组信息
-                    </el-button>
-                    <el-button type="danger" class="add-button">
+                    </customButton>
+                    <customButton @click="addTutorialGroup">
                         <el-icon>
                             <Minus />
                         </el-icon>
                         删除当前组
-                    </el-button>
-                    <el-button type="primary" class="add-button">
+                    </customButton>
+                    <customButton @click="addTutorialGroup">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         分配教程
-                    </el-button>
-                    <el-button type="primary" class="add-button">
+                    </customButton>
+                    <customButton @click="addTutorialGroup">
                         全部选中
-                    </el-button>
-                    <el-button type="danger" class="add-button">
+                    </customButton>
+                    <customButton @click="addTutorialGroup">
                         <el-icon>
                             <Minus />
                         </el-icon>
                         删除教程
-                    </el-button>
-                    <el-button type="primary" class="add-button">
-
+                    </customButton>
+                    <customButton @click="addTutorialGroup">
                         保存改动
-                    </el-button>
+                    </customButton>
+
                 </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -118,6 +118,7 @@
 
 <script setup lang="ts">
     import tableAciton from '@/components/public/tableAciton.vue';
+    import customButton from '@/components/button/customButton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import { onMounted, ref } from 'vue';
@@ -283,6 +284,10 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+                    column-gap: 12px;
+
                     .add-button {
                         font-weight: 500;
 

@@ -98,7 +98,16 @@
     import jsonEditor from '@/components/autoJson/jsonEditor.vue';
     import userList from '@/components/user/userList.vue';
     import appOSSEditor from '@/components/appOSS/appOSSEditor.vue';
-    import { onMounted, ref, watch } from 'vue';
+    import { onMounted, ref, watch, nextTick } from 'vue';
+
+    // 防抖函数
+    const debounce = (func: Function, delay: number) => {
+        let timeoutId: ReturnType<typeof setTimeout>
+        return (...args: any[]) => {
+            clearTimeout(timeoutId)
+            timeoutId = setTimeout(() => func.apply(null, args), delay)
+        }
+    }
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import { ElMessage, ElMessageBox } from 'element-plus';
@@ -383,47 +392,47 @@
     const callChildMethod = () => {
         childRef.value?.setJsonData()
     }
-    const updateNote = (note: any) => {
-        callChildMethod()
+    // 防抖函数
+    let updateNoteTimer: ReturnType<typeof setTimeout> | null = null
+
+    const updateNote = (note: { value: string; path: string }) => {
         const { value, path } = note
 
-        const hasPath = hasCommaNestedProperty(jsonConfig.value, path)
-        console.log('hasPath', hasPath, jsonConfig.value, path);
-        // if (!hasPath) {
-        //   jsonData.value[path] = ''
-        // }
+        try {
+            const noteObj = getKeysAsObject(jsonConfig.value)
+            let isUpdated = false
 
-        const noteObj = getKeysAsObject(jsonConfig.value)
-        console.log('noteObj', noteObj);
-        console.log('Object.entries(noteObj)', Object.entries(noteObj));
-        for (const [key, val] of Object.entries(noteObj)) {
-            // 如果是直接匹配到顶层属性
-            if (key.includes(',')) {
-
-                if (key.includes(path)) {
-                    console.log('keypath', key, path);
-                    noteObj[key] = value;
+            // 优化路径匹配逻辑
+            for (const [key] of Object.entries(noteObj)) {
+                if (key === path || (key.includes(',') && key.includes(path))) {
+                    noteObj[key] = value
                     assaginOBj(key, value, noteObj)
+                    isUpdated = true
 
-                }
-            } else {
-                console.log('key', key);
-                if (key === path) {
-                    noteObj[path] = value;
-                    console.log(`更新顶层属性 ${path}:`, value);
-                    console.log('noteObj', noteObj);
-                    console.log('comments', jsonConfigNote.value);
-                    assaginOBj(key, value, noteObj)
-                    console.log('noteObj', jsonConfigNote.value);
-                    return;
+                    // 如果是顶层属性，直接返回
+                    if (key === path) {
+                        break
+                    }
                 }
             }
 
+            if (!isUpdated) {
+                console.warn(`未找到路径: ${path}`)
+                return
+            }
 
+            // 防抖延迟同步，避免频繁重渲染导致展开状态丢失
+            if (updateNoteTimer) {
+                clearTimeout(updateNoteTimer)
+            }
 
+            updateNoteTimer = setTimeout(() => {
+                callChildMethod()
+            }, 150)
+
+        } catch (error) {
+            console.error('更新注释失败:', error)
         }
-
-
     }
     //编辑布尔值
     const inputChecked = (key: string) => {

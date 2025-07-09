@@ -23,14 +23,7 @@
             <div class="filter-container">
                 <div class="filter-row">
 
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.appNo" placeholder="请选择应用" clearable>
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
 
-                        </el-select>
-                    </div>
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.os" placeholder="请选择系统" clearable>
                             <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
@@ -99,7 +92,7 @@
     import service from '@/axios';
     import { useRouter } from 'vue-router';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList, international, showLoading } = storeToRefs(counterStore)
+    const { showPagestion, defaultAppNo, OSlist, channelList, international, showLoading } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -208,7 +201,7 @@
     }
     //搜索参数
     interface SearchParams {
-        appNo: string
+
         os: string
         channelId: string | number
         language: string
@@ -216,7 +209,7 @@
     }
     const searchParams = ref<SearchParams>(
         {
-            appNo: '',
+
             os: '',
             language: '',
             channelId: '',
@@ -226,7 +219,7 @@
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            appNo: '',
+
             os: '',
             language: '',
             channelId: '',
@@ -254,6 +247,13 @@
 
 
     }
+
+
+    //监听应用
+    watch(() => defaultAppNo.value, () => {
+        pageNum.value = 1
+        getUserList()
+    })
     // 生成用户数据
     const carouseData = ref<CarouselItem[]>([
 
@@ -272,6 +272,7 @@
                 timestamp: Date.now(),
                 pageNum: pageNum.value,
                 pageSize: pageSize.value,
+                appNo: defaultAppNo.value,
                 ...searchParams.value
             }
             for (let key in params) {

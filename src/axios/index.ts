@@ -4,10 +4,8 @@ import { ElMessage } from 'element-plus'
 import router from '@/router'
 import { decryptDes } from '@/utils/des'
 const service: AxiosInstance = axios.create({
-  // baseURL: 'http://192.168.31.110:18091',
   baseURL: 'http://192.168.31.36:18097',
   // baseURL: 'https://privacy.biggerlens.cn:18091',
-
   // baseURL: '/api',
 
   headers: {
@@ -23,6 +21,12 @@ service.interceptors.request.use(
     if (token && config.headers) {
       config.headers['token'] = `${token}`
     }
+
+    // 如果是FormData，删除Content-Type让浏览器自动设置
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type']
+    }
+
     return config
   },
   (error) => {

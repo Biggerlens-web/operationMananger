@@ -1,39 +1,38 @@
 <template>
     <div class="view">
-        <fontEditor v-model:dialog-visible="showEditor" />
+
+        <fontEditor v-model:dialog-visible="showEditor" :fontTypeList="fontTypeList" :fontLanguage="fontLanguage"
+            :editInfo="editInfo" :batchAdd="isBatch" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
-                <div class="left-actions">
-                    <el-button type="primary" @click="addFont" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        批量新增
-                    </el-button>
-
-                    <el-button type="primary" @click="addFont" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        新增字体
-                    </el-button>
-                    <el-button type="primary" class="add-button">
-                        全部选中
-                    </el-button>
-                    <el-button type="danger" class="add-button">
-                        <el-icon>
-                            <Minus />
-                        </el-icon>
-                        删除所选
-                    </el-button>
-                    <el-button type="primary" class="add-button">
-                        保存改动
-                    </el-button>
-                </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" /> -->
                 </div>
+            </div>
+
+            <!-- 固定在右下角的操作栏 -->
+            <div class="floating-actions" ref="actionRef" @mousedown="dragStart" @mouseup="dragEnd">
+                <customButton @click="batchAddFont"><el-icon>
+                        <Plus />
+                    </el-icon>
+                    批量新增</customButton>
+                <customButton @click="addFont"><el-icon>
+                        <Plus />
+                    </el-icon>
+                    新增字体</customButton>
+
+                <customButton @click="checkedAll">
+                    全部选中</customButton>
+                <customButton @click="deleteChecked">
+                    <el-icon>
+                        <Minus />
+                    </el-icon>
+                    删除所选
+                </customButton>
+                <customButton @click="saveAllChange">
+                    保存改动
+                </customButton>
             </div>
 
             <el-divider class="divider" />
@@ -42,36 +41,40 @@
                 <div class="filter-row">
 
 
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="应用" class="filter-select">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
-                        </el-select>
-                    </div>
+
 
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="国内外" class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
+                        <el-select filterable v-model="searchParams.region" placeholder="地区" class="filter-select">
+                            <el-option v-for="item in regionList" :key="item.value" :label="item.label"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="语言" class="filter-select">
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
-                                :value="item.id" />
+                        <el-select filterable v-model="searchParams.fontLanguage" placeholder="字体类型"
+                            class="filter-select">
+                            <el-option v-for="item in fontLanguage" :key="item.value" :label="item.note"
+                                :value="item.value" />
                         </el-select>
                     </div>
 
-
-                    <!-- <div class="filter-item filter-actions">
+                    <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getUserList">
                             <el-icon>
                                 <Search />
                             </el-icon>
-                            批量添加
+                            查询
                         </el-button>
+                        <el-button @click="resetSearch">
+                            <el-icon>
+                                <Refresh />
+                            </el-icon>
+                            重置
+                        </el-button>
+                    </div>
 
-                    </div> -->
+
+
+
                 </div>
 
 
@@ -97,8 +100,7 @@
                         </div>
 
                         <div class="img-wrapper">
-                            <img :src="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
-                                class="template-img" />
+                            <img :src="`${element.coverImgUrl}?t=${Date.now()}`" alt="" class="template-img" />
                         </div>
                         <p class="template-name">
                             <el-button type="primary" @click="editorTemplate(element)" size='samll'>
@@ -114,16 +116,69 @@
 </template>
 
 <script setup lang="ts">
+    const isDraging = ref<boolean>(false)
+    const actionRef = ref<HTMLElement>()
+    const elementSize = ref<{ width: number, height: number }>({
+        width: 0,
+        height: 0
+    })
+    const drageOffSet = ref<{ x: number, y: number }>({
+        x: 0,
+        y: 0
+    })
+    const dragStart = (e: any) => {
+        if (actionRef.value) {
+            document.body.style.userSelect = 'none'
+            const rect = actionRef.value.getBoundingClientRect()
+            elementSize.value.width = rect.width
+            elementSize.value.height = rect.height
+            actionRef.value.style.right = 'auto'
+            actionRef.value.style.bottom = 'auto'
+            actionRef.value.style.left = rect.left + 'px'
+            actionRef.value.style.top = rect.top + 'px'
+            drageOffSet.value.x = e.clientX - rect.left
+            drageOffSet.value.y = e.clientY - rect.top
+            isDraging.value = true
+            window.addEventListener('mousemove', dragMove)
+        }
+
+    }
+    const dragMove = (e: any) => {
+        if (isDraging.value && actionRef.value) {
+            const innerWidth = window.innerWidth
+            const innerHeight = window.innerHeight
+            const newX = Math.max(0, Math.min(e.clientX - drageOffSet.value.x, innerWidth - elementSize.value.width))
+            const newY = Math.max(0, Math.min(e.clientY - drageOffSet.value.y, innerHeight - elementSize.value.height))
+            actionRef.value.style.left = newX + 'px'
+            actionRef.value.style.top = newY + 'px'
+        }
+    }
+    const dragEnd = () => {
+        isDraging.value = false
+        document.body.style.userSelect = ''
+    }
+
+
+
+
+
+
+
+
     import draggable from 'vuedraggable'
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import fontEditor from '@/components/font/fontEditor.vue';
-    import { onMounted, ref } from 'vue';
+    import { nextTick, onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { ElMessageBox } from 'element-plus';
+    import { ElMessage, ElMessageBox } from 'element-plus';
+    import customButton from '@/components/button/customButton.vue';
+    import { desEncrypt } from '@/utils/des';
+    import service from '@/axios';
+    import { el } from 'element-plus/es/locales.mjs';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, regionList, showLoading, defaultAppNo } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
@@ -131,6 +186,62 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+    //监听应用
+    watch(() => defaultAppNo.value, () => {
+        getUserList()
+    })
+
+    //保存改动
+    const saveAllChange = async () => {
+        try {
+            showLoading.value = true
+            const params = {
+                timestamp: new Date().getTime(),
+                appNo: defaultAppNo.value,
+                region: searchParams.value.region,
+                fontLanguage: searchParams.value.fontLanguage,
+                fontIds: appData.value.map((item: any) => item.id)
+            }
+
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/font/saveItem', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
+
+    //全部选中
+    const checkedAll = () => {
+        appData.value.forEach((item: any) => {
+            if (!selectedList.value.includes(item.id)) {
+                selectedList.value.push(item.id)
+            }
+        })
+    }
+
+    //删除所选
+    const deleteChecked = () => {
+        appData.value = appData.value.filter((item: any) => !selectedList.value.includes(item.id))
+    }
+
+
+    //批量新增
+    const isBatch = ref<boolean>(false)
+    const batchAddFont = async () => {
+        isBatch.value = true
+        await nextTick()
+        showEditor.value = true
+    }
 
 
     //选中模板集合
@@ -151,15 +262,30 @@
 
     //新增字体
     const showEditor = ref<boolean>(false)
-    const addFont = () => {
+    watch(() => showEditor.value, (newVal, oldVal) => {
+        if (!newVal) {
+            editInfo.value = ''
+
+            getUserList()
+        }
+    })
+    const addFont = async () => {
+        isBatch.value = false
+        await nextTick()
         showEditor.value = true
     }
 
     //编辑
-    const showTemplateEdit = ref<boolean>(false)
-    const editorTemplate = (item?: any) => {
-        showTemplateEdit.value = true
+
+    const editInfo = ref<any>()
+    const editorTemplate = async (item?: any) => {
+        editInfo.value = item
         console.log('item', item)
+        isBatch.value = false
+        await nextTick()
+
+        showEditor.value = true
+
 
     }
 
@@ -167,24 +293,25 @@
 
     //搜索参数
     interface SearchParams {
-        inputText: string
-        companyNo: string
+        region: string
+        fontLanguage: string
 
 
 
     }
     const searchParams = ref<SearchParams>(
         {
-            inputText: '',
-            companyNo: '',
+            region: regionList.value[0].value,
+            fontLanguage: ''
+
 
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            inputText: '',
-            companyNo: '',
+            region: regionList.value[0].value,
+            fontLanguage: fontLanguage.value[0].value
 
         }
         getUserList()
@@ -210,46 +337,7 @@
     }
     // 生成用户数据
     const appData = ref<AppItem[]>([
-        {
-            appId: 'APP_0001',
-            shortName: '商城系统',
-            companyName: '科技有限公司',
-            accessName: 'app1.example.com',
-            systemId: 'SYS_0001',
-            developer: '张三'
-        },
-        {
-            appId: 'APP_0002',
-            shortName: '会员系统',
-            companyName: '网络科技有限公司',
-            accessName: 'app2.example.com',
-            systemId: 'SYS_0002',
-            developer: '李四'
-        },
-        {
-            appId: 'APP_0003',
-            shortName: '支付系统',
-            companyName: '软件开发有限公司',
-            accessName: 'app3.example.com',
-            systemId: 'SYS_0003',
-            developer: '王五'
-        },
-        {
-            appId: 'APP_0004',
-            shortName: '管理系统',
-            companyName: '信息技术有限公司',
-            accessName: 'app4.example.com',
-            systemId: 'SYS_0004',
-            developer: '赵六'
-        },
-        {
-            appId: 'APP_0005',
-            shortName: '客服系统',
-            companyName: '科技有限公司',
-            accessName: 'app5.example.com',
-            systemId: 'SYS_0005',
-            developer: '钱七'
-        }
+
     ])
     interface filterParams {
         note: string
@@ -258,17 +346,28 @@
     }
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
+
+        try {
+            showLoading.value = true
+            const params = {
+                timestamp: new Date().getTime(),
+                appNo: defaultAppNo.value,
+                region: searchParams.value.region,
+                fontLanguage: searchParams.value.fontLanguage,
             }
-        })
-        console.log('filterParams', filterParams.value);
+            console.log('参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/font/list', {
+                enData
+            })
+            console.log('获取字体列表', res);
+            appData.value = res.data.rows
+        } catch (err) {
+            console.log('获取字体列表失败', err);
+        } finally {
+            showLoading.value = false
+        }
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {
@@ -290,7 +389,27 @@
         }
         console.log('keyItem', keyItem);
     }
-    onMounted(() => {
+
+
+
+
+    //字体类型
+    const fontLanguage = ref<any>([])
+    const fontTypeList = ref<any>([])
+    const getFontType = async () => {
+        try {
+            const res = await service.get('/font/index')
+            console.log('字体类型', res);
+            fontLanguage.value = res.data.data.fontLanguages
+            fontTypeList.value = res.data.data.fontTypes
+            searchParams.value.fontLanguage = fontLanguage.value[0].value
+        } catch (err) {
+
+            console.log('获取字体类型失败', err);
+        }
+    }
+    onMounted(async () => {
+        await getFontType()
         getUserList();
         showPagestion.value = true
     })
@@ -309,6 +428,10 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+                    column-gap: 12px;
+
                     .add-button {
                         font-weight: 500;
 
@@ -322,6 +445,23 @@
                     display: flex;
                     align-items: center;
                 }
+            }
+
+            .floating-actions {
+                position: fixed;
+                bottom: 7px;
+                right: 20px;
+                display: flex;
+                cursor: move;
+                gap: 10px;
+                z-index: 1000;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                padding: 8px;
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+
             }
 
             .divider {
@@ -355,8 +495,8 @@
         }
 
         .stickTp_manage {
-            /* position: relative;  不再需要，因为 back-icon 改为 fixed 定位 */
-            height: 820px;
+
+            height: 700px;
             overflow-y: scroll;
 
             .template-grid {
@@ -494,7 +634,7 @@
             .template-img {
                 width: 100%;
                 height: 100%;
-                object-fit: cover;
+                object-fit: contain;
                 /* 确保图片填充整个容器且不变形 */
             }
 

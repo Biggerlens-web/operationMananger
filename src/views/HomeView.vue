@@ -58,7 +58,6 @@
             </el-select>
           </div>
         </div>
-
         <div class="header-right">
           <el-dropdown>
             <span class="user-info">
@@ -86,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, watch } from 'vue'
+  import { ref, computed, onMounted, watch, nextTick } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import { Fold, Expand } from '@element-plus/icons-vue'
 
@@ -102,7 +101,7 @@
   const activeMenu = computed(() => route.path)
 
   const showAppSelcet = () => {
-    const hotshowarr = ['/templateMaterial']
+    const hotshowarr = ['/templateMaterial', '/bannerImgConfig/index']
     const path = route.path
     console.log('path', path);
     if (hotshowarr.includes(path)) {
@@ -169,7 +168,7 @@
     }
   }, {
     immediate: true
-    // 不使用 once: true，因为需要在公司切换时重新获取应用列表
+
   })
 
 
@@ -206,8 +205,55 @@
 
 
 
-  onMounted(() => {
+  // 自动滚动到激活菜单项的函数
+  const scrollToActiveMenuItem = () => {
+    const menuContainer = document.querySelector('.menu-container') as HTMLElement
+    const activeMenuItem = document.querySelector('.el-menu-item.is-active') as HTMLElement
+    const activeSubMenu = activeMenuItem?.closest('.el-sub-menu')
 
+    if (menuContainer && activeMenuItem) {
+      // 确保父级子菜单也展开
+      if (activeSubMenu && !activeSubMenu.classList.contains('is-opened')) {
+        const subMenuTitle = activeSubMenu.querySelector('.el-sub-menu__title')
+        if (subMenuTitle) {
+          (subMenuTitle as HTMLElement).click()
+        }
+      }
+
+      // 延迟滚动，等待子菜单展开动画完成
+      setTimeout(() => {
+        // 获取菜单项相对于菜单容器的位置
+        const containerRect = menuContainer.getBoundingClientRect()
+        const itemRect = activeMenuItem.getBoundingClientRect()
+
+        // 计算菜单项相对于容器顶部的实际位置（考虑当前滚动位置）
+        const itemRelativeTop = itemRect.top - containerRect.top + menuContainer.scrollTop
+        const containerHeight = menuContainer.clientHeight
+
+        // 计算最佳滚动位置（将激活项显示在容器中央偏上位置）
+        const targetScrollTop = itemRelativeTop - containerHeight * 0.3
+
+
+        menuContainer.scrollTo({
+          top: Math.max(0, targetScrollTop),
+          behavior: 'smooth'
+        })
+      }, 300) // 等待Element Plus动画完成
+    }
+  }
+
+  // 监听路由变化，确保导航时也能自动滚动
+  watch(() => route.path, () => {
+    nextTick(() => {
+      scrollToActiveMenuItem()
+    })
+  })
+
+  onMounted(() => {
+    // 延迟执行，确保DOM完全渲染
+    nextTick(() => {
+      scrollToActiveMenuItem()
+    })
   })
 </script>
 
@@ -292,16 +338,23 @@
     /* 添加垂直滚动 */
     overflow-x: hidden;
     /* 防止水平滚动 */
+    scroll-behavior: smooth;
+    /* 添加平滑滚动 */
   }
 
   /* 美化滚动条样式 */
   .menu-container::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
   }
 
   .menu-container::-webkit-scrollbar-thumb {
-    background-color: #41546d;
-    border-radius: 3px;
+    background: linear-gradient(180deg, #41546d 0%, #5a6c7d 100%);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+  }
+
+  .menu-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #5a6c7d 0%, #6b7d8e 100%);
   }
 
   .menu-container::-webkit-scrollbar-track {

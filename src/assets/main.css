@@ -33,3 +33,29 @@ a,
     padding: 0 2rem;
   }
 }
+
+/* NProgress 自定义样式 */
+#nprogress .bar {
+  background: linear-gradient(90deg, #409eff, #67c23a) !important;
+  height: 3px !important;
+  box-shadow: 0 0 10px rgba(64, 158, 255, 0.5);
+}
+
+#nprogress .peg {
+  box-shadow:
+    0 0 10px rgba(64, 158, 255, 0.8),
+    0 0 5px rgba(64, 158, 255, 0.8) !important;
+}
+
+/* 如果您想要匹配现有loader的紫色主题 */
+/* 
+#nprogress .bar {
+  background: linear-gradient(90deg, #9b59b6, #84cdfa, #5ad1cd) !important;
+  height: 3px !important;
+}
+*/
+
+/* 隐藏旋转器（如果不需要的话） */
+#nprogress .spinner {
+  display: none !important;
+}

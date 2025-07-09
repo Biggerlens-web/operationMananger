@@ -1,3 +1,4 @@
+import VueLazyload from 'vue3-lazy'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
@@ -7,6 +8,7 @@ import App from './App.vue'
 import router from './router'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import 'animate.css'
+
 // 1. 创建 pinia 实例
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
@@ -15,7 +17,10 @@ pinia.use(piniaPluginPersistedstate)
 const app = createApp(App)
 
 // 3. 按顺序使用插件（确保 pinia 在 router 之前）
-
+app.use(VueLazyload, {
+  loading: '',
+  error: '',
+})
 app.use(pinia)
 app.use(router)
 app.use(ElementPlus)

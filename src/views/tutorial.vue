@@ -6,49 +6,49 @@
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" @click="addType" class="add-button">
+
+
+                    <customButton @click="addType">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增分类
-                    </el-button>
-                    <el-button type="danger" class="add-button">
+                    </customButton>
+                    <customButton @click="addType">
                         <el-icon>
                             <Minus />
                         </el-icon>
                         删除分类
-                    </el-button>
-                    <el-button type="primary" @click="addTutorial" class="add-button">
+                    </customButton>
+
+                    <customButton @click="addTutorial">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增教程
-                    </el-button>
-                    <el-button type="primary" class="add-button">
+                    </customButton>
+                    <customButton>
                         全部选中
-                    </el-button>
-                    <el-button type="danger" class="add-button">
-                        <el-icon>
-                            <Minus />
-                        </el-icon>
+                    </customButton>
+                    <customButton>
                         删除所选
-                    </el-button>
-                    <el-button type="primary" class="add-button">
+                    </customButton>
+                    <customButton>
                         <el-icon>
                             <Edit />
                         </el-icon>
                         批量编辑
-                    </el-button>
-                    <el-button type="primary" @click="addType" class="add-button">
+                    </customButton>
+                    <customButton>
                         <el-icon>
                             <Edit />
                         </el-icon>
-                        教程分类编辑
-                    </el-button>
-                    <el-button type="primary" class="add-button" @click="saveChange">
-
+                        教程编辑
+                    </customButton>
+                    <customButton>
                         保存改动
-                    </el-button>
+                    </customButton>
+
                 </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
@@ -101,6 +101,12 @@
                                 <Search />
                             </el-icon>
                             搜索
+                        </el-button>
+                        <el-button @click="resetSearch">
+                            <el-icon>
+                                <Refresh />
+                            </el-icon>
+                            重置
                         </el-button>
 
                     </div>
@@ -157,6 +163,8 @@
     import tutorialTemplateEdit from '@/components/tutorial/tutorialTemplateEdit.vue';
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
+    import { ElMessage } from 'element-plus';
+    import customButton from '@/components/button/customButton.vue';
     const counterStore = useCounterStore()
     const { showPagestion, regionList, OSlist, channelList, defaultAppNo, showLoading } = storeToRefs(counterStore)
 
@@ -181,7 +189,13 @@
             const res = await service.post('/tutorial/saveItem', {
                 enData
             })
-            console.log('保存改动', res);
+            console.log('保存改动', res)
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功');
+                getUserList()
+            } else {
+                ElMessage.error(res.data?.msg);
+            }
         } catch (err) {
             console.log('保存失败', err);
         } finally {
@@ -328,6 +342,10 @@
                 margin-bottom: 8px;
 
                 .left-actions {
+                    display: flex;
+                    align-items: center;
+                    column-gap: 12px;
+
                     .add-button {
                         font-weight: 500;
 
@@ -383,7 +401,7 @@
 
         .stickTp_manage {
             /* position: relative;  不再需要，因为 back-icon 改为 fixed 定位 */
-            height: 820px;
+            height: 700px;
             overflow-y: scroll;
 
             .template-grid {
@@ -521,7 +539,7 @@
             .template-img {
                 width: 100%;
                 height: 100%;
-                object-fit: cover;
+                object-fit: contain;
                 /* 确保图片填充整个容器且不变形 */
             }
 

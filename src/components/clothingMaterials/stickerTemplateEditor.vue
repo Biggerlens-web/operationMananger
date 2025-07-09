@@ -53,7 +53,7 @@
         </div>
 
         <!-- 样式选择区域 -->
-        <div class="form-item" v-if="route.query.type !== 'template'">
+        <div class="form-item" v-if="route.query.type !== 'template' && route.query.type !== 'otherMaterial'">
           <span class="label">样式</span>
           <el-input-number v-model="formData.style" />
         </div>
@@ -76,9 +76,9 @@
         </div>
 
         <!-- 是否付费选择区域 -->
-        <div class="form-item">
+        <div class="form-item" v-if="route.query.type !== 'otherMaterial'">
           <span class="label">是否付费</span>
-          <el-switch v-model="formData.pay" :active-value="1" :inactive-value="0" active-text="付费"
+          <el-switch v-model="formData.isPay" :active-value="true" :inactive-value="false" active-text="付费"
             inactive-text="免费"></el-switch>
         </div>
 
@@ -86,6 +86,18 @@
           <span class="label">是否推荐模板</span>
           <el-switch v-model="formData.isRecommend" :active-value="true" :inactive-value="false" active-text="是"
             inactive-text="否"></el-switch>
+        </div>
+        <div class="form-item" v-if="route.query.type === 'mask' || route.query.type === 'otherMaterial'">
+          <span class="label">是否VIP资源</span>
+          <el-switch v-model="formData.isVip" :active-value="true" :inactive-value="false" active-text="是"
+            inactive-text="否"></el-switch>
+        </div>
+
+        <div class="form-item" v-if="route.query.type === 'otherMaterial'">
+          <span class="label">关联运营类</span>
+          <el-select v-model="formData.operationClassId" placeholder="请选择关联运营类" multiple>
+            <el-option v-for="(item, index) in oprationClassList" :key="index" :label="item.name" :value="item.id" />
+          </el-select>
         </div>
       </div>
     </div>
@@ -102,7 +114,7 @@
 <script lang="ts" setup>
   import { onMounted, reactive, ref, render, version, watch } from 'vue'
   import { Plus, Delete } from '@element-plus/icons-vue'
-  import { ElMessage } from 'element-plus'
+  import { ElMessage, formProps } from 'element-plus'
   import { useRoute } from 'vue-router'
   import { desEncrypt } from '@/utils/des'
   import service from '@/axios'
@@ -127,14 +139,16 @@
   const formData = reactive<any>({
     id: '',
     style: 0,
-
     smallUrl: '',
+    bigUrl: '',
     keyword: '',
-    pay: 0,
+    isPay: false,
     backgroundWidth: 0,
     backgroundHeight: 0,
     version: '',
-    isRecommend: false
+    isRecommend: false,
+    isVip: false,
+    operationClassId: []
   })
   const initFormData = () => {
     const { type } = route.query
@@ -146,10 +160,21 @@
       formData.backgroundId = parseInt(route.query.id as string) || ''
     } else if (type === 'template') {
       formData.templateUpId = parseInt(route.query.id as string) || ''
+    } else if (type === 'mask') {
+      formData.maskId = parseInt(route.query.id as string) || ''
+    } else if (type === 'wallpapper') {
+      formData.wallpaperId = parseInt(route.query.id as string) || ''
+    } else if (type === 'shape') {
+      formData.shapeId = parseInt(route.query.id as string) || ''
+    } else if (type === 'otherMaterial') {
+      formData.materialId = parseInt(route.query.id as string) || ''
     }
   }
   onMounted(() => {
     initFormData()
+
+    getEditSelectInfo()
+
   })
   // 处理关闭
   const handleClose = () => {
@@ -160,29 +185,42 @@
   // 处理确认
 
   const saveMaterial = async () => {
-    try {
+    // 防止重复点击
+    if (showLoading.value) {
+      ElMessage.warning('正在保存。。。');
+      return false
+    }
 
+    try {
+      showLoading.value = true
       const { type } = route.query
       let params: any = {
         id: formData.id,
         style: formData.style,
-        bigUrl: formData.bigUrl.split(',')[1],
-        smallUrl: formData.smallUrl.split(',')[1],
+        bigUrl: formData.bigUrl.includes('http') ? formData.bigUrl : formData.bigUrl.split(',')[1],
+        smallUrl: formData.smallUrl.includes('http') ? formData.smallUrl : formData.smallUrl.split(',')[1],
         keyword: formData.keyword,
-        pay: formData.pay,
+        isPay: formData.isPay,
         timestamp: Date.now(),
+        type: formData.id ? 'update' : 'add',
+      }
+      if (formData.bigUrl.includes('http')) {
+        params.bigName = props.editData?.bigName
+      }
+      if (formData.smallUrl.includes('http')) {
+        params.smallName = props.editData?.smallName
       }
       let url: string = ''
       if (type === 'sitcker') {
         url = '/stickerDetail/save'
         params.stickerId = formData.stickerId
-        params.type = formData.id ? 'update' : 'add'
+
       } else if (type === 'clothing') {
         url = '/clothingMaterialsDetail/save'
         params.clothingMaterialsId = formData.clothingMaterialsId
       } else if (type === 'background') {
         url = '/backgroundDetail/save'
-        params.type = formData.id ? 'update' : 'add'
+
         params.backId = formData.backgroundId
       } else if (type === 'template') {
         url = '/templateUpDetail/save'
@@ -192,11 +230,11 @@
           templateUpId: formData.templateUpId,
           backgroundWidth: parseInt(formData.backgroundWidth),
           backgroundHeight: parseInt(formData.backgroundHeight),
-          backgroundImage: formData.bigUrl.split(',')[1],
-          coverImage: formData.smallUrl.split(',')[1],
+          backgroundImage: formData.bigUrl.includes('http') ? formData.bigUrl : formData.bigUrl.split(',')[1],
+          coverImage: formData.smallUrl.includes('http') ? formData.smallUrl : formData.smallUrl.split(',')[1],
           version: formData.version,
           keyword: formData.keyword,
-          pay: formData.pay,
+          isPay: formData.isPay,
           templateType: props.isAddChild ? 2 : 1,
           templateParentId: props.isAddChild,
           isRecommend: formData.isRecommend,
@@ -204,14 +242,29 @@
           backgroundImageName: props.editData?.backgroundImageName || null
         }
       } else if (type === 'mask') {
-        url = ''
+        url = '/maskDetail/save'
+
+        params.maskId = formData.maskId
+        params.isVip = formData.isVip
       } else if (type === 'wallpapper') {
-        url = ''
+        url = '/wallpaperDetail/save'
+
+        params.wallpaperId = formData.wallpaperId
+      } else if (type === 'shape') {
+        url = '/shapeDetail/save'
+
+        params.shapeId = formData.shapeId
+      } else if (type === 'otherMaterial') {
+        url = '/otherMaterialDetail/save'
+        delete params.isPay
+        delete params.style
+        params.isVip = formData.isVip
+        params.operationClassId = formData.operationClassId.join(',')
+        params.materialId = formData.materialId
       }
 
       console.log('参数', params)
       const enData = desEncrypt(JSON.stringify(params))
-      showLoading.value = true
       const res = await service.post(url, {
         enData,
       })
@@ -255,11 +308,13 @@
       bigUrl: '',
       smallUrl: '',
       keyword: '',
+      isPay: false,
       backgroundWidth: 0,
       backgroundHeight: 0,
       version: '',
-      pay: 0,
-      isRecommend: false
+      isRecommend: false,
+      isVip: false,
+      operationClassId: []
     })
     console.log('格式化数据');
     initFormData()
@@ -295,10 +350,46 @@
     formData.bigUrl = ''
   }
 
+  const oprationClassList = ref<any>([])
+  const getEditSelectInfo = async (id?: number) => {
+    try {
+      const params: any = {
+        timestamp: Date.now(),
+        type: id ? 'update' : 'add',
+        id
+      }
+      const { type } = route.query
+      if (type === 'otherMaterial') {
+        params.materialId = parseInt(route.query.id as string)
+      } else {
+        return
+      }
+      console.log('选项参数', params);
+      const enData = desEncrypt(JSON.stringify(params))
+      const res = await service.post('/otherMaterialDetail/edit', {
+        enData
+      })
+      console.log('获取选项', res);
+
+      oprationClassList.value = res.data.data.operationClassArr
+      if (id) {
+
+        for (let key in res.data.data.detailOperationClassArr) {
+          formData.operationClassId.push(parseInt(key))
+        }
+
+      }
+
+    } catch (err) {
+      console.log('获取选项失败', err);
+    }
+  }
+
   // 监听对话框打开状态和编辑数据变化
   watch(
     () => props.dialogEditor,
     async (isOpen) => {
+
       if (isOpen && props.editData) {
 
         // 对话框打开时，如果有编辑数据则回显
@@ -311,10 +402,13 @@
             bigUrl: props.editData.bigUrl ? props.editData.bigUrl : '',
             smallUrl: props.editData.smallUrl ? props.editData.smallUrl : '',
             keyword: props.editData.keyword || '',
-            pay: props.editData.pay === undefined ? 0 : props.editData.pay,
+            isPay: props.editData.isPay === undefined ? false : props.editData.isPay,
+            isVip: props.editData.isVip || false,
+            operationClassId: props.editData.operationClassId || [],
 
 
           })
+          getEditSelectInfo(props.editData.id)
         } else {
 
           Object.assign(formData, {
@@ -325,7 +419,7 @@
             bigUrl: props.editData.backgroundUrl ? props.editData.backgroundUrl : '',
             smallUrl: props.editData.coverUrl ? props.editData.coverUrl : '',
             keyword: props.editData.keyword || '',
-            pay: props.editData.pay === true ? 1 : 0,
+            isPay: props.editData.isPay,
             backgroundWidth: props.editData.backgroundWidth || 0,
             backgroundHeight: props.editData.backgroundHeight || 0,
             version: props.editData.version || '',
@@ -336,40 +430,9 @@
         }
 
 
-        if (formData.bigUrl) {
-          try {
-            const res = await fetch(formData.bigUrl)
-            const blob = await res.blob()
-            const fileName = 'smallIMg' + Date.now()
-            const file = new File([blob], fileName, { type: blob.type })
-            const render = new FileReader()
-            render.onload = (e) => {
-              formData.bigUrl = e.target?.result as string
-            }
-            render.readAsDataURL(file)
-          } catch (err) {
-            formData.bigUrl = ''
-            console.log('获取图片失败', err)
-          }
-        }
-        if (formData.smallUrl) {
-          try {
-            const res = await fetch(formData.smallUrl)
-            const blob = await res.blob()
-            const fileName = 'smallIMg' + Date.now()
-            const file = new File([blob], fileName, { type: blob.type })
-            const render = new FileReader()
-            render.onload = (e) => {
-              formData.smallUrl = e.target?.result as string
-            }
-            render.readAsDataURL(file)
-          } catch (err) {
-            formData.smallUrl = ''
-            console.log('获取图片失败', err)
-          }
-        }
+
       } else if (!isOpen) {
-        // 对话框关闭时不立即重置，由handleClose处理
+
       }
     },
     { immediate: true },
