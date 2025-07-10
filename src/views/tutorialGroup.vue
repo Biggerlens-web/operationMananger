@@ -3,45 +3,7 @@
         <tutorialGroupEditor v-model:show-editor="showEditor" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
-                <div class="left-actions">
-                    <customButton @click="addTutorialGroup">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        新增教程组
-                    </customButton>
-                    <customButton @click="addTutorialGroup">
-                        <el-icon>
-                            <Edit />
-                        </el-icon>
-                        编辑组信息
-                    </customButton>
-                    <customButton @click="addTutorialGroup">
-                        <el-icon>
-                            <Minus />
-                        </el-icon>
-                        删除当前组
-                    </customButton>
-                    <customButton @click="addTutorialGroup">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        分配教程
-                    </customButton>
-                    <customButton @click="addTutorialGroup">
-                        全部选中
-                    </customButton>
-                    <customButton @click="addTutorialGroup">
-                        <el-icon>
-                            <Minus />
-                        </el-icon>
-                        删除教程
-                    </customButton>
-                    <customButton @click="addTutorialGroup">
-                        保存改动
-                    </customButton>
 
-                </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" /> -->
@@ -113,10 +75,85 @@
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
                 :total="1000" /> -->
         </el-card>
+
+
+        <div class="floating-actions" ref='actionBox' @mousedown="dragStart" @mouseup="dragEnd">
+            <customButton @click="addTutorialGroup">
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                新增教程组
+            </customButton>
+            <customButton @click="addTutorialGroup">
+                <el-icon>
+                    <Edit />
+                </el-icon>
+                编辑组信息
+            </customButton>
+            <customButton @click="addTutorialGroup">
+                <el-icon>
+                    <Minus />
+                </el-icon>
+                删除当前组
+            </customButton>
+            <customButton @click="addTutorialGroup">
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                分配教程
+            </customButton>
+            <customButton @click="addTutorialGroup">
+                全部选中
+            </customButton>
+            <customButton @click="addTutorialGroup">
+                <el-icon>
+                    <Minus />
+                </el-icon>
+                删除教程
+            </customButton>
+            <customButton @click="addTutorialGroup">
+                保存改动
+            </customButton>
+
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
+    const isDraging = ref<boolean>(false)
+    const actionBox = ref<HTMLElement>()
+    const elementSize = ref<{ width: number, height: number }>({ width: 0, height: 0 })
+    const dragOffset = ref<{ x: number, y: number }>({ x: 0, y: 0 })
+
+    const dragStart = (e: MouseEvent) => {
+        if (actionBox.value) {
+            const rect = actionBox.value.getBoundingClientRect()
+            elementSize.value.width = rect.width
+            elementSize.value.height = rect.height
+            actionBox.value.style.right = 'auto'
+            actionBox.value.style.bottom = 'auto'
+            actionBox.value.style.left = rect.left + 'px'
+            actionBox.value.style.top = rect.top + 'px'
+            dragOffset.value.x = e.clientX - rect.left
+            dragOffset.value.y = e.clientY - rect.top
+            isDraging.value = true
+            window.addEventListener('mousemove', dragMove)
+        }
+    }
+
+    const dragMove = (e: MouseEvent) => {
+        if (isDraging.value && actionBox.value) {
+            const newX = Math.max(0, Math.min(e.clientX - dragOffset.value.x, window.innerWidth - elementSize.value.width))
+            const newY = Math.max(0, Math.min(e.clientY - dragOffset.value.y, window.innerHeight - elementSize.value.height))
+            actionBox.value.style.left = newX + 'px'
+            actionBox.value.style.top = newY + 'px'
+        }
+    }
+    const dragEnd = () => {
+        isDraging.value = false
+        window.removeEventListener('mousemove', dragMove)
+    }
+
     import tableAciton from '@/components/public/tableAciton.vue';
     import customButton from '@/components/button/customButton.vue';
     import userTable from '@/components/user/userTable.vue';
@@ -272,6 +309,25 @@
 </script>
 
 <style scoped lang="scss">
+
+
+    .floating-actions {
+        position: fixed;
+        user-select: none;
+        cursor: move;
+        bottom: 7px;
+        right: 20px;
+        display: flex;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 8px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        z-index: 1000;
+    }
+
     .view {
         .filter-card {
             width: 100%;

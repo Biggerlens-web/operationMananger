@@ -93,7 +93,7 @@
                     @click="copyInfo(scope.row)">复制</el-button>
 
                 <el-button style="margin: 0;" type="text" size="small" @click="handleView(scope.row)"
-                    v-if="viewButton || isShowButton(scope.row, 'view')">查看</el-button>
+                    v-if="viewButton || isShowButton(scope.row, 'view') || showview(scope.row)">查看</el-button>
                 <el-button v-if="moveIndex || isShowButton(scope.row, 'topIndex')" style="margin: 0;" type="text"
                     size="small" @click="goMove(scope.row, 'topMove')">置顶</el-button>
                 <el-button v-if="moveIndex || isShowButton(scope.row, 'upIndex')" style="margin: 0;" type="text"
@@ -194,6 +194,23 @@
             return item
         }
     }
+
+    const showviewArr = ['/voice/index']
+    const showview = (row: any) => {
+        const path = route.path
+        if (showviewArr.includes(path)) {
+            if (row.pid !== 0) {
+                return true
+            } else {
+                return false
+            }
+
+        } else {
+            return false
+        }
+    }
+
+
 
     const showMoveBtnPath = ['/clothingMaterials/index', '/sticker/index', '/background/index', '/templateUp/index', '/mask/index', '/wallpaper/index', '/shape/index', '/otherMaterial/index']
 

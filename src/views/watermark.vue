@@ -247,7 +247,7 @@
         try {
             const params = {
                 timestamp: Date.now(),
-                ids: appData.value.map(item => item.id),
+                templateIds: appData.value.map(item => item.id),
                 appNo: defaultAppNo.value,
                 region: searchParams.value.region
             }
@@ -288,7 +288,7 @@
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            region: '',
+            region: regionList.value[0].value,
 
 
         }

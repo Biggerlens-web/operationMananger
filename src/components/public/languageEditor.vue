@@ -9,8 +9,6 @@
                 </template>
             </el-table-column>
             <el-table-column prop="address" label="语言文案配置">
-
-
                 <template #default="scope">
                     <ul>
                         <li v-for="item in scope.row.config" :key="item.language">
@@ -114,7 +112,7 @@
                 timestamp: Date.now(),
                 id: item.id,
                 name: item.name,
-                config: JSON.stringify(item.config)
+                // config: JSON.stringify(item.config)
             }
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
@@ -148,7 +146,7 @@
             const params = {
                 timestamp: Date.now(),
                 id: configId.value,
-                name: configName.value,
+                // name: configName.value,
                 config: JSON.stringify(obj)
             }
             console.log('保存国际化参数', params);

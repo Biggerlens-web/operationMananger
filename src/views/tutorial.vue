@@ -5,51 +5,6 @@
         <tutorialTemplateEdit v-model:dialog-visible="showTemplateEdit" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
-                <div class="left-actions">
-
-
-                    <customButton @click="addType">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        新增分类
-                    </customButton>
-                    <customButton @click="addType">
-                        <el-icon>
-                            <Minus />
-                        </el-icon>
-                        删除分类
-                    </customButton>
-
-                    <customButton @click="addTutorial">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        新增教程
-                    </customButton>
-                    <customButton>
-                        全部选中
-                    </customButton>
-                    <customButton>
-                        删除所选
-                    </customButton>
-                    <customButton>
-                        <el-icon>
-                            <Edit />
-                        </el-icon>
-                        批量编辑
-                    </customButton>
-                    <customButton>
-                        <el-icon>
-                            <Edit />
-                        </el-icon>
-                        教程编辑
-                    </customButton>
-                    <customButton>
-                        保存改动
-                    </customButton>
-
-                </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" /> -->
@@ -149,6 +104,52 @@
                 </template>
             </draggable>
         </el-card>
+
+        <!-- 浮动操作栏 -->
+        <div class="floating-actions" ref="actionBox" @mousedown="dragStart" @mouseup="dragEnd">
+            <customButton @click="addType">
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                新增分类
+            </customButton>
+            <customButton @click="deleteType">
+                <el-icon>
+                    <Minus />
+                </el-icon>
+                删除分类
+            </customButton>
+            <customButton @click="addTutorial">
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                新增教程
+            </customButton>
+            <customButton @click="selectAll">
+                全部选中
+            </customButton>
+            <customButton @click="delSelected">
+                <el-icon>
+                    <Minus />
+                </el-icon>
+                删除所选
+            </customButton>
+            <customButton @click="batchEdit">
+                <el-icon>
+                    <Edit />
+                </el-icon>
+                批量编辑
+            </customButton>
+            <customButton @click="tutorialEdit">
+                <el-icon>
+                    <Edit />
+                </el-icon>
+                教程编辑
+            </customButton>
+            <customButton @click="saveChange">
+                保存改动
+            </customButton>
+        </div>
     </div>
 </template>
 
@@ -167,6 +168,49 @@
     import customButton from '@/components/button/customButton.vue';
     const counterStore = useCounterStore()
     const { showPagestion, regionList, OSlist, channelList, defaultAppNo, showLoading } = storeToRefs(counterStore)
+
+    // 浮动操作栏拖动相关
+    const actionBox = ref<HTMLElement>()
+    const isDraging = ref<boolean>(false)
+    const dragOffset = ref<{ x: number, y: number }>({ x: 0, y: 0 })
+    const elementSize = ref<{ width: number, height: number }>({ width: 0, height: 0 })
+
+    const dragStart = (e: MouseEvent) => {
+        if (actionBox.value) {
+            const rect = actionBox.value.getBoundingClientRect()
+            // 缓存元素尺寸，避免重复计算
+            elementSize.value.width = rect.width
+            elementSize.value.height = rect.height
+
+            dragOffset.value.x = e.clientX - rect.left
+            dragOffset.value.y = e.clientY - rect.top
+            isDraging.value = true
+            actionBox.value.style.right = 'auto'
+            actionBox.value.style.bottom = 'auto'
+            actionBox.value.style.left = rect.left + 'px'
+            actionBox.value.style.top = rect.top + 'px'
+            window.addEventListener('mousemove', dragMove)
+            // 防止文本选择
+            document.body.style.userSelect = 'none'
+        }
+    }
+
+    const dragMove = (e: MouseEvent) => {
+        if (actionBox.value && isDraging.value) {
+            const innerWidth = window.innerWidth
+            const innerHeight = window.innerHeight
+            const newX = Math.max(0, Math.min(e.clientX - dragOffset.value.x, innerWidth - elementSize.value.width))
+            const newY = Math.max(0, Math.min(e.clientY - dragOffset.value.y, innerHeight - elementSize.value.height))
+            actionBox.value.style.left = newX + 'px'
+            actionBox.value.style.top = newY + 'px'
+        }
+    }
+
+    const dragEnd = (e: MouseEvent) => {
+        isDraging.value = false
+        document.body.style.userSelect = ''
+        window.removeEventListener('mousemove', dragMove)
+    }
 
 
 
@@ -214,6 +258,44 @@
     const showEditor = ref<boolean>(false)
     const addTutorial = () => {
         showEditor.value = true
+    }
+
+    // 删除分类
+    const deleteType = () => {
+        console.log('删除分类')
+        // TODO: 实现删除分类功能
+    }
+
+    // 全部选中
+    const selectAll = () => {
+        selectedList.value = appData.value.map((item: any) => item.id)
+    }
+
+    // 删除所选
+    const delSelected = () => {
+        if (selectedList.value.length === 0) {
+            ElMessage.warning('请先选择要删除的项目')
+            return
+        }
+        appData.value = appData.value.filter((item: any) => !selectedList.value.includes(item.id))
+        selectedList.value = []
+        ElMessage.success('删除成功')
+    }
+
+    // 批量编辑
+    const batchEdit = () => {
+        if (selectedList.value.length === 0) {
+            ElMessage.warning('请先选择要编辑的项目')
+            return
+        }
+        console.log('批量编辑', selectedList.value)
+        // TODO: 实现批量编辑功能
+    }
+
+    // 教程编辑
+    const tutorialEdit = () => {
+        console.log('教程编辑')
+        // TODO: 实现教程编辑功能
     }
     //搜索参数
     interface SearchParams {
@@ -341,19 +423,7 @@
                 justify-content: space-between;
                 margin-bottom: 8px;
 
-                .left-actions {
-                    display: flex;
-                    align-items: center;
-                    column-gap: 12px;
 
-                    .add-button {
-                        font-weight: 500;
-
-                        .el-icon {
-                            margin-right: 4px;
-                        }
-                    }
-                }
 
                 .right-actions {
                     display: flex;
@@ -628,6 +698,24 @@
                 transform: rotate(3deg);
                 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             }
+        }
+
+        /* 浮动操作栏样式 */
+        .floating-actions {
+            position: fixed;
+            user-select: none;
+            cursor: move;
+            bottom: 7px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
         }
     }
 </style>

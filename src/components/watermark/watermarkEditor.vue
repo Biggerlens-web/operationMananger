@@ -230,10 +230,16 @@
     const props = defineProps<{
         dialogVisible: boolean
         editInfo: any
+        isPublic?: boolean
     }>()
     const emit = defineEmits<{
         'update:dialogVisible': [value: boolean]
     }>()
+
+
+
+
+
 
 
     watch(() => props.dialogVisible, (newV) => {
@@ -325,7 +331,7 @@
 
     const addFontItem = () => {
         fontFormData.value.push({
-            detailId: '',
+            id: '',
             text: '',
             rect: '',
             color: '#000000',
@@ -494,7 +500,9 @@
             form.append('textRotate', formData.value.textRotate)
             form.append('appNo', formData.value.appNo)
             form.append('region', formData.value.region)
-
+            if (props.isPublic) {
+                form.append('isPublic', 'true')
+            }
             if (formData.value.coverName) {
                 form.append('coverName', formData.value.coverName)
             } else {
@@ -514,8 +522,11 @@
             form.append('detailDtoListStr', detailDtoListStr)
             fontFormData.value.forEach((item: any) => {
                 for (let key in item) {
-                    form.append(key, item[key])
-
+                    if (key === 'id') {
+                        form.append('detailId', item[key])
+                    } else {
+                        form.append(key, item[key])
+                    }
                 }
             })
 
@@ -528,6 +539,7 @@
 
                 ElMessage.success(res.data.msg)
                 handleClose()
+
             } else {
                 ElMessage.error(res.data.msg)
             }
@@ -537,6 +549,7 @@
             showLoading.value = false
         }
     }
+
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate((valid: any) => {
             if (valid) {

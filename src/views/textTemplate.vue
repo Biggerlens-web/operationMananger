@@ -3,37 +3,7 @@
         <textTemplateEditor v-model:show-editor="showEditor" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
-                <div class="left-actions">
 
-                    <customButton>
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        导入
-                    </customButton>
-                    <customButton>
-                        公共空间
-                    </customButton>
-                    <customButton>
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        新增模板
-                    </customButton>
-                    <customButton>
-                        全部选中
-                    </customButton>
-                    <customButton>
-                        <el-icon>
-                            <Minus />
-                        </el-icon>
-                        删除所选
-                    </customButton>
-                    <customButton>
-                        保存改动
-                    </customButton>
-
-                </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" /> -->
@@ -90,10 +60,81 @@
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
                 :total="1000" /> -->
         </el-card>
+        <div class="floating-actions" ref="actionBox" @mousedown="dragStart" @mouseup="dragEnd">
+
+            <customButton>
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                导入
+            </customButton>
+            <customButton>
+                公共空间
+            </customButton>
+            <customButton>
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                新增模板
+            </customButton>
+            <customButton>
+                全部选中
+            </customButton>
+            <customButton>
+                <el-icon>
+                    <Minus />
+                </el-icon>
+                删除所选
+            </customButton>
+            <customButton>
+                保存改动
+            </customButton>
+
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
+
+    const actionBox = ref<HTMLElement>()
+    const isDraging = ref<boolean>(false)
+    const dragOffset = ref<{ x: number, y: number }>({ x: 0, y: 0 })
+    const elementSize = ref<{ width: number, height: number }>({ width: 0, height: 0 })
+    const dragStart = (e: MouseEvent) => {
+        isDraging.value = true
+        if (actionBox.value) {
+            const rect = actionBox.value.getBoundingClientRect()
+            actionBox.value.style.right = 'auto'
+            actionBox.value.style.bottom = 'auto'
+            actionBox.value.style.left = rect.left + 'px'
+            actionBox.value.style.top = rect.top + 'px'
+        }
+
+
+        elementSize.value.width = actionBox.value!.offsetWidth
+        elementSize.value.height = actionBox.value!.offsetHeight
+        dragOffset.value = {
+            x: e.clientX - actionBox.value!.getBoundingClientRect().left,
+            y: e.clientY - actionBox.value!.getBoundingClientRect().top
+        }
+        window.addEventListener('mousemove', dragMove)
+    }
+    const dragEnd = () => {
+        isDraging.value = false
+
+        window.removeEventListener('mousemove', dragMove)
+    }
+    const dragMove = (e: MouseEvent) => {
+        if (isDraging.value) {
+            const newX = Math.max(0, Math.min(e.clientX - dragOffset.value.x, document.documentElement.clientWidth - elementSize.value.width))
+            const newY = Math.max(0, Math.min(e.clientY - dragOffset.value.y, document.documentElement.clientHeight - elementSize.value.height))
+            actionBox.value!.style.left = newX + 'px'
+            actionBox.value!.style.top = newY + 'px'
+        }
+    }
+
+
+
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import customButton from '@/components/button/customButton.vue';
@@ -250,6 +291,26 @@
 
 <style scoped lang="scss">
     .view {
+
+        /* 浮动操作栏样式 */
+        .floating-actions {
+            position: fixed;
+            user-select: none;
+            cursor: move;
+            bottom: 7px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+
+        }
+
         .filter-card {
             width: 100%;
             margin-bottom: 20px;

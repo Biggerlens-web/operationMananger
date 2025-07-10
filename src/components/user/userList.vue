@@ -103,8 +103,8 @@
                             </el-icon>
                             编辑
                         </el-button>
-                        <el-button v-if="viewButton || isShowButton(item, 'view')" style="margin: 0;" type="primary"
-                            size="small" plain @click="handleView(item)">
+                        <el-button v-if="viewButton || isShowButton(item, 'view') || showview(item)" style="margin: 0;"
+                            type="primary" size="small" plain @click="handleView(item)">
                             查看
                         </el-button>
                         <el-button v-if="moveIndex || isShowButton(item, 'topIndex')" style="margin: 0;" type="primary"
@@ -198,6 +198,21 @@
         const { id } = item
         emit('moveIndex', { id, moveType })
 
+    }
+
+    const showviewArr = ['/voice/index']
+    const showview = (row: any) => {
+        const path = route.path
+        if (showviewArr.includes(path)) {
+            if (row.pid !== 0) {
+                return true
+            } else {
+                return false
+            }
+
+        } else {
+            return false
+        }
     }
 
     //编辑按钮显示控制
