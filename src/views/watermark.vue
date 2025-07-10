@@ -106,7 +106,7 @@
             </customButton>
         </div>
     </div>
-    <watermarkPublicArea v-model:dialog-visible="showPublicSpace" :region="searchParams.region" />
+    <watermarkPublicArea :type="'watermark'" v-model:dialog-visible="showPublicSpace" :region="searchParams.region" />
 </template>
 
 <script setup lang="ts">

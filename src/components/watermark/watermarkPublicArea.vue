@@ -10,7 +10,8 @@
                             <span class="template-id">{{ element.id }}</span>
                         </div>
                         <div class="card-image">
-                            <img :src="element.coverUrl" :alt="element.title" />
+                            <img :src="templateType ? `${host}${element.coverUrl}` : element.coverUrl"
+                                :alt="element.title" />
                         </div>
                         <div class="card-actions">
                             <el-button size="small" type="primary" @click="handleEdit(element)">编辑</el-button>
@@ -36,7 +37,8 @@
         </template>
     </el-dialog>
     <watermarkEditor v-model:dialogVisible="dialogEditor" :editInfo="editInfo" :isPublic="true" />
-
+    <textTemplateEditor v-model:showEditor="dialogEditorFont" :editInfo="editInfo"
+        :textTemplateTypeList="textTemplateTypeList" />
 </template>
 
 <script lang="ts" setup>
@@ -44,6 +46,7 @@
     import forceTemplate from '@/components/templates/forceTemplate.vue'
     import sizeEdit from '@/components/templates/sizeEdit.vue'
     import { useCounterStore } from '@/stores/counter'
+    import textTemplateEditor from '../textTemplate/textTemplateEditor.vue'
     import { desEncrypt } from '@/utils/des'
     import { storeToRefs } from 'pinia'
     import { watch, ref } from 'vue'
@@ -53,7 +56,7 @@
     import { ElMessage } from 'element-plus'
     import type { UploadRequestOptions } from 'element-plus'
     const route = useRoute()
-
+    const host = ref(service.defaults.baseURL)
     const stores = useCounterStore()
     const { defaultAppNo, showLoading } = storeToRefs(stores)
     const dialogVisible = defineModel('dialogVisible', {
@@ -62,6 +65,9 @@
     })
     const props = defineProps<{
         region: string
+        type: string
+        templateType?: number | string
+        textTemplateTypeList?: any
     }>()
     // 拖拽相关状态
     const isDragging = ref(false)
@@ -106,15 +112,27 @@
     const getTemplateList = async () => {
         try {
             showLoading.value = true
-            const params = {
+            const params: any = {
                 timestamp: Date.now(),
                 appNo: defaultAppNo.value,
                 region: props.region,
                 isPublic: true,
             }
+            let url: string = ''
+            switch (props.type) {
+                case 'watermark':
+                    url = '/watermark/list'
+                    break;
+                case 'texttemplate':
+                    url = '/textTemplate/list'
+                    params.textTemplateType = props.templateType
+                    break;
+
+            }
             const enData = desEncrypt(JSON.stringify(params))
 
-            const res = await service.post('/watermark/list', {
+
+            const res = await service.post(url, {
                 enData
             })
             console.log('公共空间列表', res);
@@ -169,16 +187,36 @@
     //保存改动
     const saveChange = async () => {
         try {
-            const params = {
-                timestamp: Date.now(),
-                appNo: defaultAppNo.value,
-                isPublic: true,
-                region: props.region,
-                templateIds: templateList.value.map((item: any) => item.id)
+            let url = ''
+            let params: any = {}
+            switch (props.type) {
+                case 'watermark':
+                    url = '/watermark/saveItem'
+                    params = {
+                        timestamp: Date.now(),
+                        appNo: defaultAppNo.value,
+                        isPublic: true,
+                        region: props.region,
+                        templateIds: templateList.value.map((item: any) => item.id)
+                    }
+                    break;
+                case 'texttemplate':
+                    url = '/textTemplate/saveItem'
+                    params = {
+                        timestamp: Date.now(),
+                        appNo: defaultAppNo.value,
+                        isPublic: true,
+                        region: props.region,
+                        templateIds: templateList.value.map((item: any) => item.id),
+                        templateType: props.templateType
+                    }
+                    break;
+
             }
+
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
-            const res = await service.post('/watermark/saveItem', {
+            const res = await service.post(url, {
                 enData
             })
             if (res.data.code === 200) {
@@ -213,11 +251,25 @@
         showLoading.value = true
         try {
             const form = new FormData()
-            form.append('templates', file)
-            form.append('region', props.region)
-            form.append('appNo', defaultAppNo.value as string)
+            let url = ''
+            switch (props.type) {
+                case 'watermark':
+                    form.append('templates', file)
+                    form.append('region', props.region)
+                    form.append('appNo', defaultAppNo.value as string)
+                    url = '/watermark/importWatermark'
+                    break;
+                case 'texttemplate':
+                    form.append('templates', file)
+                    form.append('region', props.region)
+                    form.append('appNo', defaultAppNo.value as string)
+                    form.append('textTemplateType', String(props.templateType))
 
-            const res = await service.post('/watermark/importWatermark', form, {
+                    url = '/textTemplate/importTextTemplate'
+                    break;
+
+            }
+            const res = await service.post(url, form, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -247,15 +299,36 @@
                 ElMessage.error('请选择模板')
                 return
             }
-            const params = {
-                timestamp: Date.now(),
-                region: props.region,
-                templateIds: isSelectedList.map((item: any) => item.id),
+            let params: any = {
+
+            }
+            let url = ''
+            switch (props.type) {
+                case 'watermark':
+                    params = {
+                        timestamp: Date.now(),
+                        region: props.region,
+                        templateIds: isSelectedList.map((item: any) => item.id),
+                        appNo: defaultAppNo.value,
+                    }
+                    url = '/watermark/copyTemplate'
+                    break;
+                case 'texttemplate':
+                    params = {
+                        appNo: defaultAppNo.value,
+                        timestamp: Date.now(),
+                        region: props.region,
+                        templateIds: isSelectedList.map((item: any) => item.id),
+                        templateType: props.templateType
+                    }
+                    url = '/textTemplate/copyTemplate'
+                    break;
+
             }
             console.log('分配参数', params);
             const enData = desEncrypt(JSON.stringify(params))
 
-            const res = await service.post('/watermark/copyTemplate', {
+            const res = await service.post(url, {
                 enData
             })
             console.log('分配', res);
@@ -276,7 +349,7 @@
 
 
 
-    //编辑
+    //水印编辑
     const dialogEditor = ref<boolean>(false)
     watch(() => dialogEditor.value, (newV) => {
         if (!newV) {
@@ -284,11 +357,32 @@
             getTemplateList()
         }
     })
+
+    //文字模板编辑
+    const dialogEditorFont = ref<boolean>(false)
+    watch(() => dialogEditorFont, (newV) => {
+        if (!newV) {
+            editInfo.value = ''
+            getTemplateList()
+        }
+    })
+
+
     const editInfo = ref<any>()
     const handleEdit = (item: any) => {
         console.log('编辑', item);
+
         editInfo.value = item
-        dialogEditor.value = true
+        switch (props.type) {
+            case 'watermark':
+                dialogEditor.value = true
+                break;
+            case 'texttemplate':
+                dialogEditorFont.value = true
+                break;
+        }
+
+
     }
 
 
