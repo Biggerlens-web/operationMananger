@@ -16,51 +16,48 @@
                 <div class="filter-row">
 
 
+
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="应用" class="filter-select">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
+                        <el-select filterable v-model="searchParams.os" placeholder="系统" class="filter-select">
+                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="系统" class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
+                        <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
+                            <el-option v-for="item in regionList" :key="item.value" :label="item.label"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="国内外" class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
+                        <el-select filterable v-model="searchParams.language" placeholder="语言" class="filter-select">
+                            <el-option v-for="item in international" :key="item.value" :label="item.language"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="教程类型" class="filter-select">
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
-                                :value="item.id" />
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="教程" class="filter-select">
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
-                                :value="item.id" />
-                        </el-select>
-                    </div>
-                    <div class="filter-item">
-                        <el-select filterable v-model="searchParams.companyNo" placeholder="设备类型" class="filter-select">
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
+                        <el-select filterable v-model="searchParams.tutorialType" placeholder="教程类型"
+                            class="filter-select">
+                            <el-option v-for="item in tutorialTypeList" :key="item.id" :label="item.channelName"
                                 :value="item.id" />
                         </el-select>
                     </div>
 
-                    <!-- <div class="filter-item filter-actions">
+
+                    <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getUserList">
                             <el-icon>
                                 <Search />
                             </el-icon>
-                            批量添加
+                            搜索
+                        </el-button>
+                        <el-button @click="resetSearch">
+                            <el-icon>
+                                <Refresh />
+                            </el-icon>
+                            重置
                         </el-button>
 
-                    </div> -->
+                    </div>
                 </div>
 
 
@@ -163,13 +160,20 @@
     import { storeToRefs } from 'pinia';
     import tutorialGroupEditor from '@/components/tutorialGroup/tutorialGroupEditor.vue';
     const counterStore = useCounterStore()
-    const { showPagestion, appList, OSlist, channelList } = storeToRefs(counterStore)
+    const { showPagestion, OSlist, international, regionList, showLoading, defaultAppNo } = storeToRefs(counterStore)
     const components: any = {
         userTable,
         userList
     }
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
+
+
+
+    //教程类型
+    const tutorialTypeList = ref<any>([
+
+    ])
 
     //新增教程组
     const showEditor = ref<boolean>(false)
@@ -179,36 +183,35 @@
     }
     //搜索参数
     interface SearchParams {
-        inputText: string
-        companyNo: string
+        "os": string
+        "region": string
+        "language": string
+        "tutorialType": string
 
 
 
     }
     const searchParams = ref<SearchParams>(
         {
-            inputText: '',
-            companyNo: '',
+            "os": "",
+            "region": '',
+            "language": "",
+            "tutorialType": ""
 
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            inputText: '',
-            companyNo: '',
+            "os": "",
+            "region": '',
+            "language": "",
+            "tutorialType": ""
 
         }
         getUserList()
     }
-    interface AppItem {
-        appId: string;        // 应用编号
-        shortName: string;    // 应用简称
-        companyName: string;  // 所属公司
-        accessName: string;   // 应用访问名
-        systemId: string;     // 系统账号id
-        developer: string;    // 开发者
-    }
+
 
 
     const appNote: any = {
@@ -221,47 +224,8 @@
 
     }
     // 生成用户数据
-    const appData = ref<AppItem[]>([
-        {
-            appId: 'APP_0001',
-            shortName: '商城系统',
-            companyName: '科技有限公司',
-            accessName: 'app1.example.com',
-            systemId: 'SYS_0001',
-            developer: '张三'
-        },
-        {
-            appId: 'APP_0002',
-            shortName: '会员系统',
-            companyName: '网络科技有限公司',
-            accessName: 'app2.example.com',
-            systemId: 'SYS_0002',
-            developer: '李四'
-        },
-        {
-            appId: 'APP_0003',
-            shortName: '支付系统',
-            companyName: '软件开发有限公司',
-            accessName: 'app3.example.com',
-            systemId: 'SYS_0003',
-            developer: '王五'
-        },
-        {
-            appId: 'APP_0004',
-            shortName: '管理系统',
-            companyName: '信息技术有限公司',
-            accessName: 'app4.example.com',
-            systemId: 'SYS_0004',
-            developer: '赵六'
-        },
-        {
-            appId: 'APP_0005',
-            shortName: '客服系统',
-            companyName: '科技有限公司',
-            accessName: 'app5.example.com',
-            systemId: 'SYS_0005',
-            developer: '钱七'
-        }
+    const appData = ref<any>([
+
     ])
     interface filterParams {
         note: string
@@ -270,17 +234,19 @@
     }
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
-        console.log('获取用户列表');
-        const dataItem = appData.value[0]
-        const keys = Object.keys(dataItem)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
+        showLoading.value = true
+        try {
+            const params = {
+                timestamp: Date.now(),
+                ...searchParams.value,
+                appNo: defaultAppNo.value
             }
-        })
-        console.log('filterParams', filterParams.value);
+        } catch (err) {
+            console.log('获取教程组失败', err);
+        } finally {
+            showLoading.value = false
+        }
+
     }
     //参数显影
     const checkedParams = ({ key, checked }: any) => {

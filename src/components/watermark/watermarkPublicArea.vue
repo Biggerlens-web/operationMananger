@@ -360,7 +360,7 @@
 
     //文字模板编辑
     const dialogEditorFont = ref<boolean>(false)
-    watch(() => dialogEditorFont, (newV) => {
+    watch(() => dialogEditorFont.value, (newV) => {
         if (!newV) {
             editInfo.value = ''
             getTemplateList()
