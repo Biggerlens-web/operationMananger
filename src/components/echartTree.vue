@@ -202,8 +202,8 @@
             } else if (node.data.level === 2) {
                 const childrenData = OSlist.value.map((item: any) => {
                     return {
-                        id: item,
-                        label: item,
+                        id: item.value,
+                        label: item.value,
                         url: item.url,
                         editable: true,
                         isLeaf: false,

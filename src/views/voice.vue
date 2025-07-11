@@ -34,7 +34,8 @@
 
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.os" placeholder="系统" class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
+                            <el-option v-for="item in OSlist" :key="item.value" :label="item.note"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
@@ -212,7 +213,7 @@
     const searchParams = ref<SearchParams>(
         {
             query: '',
-            os: OSlist.value[0],
+            os: OSlist.value[0].value,
             voiceCate: '',
             pageNum: 1,
             pageSize: 10
@@ -223,7 +224,7 @@
     const resetSearch = () => {
         searchParams.value = {
             query: '',
-            os: OSlist.value[0],
+            os: OSlist.value[0].value,
             voiceCate: '',
             pageNum: 1,
             pageSize: 10

@@ -9,7 +9,7 @@
             </el-form-item>
             <el-form-item label="所属系统">
                 <el-select v-model="formData.os">
-                    <el-option v-for="os in OSlist" :key="os" :label="os" :value="os"></el-option>
+                    <el-option v-for="os in OSlist" :key="os.value" :label="os.note" :value="os.value"></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item label="地区">

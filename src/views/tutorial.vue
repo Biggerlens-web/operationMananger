@@ -1,8 +1,11 @@
 <template>
     <div class="view">
-        <tutorialTypeEditor v-model:show-editor="showEditorType" />
-        <tutorialEditor v-model:show-editor="showEditor" />
-        <tutorialTemplateEdit v-model:dialog-visible="showTemplateEdit" />
+        <tutorialTypeEditor v-model:show-editor="showEditorType" :categoryTypes="categoryTypes" :isEdit="isEdit"
+            :searchParams="searchParams" />
+        <tutorialEditor v-model:show-editor="showEditor" :categoryTypes="categoryTypes" :tutorialTypes="tutorialTypes"
+            :deviceTypes="deviceTypes" :editInfo="editInfo" :levels="levels" />
+        <!-- <tutorialTemplateEdit v-model:dialog-visible="showTemplateEdit" /> -->
+        <batchEditEl v-model:dialog-batch="dialogBatch" :categoryTypes="categoryTypes" :selectedList="selectedList" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="right-actions">
@@ -19,34 +22,44 @@
 
 
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.os" placeholder="系统" class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
+                        <el-select filterable @change="getTypeInfo" v-model="searchParams.os" placeholder="系统"
+                            class="filter-select">
+                            <el-option v-for="item in OSlist" :key="item.value" :label="item.note"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
+                        <el-select @change="getTypeInfo" filterable v-model="searchParams.region" placeholder="国内外"
+                            class="filter-select">
                             <el-option v-for="item in regionList" :key="item.value" :label="item.label"
+                                :value="item.value" />
+                        </el-select>
+                    </div>
+                    <div class="filter-item" v-show="searchParams.region !== 'domestic'">
+                        <el-select @change="getTypeInfo" filterable v-model="searchParams.language" placeholder="语言"
+                            class="filter-select">
+                            <el-option v-for="item in international" :key="item.value" :label="item.language"
                                 :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.tutorialType" placeholder="教程类型"
                             class="filter-select">
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
-                                :value="item.id" />
+                            <el-option v-for="item in tutorialTypes" :key="item.value" :label="item.note"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.categoryId" placeholder="教程" class="filter-select">
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
+                        <el-select filterable v-model="searchParams.category" placeholder="教程" class="filter-select">
+                            <el-option v-for="item in categoryTypes" :key="item.id" :label="item.categoryName"
                                 :value="item.id" />
                         </el-select>
                     </div>
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.deviceType" placeholder="设备类型"
                             class="filter-select">
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
-                                :value="item.id" />
+                            <el-option v-for="item in deviceTypes" :key="item.value" :label="item.note"
+                                :value="item.value" />
                         </el-select>
                     </div>
 
@@ -85,14 +98,13 @@
                         </div>
 
                         <div class="template_data" @click.stop>
-                            <p class="p_id">ID:{{ element.id }}</p>
+                            <p class="p_id">{{ element.labels[1] }}</p>
                             <p class="p_viewNum">点击数:{{ element.likeNum }}</p>
                             <p class="p_viewNum" v-if="element.viewNum">浏览数:{{ element.viewNum }}</p>
                         </div>
 
                         <div class="img-wrapper">
-                            <img :src="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
-                                class="template-img" />
+                            <img :src="element.coverImgUrl" alt="" class="template-img" />
                         </div>
                         <p class="template-name">
                             <el-button type="primary" @click="editorTemplate(element)" size='samll'>
@@ -144,7 +156,7 @@
                 <el-icon>
                     <Edit />
                 </el-icon>
-                教程编辑
+                教程分类编辑
             </customButton>
             <customButton @click="saveChange">
                 保存改动
@@ -157,6 +169,7 @@
 
     import draggable from 'vuedraggable'
     import { onMounted, ref, watch } from 'vue';
+    import batchEditEl from '@/components/tutorial/batchEdit.vue'
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import tutorialTypeEditor from '@/components/tutorial/tutorialTypeEditor.vue';
@@ -167,7 +180,7 @@
     import { ElMessage } from 'element-plus';
     import customButton from '@/components/button/customButton.vue';
     const counterStore = useCounterStore()
-    const { showPagestion, regionList, OSlist, channelList, defaultAppNo, showLoading } = storeToRefs(counterStore)
+    const { showPagestion, regionList, OSlist, international, defaultAppNo, showLoading } = storeToRefs(counterStore)
 
     // 浮动操作栏拖动相关
     const actionBox = ref<HTMLElement>()
@@ -212,6 +225,49 @@
         window.removeEventListener('mousemove', dragMove)
     }
 
+    const initSearchParams = () => {
+        searchParams.value.os = OSlist.value[0].value
+        searchParams.value.region = regionList.value[0].value
+        searchParams.value.language = searchParams.value.region === 'domestic' ? 'zh' : international.value[0].value
+
+    }
+
+    //分类
+    const categoryTypes = ref<any>([]) //目录
+    const deviceTypes = ref<any>([])//设备
+    const tutorialTypes = ref<any>([])//教程
+    const levels = ref<any>([])//等级
+    const getTypeInfo = async () => {
+        showLoading.value = true
+        try {
+            const params = {
+                timestamp: Date.now(),
+                appNo: defaultAppNo.value,
+                os: searchParams.value.os,
+                region: searchParams.value.region,
+                language: searchParams.value.region === 'domestic' ? 'zh' : searchParams.value.language
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            console.log('分类信息参数', params);
+            const res = await service.get('/tutorial/index', {
+                params: {
+                    enData
+                }
+            })
+            console.log('分类信息', res);
+            categoryTypes.value = res.data.data.categoryTypes
+            deviceTypes.value = res.data.data.deviceTypes
+            tutorialTypes.value = res.data.data.tutorialTypes
+            levels.value = res.data.data.levels
+
+            searchParams.value.tutorialType = tutorialTypes.value[0].value
+            searchParams.value.deviceType = deviceTypes.value[0].value
+        } catch (err) {
+            console.log('获取分类信息失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
 
 
     //保存改动
@@ -221,13 +277,14 @@
                 "appNo": defaultAppNo.value,
                 "os": searchParams.value.os,
                 "region": searchParams.value.region,
-                "language": searchParams.value.language,
                 "tutorialType": searchParams.value.tutorialType,
-                "categoryType": searchParams.value.categoryId,
+                "categoryType": searchParams.value.category,
                 "deviceType": searchParams.value.deviceType,
                 "tutorialIds": appData.value.map((item: any) => item.id),
+                language: searchParams.value.region === 'domestic' ? 'zh' : searchParams.value.language,
                 timestamp: Date.now()
             }
+            console.log('保存改动参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
             const res = await service.post('/tutorial/saveItem', {
@@ -251,19 +308,52 @@
 
     // 新增分类
     const showEditorType = ref<boolean>(false)
+    watch(() => showEditorType.value, (newV) => {
+        if (!newV) {
+            getTypeInfo()
+            isEdit.value = false
+        }
+    })
     const addType = () => {
         showEditorType.value = true
     }
     // 新增教程    
     const showEditor = ref<boolean>(false)
+    watch(() => showEditor.value, (newV) => {
+        if (!newV) {
+            getUserList()
+            editInfo.value = ''
+        }
+
+    })
     const addTutorial = () => {
         showEditor.value = true
     }
 
     // 删除分类
-    const deleteType = () => {
-        console.log('删除分类')
+    const deleteType = async () => {
+        if (!searchParams.value.category) {
+            ElMessage.warning('请先选择要删除的分类')
+            return
+        }
         // TODO: 实现删除分类功能
+        showLoading.value = true
+        try {
+            const res = await service.post(`/category/delCategory/${searchParams.value.category}`)
+            if (res.data.code === 200) {
+                ElMessage.success('删除成功')
+                searchParams.value.category = ''
+                await getTypeInfo()
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('删除失败', err);
+        } finally {
+            showLoading.value = false
+        }
+
     }
 
     // 全部选中
@@ -279,32 +369,42 @@
         }
         appData.value = appData.value.filter((item: any) => !selectedList.value.includes(item.id))
         selectedList.value = []
-        ElMessage.success('删除成功')
     }
 
     // 批量编辑
+    const dialogBatch = ref<boolean>(false)
+    watch(() => dialogBatch.value, (newV) => {
+        if (!newV) {
+            selectedList.value = []
+            getUserList()
+        }
+    })
     const batchEdit = () => {
         if (selectedList.value.length === 0) {
-            ElMessage.warning('请先选择要编辑的项目')
+            ElMessage.warning('请先选择要编辑的教程')
             return
         }
         console.log('批量编辑', selectedList.value)
         // TODO: 实现批量编辑功能
+        dialogBatch.value = true
     }
 
     // 教程编辑
+    const isEdit = ref<boolean>(false)
     const tutorialEdit = () => {
         console.log('教程编辑')
         // TODO: 实现教程编辑功能
+        isEdit.value = true
+        showEditorType.value = true
     }
     //搜索参数
     interface SearchParams {
         os: string
         region: string
         tutorialType: string
+        category: number | string
+        deviceType: string
         language: string
-        categoryId: number | string
-        deviceType: ''
 
 
     }
@@ -312,39 +412,30 @@
         {
             os: '',
             region: '',
-            language: '',
             tutorialType: '',
-            categoryId: '',
-            deviceType: ''
-
+            category: '',
+            deviceType: '',
+            language: "zh"
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            os: '',
-            region: '',
-            language: '',
-            tutorialType: '',
-            categoryId: '',
-            deviceType: ''
-
+            os: OSlist.value[0].value,
+            region: regionList.value[0].value,
+            tutorialType: tutorialTypes.value[0].value,
+            category: '',
+            deviceType: deviceTypes.value[0].value,
+            language: "zh"
         }
         getUserList()
     }
-    interface AppItem {
-        appId: string;        // 应用编号
-        shortName: string;    // 应用简称
-        companyName: string;  // 所属公司
-        accessName: string;   // 应用访问名
-        systemId: string;     // 系统账号id
-        developer: string;    // 开发者
-    }
+
 
 
 
     // 生成用户数据
-    const appData = ref<AppItem[]>([
+    const appData = ref<any>([
 
     ])
     interface filterParams {
@@ -353,6 +444,9 @@
         key: string
     }
     const filterParams = ref<filterParams[]>()
+    watch(() => defaultAppNo.value, () => {
+        resetSearch()
+    })
     const getUserList = async () => {
         try {
             const params = {
@@ -361,11 +455,11 @@
                 os: searchParams.value.os,
                 region: searchParams.value.region,
                 tutorialType: searchParams.value.tutorialType,
-                language: searchParams.value.language,
-                categoryId: searchParams.value.categoryId,
+                category: searchParams.value.category,
                 deviceType: searchParams.value.deviceType,
-
+                language: searchParams.value.region !== 'domestic' ? searchParams.value.language : "zh",
             }
+            console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
             const res = await service.post('/tutorial/list', {
@@ -373,7 +467,13 @@
             })
             console.log('获取教程列表', res);
             appData.value = res.data.rows
-
+            appData.value.forEach((element: any) => {
+                element.likeNum = element.labels[0].split(':')[1]
+                element.levels = element.level
+                element.level = element.levels.value
+                element.osObj = element.os
+                element.os = element.osObj.value.toUpperCase()
+            });
         } catch (err) {
             console.log('获取教程列表失败', err);
         } finally {
@@ -382,7 +482,9 @@
     }
 
 
-    onMounted(() => {
+    onMounted(async () => {
+        initSearchParams()
+        await getTypeInfo()
         getUserList();
         showPagestion.value = true
     })
@@ -403,9 +505,11 @@
 
 
     //编辑
-    const showTemplateEdit = ref<boolean>(false)
+    // const showTemplateEdit = ref<boolean>(false)
+    const editInfo = ref<any>()
     const editorTemplate = (item?: any) => {
-        showTemplateEdit.value = true
+        editInfo.value = item
+        showEditor.value = true
         console.log('item', item)
 
     }

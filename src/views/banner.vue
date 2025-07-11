@@ -26,7 +26,8 @@
 
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.os" placeholder="请选择系统" clearable>
-                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
+                            <el-option v-for="item in OSlist" :key="item.value" :label="item.label"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">

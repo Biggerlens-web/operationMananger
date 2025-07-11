@@ -6,7 +6,7 @@
             </el-form-item>
             <el-form-item label="渠道">
                 <el-select v-model="formData.os" placeholder="请选择">
-                    <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
+                    <el-option v-for="item in OSlist" :key="item.value" :label="item.note" :value="item.value" />
                 </el-select>
             </el-form-item>
         </el-form>
