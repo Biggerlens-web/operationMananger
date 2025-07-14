@@ -1,7 +1,10 @@
+<!-- 应用配置管理视图 -->
 <template>
   <div class="view">
 
+    <!-- JSON配置弹窗 -->
     <el-dialog v-model="dialogJSON" title="JSON配置" width="1000" :before-close="handleCloseJSON">
+      <!-- JSON编辑器组件 -->
       <jsonEditor ref="childRef" v-model="jsonData" :comment-data="comments" @updateNote="updateNote"
         @inputChecked="inputChecked" @dateChange="dateChange" :editorType="editorType" :dialogJSON="dialogJSON" />
       <template #footer>
@@ -13,12 +16,15 @@
         </div>
       </template>
     </el-dialog>
+    <!-- 配置项编辑器弹窗 -->
     <configEditor v-model:dialogEditor="dialogEditor" :editorFormData="editorFormData" :activeApp="activeApp"
       @update="getAutoConfig" />
+    <!-- 页面头部操作区 -->
     <div class="page-header">
       <el-button type="primary" :icon="Plus" @click="addConfig">新增配置</el-button>
     </div>
 
+    <!-- 筛选条件卡片 -->
     <el-card class="filter-card">
       <div class="filter-box">
         <div class="filter-item">
@@ -56,6 +62,7 @@
       </div>
     </el-card>
 
+    <!-- 数据表格卡片 -->
     <el-card class="table-card">
       <el-table :data="tableData" border style="width: 100%" height="630" v-loading="loading">
         <el-table-column prop="name" label="名称" />
@@ -69,7 +76,7 @@
         <el-table-column prop="code" label="编码" />
         <el-table-column prop="open" label="开关" width="180px">
           <template #default="scope">
-
+            <!-- 开关和日期选择器 -->
             <p>
               <el-switch v-model="scope.row.open" @change="changeSwitch(scope.row)" />
             </p>
@@ -119,9 +126,15 @@
 </template>
 
 <script setup lang="ts">
+  // 引入Vue相关API
   import { onMounted, ref, watch, nextTick } from 'vue'
 
-  // 防抖函数
+  /**
+   * @description: 防抖函数
+   * @param {Function} func 需要执行的函数
+   * @param {number} delay 延迟时间
+   * @returns {Function} 防抖处理后的函数
+   */
   const debounce = (func: Function, delay: number) => {
     let timeoutId: ReturnType<typeof setTimeout>
     return (...args: any[]) => {
@@ -129,43 +142,53 @@
       timeoutId = setTimeout(() => func.apply(null, args), delay)
     }
   }
+  // 引入Element Plus图标
   import { Plus } from '@element-plus/icons-vue'
+  // 引入子组件
   import jsonEditor from '../components/autoJson/jsonEditor.vue'
   import { getKeysAsObject } from '../utils/keyAsObj'
+  // 引入axios实例
   import service from '@/axios'
+  // 引入Pinia store
   import { useCounterStore } from '@/stores/counter'
   import { storeToRefs } from 'pinia'
   import configEditor from '@/components/autoJson/configEditor.vue'
   import { useAutoOpration } from '@/stores/autoOpration'
+  // 引入加解密工具
   import { decryptDes, desEncrypt } from '@/utils/des'
+  // 引入Element Plus消息提示
   import { ElMessage } from 'element-plus'
+  // 子组件引用
   const childRef = ref()
-  // 调用子组件方法
+  // 调用子组件方法，设置JSON数据
   const callChildMethod = () => {
     childRef.value?.setJsonData()
   }
+  // 使用Pinia store
   const counterStore = useCounterStore()
   const autoOprationStore = useAutoOpration()
-  const { JSONEditorValue, JSONEditorNote } = storeToRefs(autoOprationStore)
+  const { JSONEditorValue, JSONEditorNote } = storeToRefs(autoOprationStore) // 从store中解构状态
   const {
     appList, channelList, OSlist, showLoading
-  } = storeToRefs(counterStore)
-  // 筛选相关
-  const activeApp = ref<string | number>('')
-  const activeChannel = ref<string | number>('')
-  const activeOS = ref<string | number>('')
-  const activeArea = ref<string>('')
-  // 表格相关
-  const loading = ref(false)
+  } = storeToRefs(counterStore) // 从store中解构公共数据
+  // 筛选条件状态
+  const activeApp = ref<string | number>('') // 当前选中的应用
+  const activeChannel = ref<string | number>('') // 当前选中的渠道
+  const activeOS = ref<string | number>('') // 当前选中的系统
+  const activeArea = ref<string>('') // 当前选中的地区
+  // 表格状态
+  const loading = ref(false) // 表格加载状态
+  // 表格数据项接口定义
   interface TableItem {
     configNote: string;
     // 添加其他必要的字段
     [key: string]: any; // 如果有其他动态字段，可以使用索引签名
   }
-  const tableData = ref<TableItem[]>(
-    []
-  )
-  //修改开关
+  const tableData = ref<TableItem[]>([]) // 表格数据
+  /**
+   * @description: 调用API保存开关状态和配置
+   * @param {any} params 配置项数据
+   */
   const switchFn = async (params: any) => {
     try {
       params.timestamp = Date.now()
@@ -191,12 +214,13 @@
       showLoading.value = false
     }
   }
+  // 开关状态改变时触发
   const changeSwitch = (item: any) => {
     console.log('item', item);
     switchFn(item)
   }
 
-  //修改时间
+  // 日期范围改变时触发
   const changeDate = (item: any) => {
     console.log('item', item);
     if (item.dateArr) {

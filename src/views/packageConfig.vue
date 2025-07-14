@@ -2,7 +2,7 @@
     <div class="packageConfig_page">
         <el-card>
             <el-tabs v-model="activeTab">
-                <el-tab-pane label="Android" name="android">
+                <el-tab-pane v-for="system in systemList" :label="system" :name="system">
                     <div class="android-package-config">
                         <!-- 密钥配置 -->
                         <div class="config-section">
@@ -71,75 +71,7 @@
                         </div>
                     </div>
                 </el-tab-pane>
-                <el-tab-pane label="iOS" name="ios">
-                    <div class="ios-package-config">
-                        <!-- 密钥配置 -->
-                        <div class="config-section">
-                            <h3 class="section-title">密钥配置</h3>
-                            <el-table :data="keystoreConfig" style="width: 100%" border>
-                                <el-table-column prop="channel" label="渠道" width="180">
-                                    <template #default="scope">
-                                        <el-input v-model="scope.row.channel" placeholder="渠道"></el-input>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="keystoreFile" label="密钥库文件" width="180">
-                                    <template #default="scope">
-                                        <el-input v-model="scope.row.keystoreFile" placeholder="密钥库文件"></el-input>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="keystorePassword" label="密钥库密码" width="180">
-                                    <template #default="scope">
-                                        <el-input v-model="scope.row.keystorePassword" placeholder="密钥库密码"></el-input>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="alias" label="别名" width="180">
-                                    <template #default="scope">
-                                        <el-input v-model="scope.row.alias" placeholder="别名"></el-input>
-                                    </template>
-                                </el-table-column>
-                                <el-table-column prop="aliasPassword" label="别名密码">
-                                    <template #default="scope">
-                                        <el-input v-model="scope.row.aliasPassword" placeholder="别名密码"></el-input>
-                                    </template>
-                                </el-table-column>
-                            </el-table>
-                        </div>
 
-                        <!-- 打包配置 -->
-                        <div class="config-section">
-                            <h3 class="section-title">打包配置</h3>
-                            <p class="section-subtitle">安装包渠道 对应 要打出哪些渠道包</p>
-                            <el-table :data="packagingConfig" style="width: 100%" border>
-                                <el-table-column prop="localChannelName" label="本地渠道名" width="180"></el-table-column>
-                                <el-table-column label="对应打包渠道">
-                                    <template #default="scope">
-                                        <el-button icon="Plus" circle size="small"
-                                            @click="handleAddPackageChannel(scope.row)"
-                                            style="margin-right: 8px;"></el-button>
-                                        <el-tag v-for="tag in scope.row.packageChannels" :key="tag.name" closable
-                                            :disable-transitions="false"
-                                            @close="handleRemovePackageChannel(scope.row, tag)"
-                                            style="margin-right: 5px; margin-bottom: 5px;">
-                                            {{ tag.name }}
-                                        </el-tag>
-                                    </template>
-                                </el-table-column>
-                            </el-table>
-                        </div>
-
-                        <!-- 加固配置 -->
-                        <div class="config-section reinforcement-section">
-                            <el-form-item label="加固配置">
-                                <el-switch v-model="reinforcementEnabled"></el-switch>
-                                <span class="reinforcement-label">上传release包后是否先加固</span>
-                            </el-form-item>
-                        </div>
-
-                        <div class="form-actions">
-                            <el-button type="primary" @click="savePackageConfig">保存配置</el-button>
-                        </div>
-                    </div>
-                </el-tab-pane>
             </el-tabs>
         </el-card>
     </div>
@@ -162,6 +94,10 @@
 
     }
 
+
+
+    const systemList = ref<any>(['android', 'ios'])
+
     interface PackagingItem {
         id: string; // 或者 number，用于唯一标识行
         localChannelName: string;
@@ -174,6 +110,7 @@
         { channel: '全部渠道', keystoreFile: 'xx', keystorePassword: 'xx', alias: 'xx', aliasPassword: 'xx' },
         // 可以添加更多行的默认数据或通过方法动态添加
     ]);
+
 
 
     const packagingConfig = ref<PackagingItem[]>([

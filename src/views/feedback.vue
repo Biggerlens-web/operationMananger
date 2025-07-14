@@ -1,17 +1,21 @@
 <template>
+    <!-- 视图主容器 -->
     <div class="view">
+        <!-- 过滤和操作卡片 -->
         <el-card class="filter-card">
+            <!-- 卡片头部 -->
             <div class="card-header" style="margin: 0;">
+                <!-- 左侧操作按钮 -->
                 <div class="left-actions">
+                    <!-- 导出Excel按钮 -->
                     <el-button type="primary" class="add-button" @click="exportExcel">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         导出Excel
                     </el-button>
-
-
                 </div>
+                <!-- 右侧表格操作组件 -->
                 <div class="right-actions">
                     <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" />
@@ -19,10 +23,10 @@
             </div>
 
             <el-divider class="divider" />
+            <!-- 过滤器容器 -->
             <div class="filter-container">
                 <div class="filter-row">
-
-
+                    <!-- 系统选择器 -->
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.os" placeholder="系统" class="filter-select">
                             <el-option v-for="item in OSlist" :key="item.value" :label="item.note"
@@ -30,7 +34,7 @@
                         </el-select>
                     </div>
 
-
+                    <!-- 查询和重置按钮 -->
                     <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getUserList">
                             <el-icon>
@@ -46,16 +50,17 @@
                         </el-button>
                     </div>
                 </div>
-
-
             </div>
         </el-card>
+        <!-- 内容展示卡片 -->
         <el-card class="content-card">
+            <!-- 动态组件，带过渡效果 -->
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="appData" :showAction="false">
                 </component :showAction='false'>
             </Transition>
+            <!-- 分页组件 -->
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
                 :total="totalData" v-model:current-page="pageNum" :page-size="pageSize" />
         </el-card>
@@ -63,6 +68,7 @@
 </template>
 
 <script setup lang="ts">
+    // 引入所需组件和模块
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
@@ -72,21 +78,26 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     import { ElMessage } from 'element-plus';
+
+    // 使用Pinia store
     const counterStore = useCounterStore()
     const { showPagestion, OSlist, defaultAppNo, showLoading } = storeToRefs(counterStore)
+
+    // 动态组件定义
     const components: any = {
         userTable,
         userList
     }
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
+
+    // 监听默认应用编号变化，并重置搜索
     watch(() => defaultAppNo.value, () => {
         searchParams.value.appNo = defaultAppNo.value
         resetSearch()
     })
 
-
-    //导出excell
+    // 导出Excel
     const exportExcel = async () => {
         try {
             const params = {
@@ -94,13 +105,13 @@
                 appNo: defaultAppNo.value,
                 os: searchParams.value.os,
             }
-            console.log('导出参数', params);
             showLoading.value = true
             const res = await service.get('/feedback/exportExcel', {
                 params,
                 responseType: 'blob'
             })
 
+            // 创建Blob对象并触发下载
             const blob = new Blob([res.data], { type: res.headers['content-type'] });
             const link = document.createElement('a')
             link.href = URL.createObjectURL(blob)
@@ -109,16 +120,13 @@
             URL.revokeObjectURL(link.href)
             ElMessage.success('导出成功')
         } catch (err) {
-
-
             console.log('导出失败', err);
         } finally {
             showLoading.value = false
         }
-
     }
 
-    //分页
+    // 分页状态
     const pageNum = ref<number>(1)
     const pageSize = ref<number>(10)
     const totalData = ref<number>(0)
@@ -126,48 +134,45 @@
         getUserList()
     })
 
-    //搜索参数
+    // 搜索参数接口定义
     interface SearchParams {
         appNo: string | number
         os: string
-
-
     }
+    // 搜索参数
     const searchParams = ref<SearchParams>(
         {
-
             appNo: defaultAppNo.value,
             os: OSlist.value[0].value,
-
         }
     )
-    //重置搜索
+
+    // 重置搜索
     const resetSearch = () => {
-
         searchParams.value = {
-
             appNo: defaultAppNo.value,
             os: OSlist.value[0].value,
-
         }
         pageNum.value = 1
         getUserList()
     }
+
+    // 用户反馈数据接口定义
     interface UserFeedback {
         appAbbreviation: string;         // 所属应用
-        system: string;// 系统
-        content: string;  // 反馈内容
-        uid: string;          // 用户uid
-        isMember: '';        // 是否会员
-        contact: string;      // 联系方式
-        phoneType: string;      // 机型
-        systemVersion: string;        // 系统版本
-        appVersion: string;       // 应用版本
-        attaUrl: string[];    // 附件
-        createTime: string;     // 反馈时间
+        system: string;                  // 系统
+        content: string;                 // 反馈内容
+        uid: string;                     // 用户uid
+        isMember: '';                    // 是否会员
+        contact: string;                 // 联系方式
+        phoneType: string;               // 机型
+        systemVersion: string;           // 系统版本
+        appVersion: string;              // 应用版本
+        attaUrl: string[];               // 附件
+        createTime: string;              // 反馈时间
     }
 
-
+    // 表格列中文注释
     const appNote: any = {
         appAbbreviation: '所属应用',
         system: '系统',
@@ -181,17 +186,19 @@
         attaUrl: '附件',
         createTime: '反馈时间',
     }
-    // 生成用户数据
-    const appData = ref<UserFeedback[]>([
 
-    ])
+    // 用户反馈数据列表
+    const appData = ref<UserFeedback[]>([])
+
+    // 过滤参数接口定义
     interface filterParams {
         note: string
         isShow: boolean
         key: string
     }
     const filterParams = ref<filterParams[]>()
-    //获取查询用户信息列表
+
+    // 获取用户反馈列表
     const getUserList = async () => {
         try {
             const params = {
