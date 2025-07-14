@@ -1,23 +1,30 @@
 <template>
+    <!-- 视图主容器 -->
     <div class="view">
+        <!-- 公司信息编辑器弹窗 -->
         <companyInfoEditor v-model:dialog-visible="showCompanyEditor" :companyInfo="companyInfo" />
 
-
+        <!-- 过滤和操作卡片 -->
         <el-card class="filter-card">
+            <!-- 卡片头部 -->
             <div class="card-header" style="margin: 0;">
+                <!-- 左侧操作按钮 -->
                 <div class="left-actions">
+                    <!-- 新增公司按钮 -->
                     <el-button type="primary" @click="addCompany" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增公司
                     </el-button>
+                    <!-- 下载Excel模板按钮 -->
                     <el-button type="primary" class="add-button" @click="downloadTemplate">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         下载EXECEL模板
                     </el-button>
+                    <!-- Excel导入按钮 -->
                     <el-upload action="#" :show-file-list='false' :http-request="importCompany">
                         <el-button type="primary" class="add-button">
                             <el-icon>
@@ -27,6 +34,7 @@
                         </el-button>
                     </el-upload>
                 </div>
+                <!-- 右侧表格操作组件 -->
                 <div class="right-actions">
                     <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" />
@@ -35,18 +43,19 @@
 
             <el-divider class="divider" />
 
+            <!-- 过滤器容器 -->
             <div class="filter-container">
                 <div class="filter-row">
-
+                    <!-- 公司编号查询输入框 -->
                     <div class="filter-item">
                         <el-input v-model="searchParams.companyNo" placeholder="输入公司编号查询"></el-input>
                     </div>
+                    <!-- 公司名称查询输入框 -->
                     <div class="filter-item">
                         <el-input v-model="searchParams.companyName" placeholder="输入公司名称查询"></el-input>
                     </div>
 
-
-
+                    <!-- 查询和重置按钮 -->
                     <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getUserList">
                             <el-icon>
@@ -62,17 +71,18 @@
                         </el-button>
                     </div>
                 </div>
-
-
             </div>
         </el-card>
+        <!-- 内容展示卡片 -->
         <el-card class="content-card">
+            <!-- 动态组件，带过渡效果 -->
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="companyData"
                     @editor="editorCompany" @delete="deleteCompany"></component>
             </Transition>
 
+            <!-- 分页组件 -->
             <el-pagination v-show="showPagestion" v-model:current-page="pageNum" v-model:page-size="pageSize"
                 class="pagesBox" background layout="prev, pager, next" :total="totalData" />
         </el-card>
@@ -80,6 +90,7 @@
 </template>
 
 <script setup lang="ts">
+    // 引入所需组件和模块
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
@@ -90,15 +101,20 @@
     import { ElMessage, ElMessageBox } from 'element-plus';
     import service from '@/axios';
     import { desEncrypt } from '@/utils/des';
+
+    // 使用Pinia store
     const counterStore = useCounterStore()
     const { showPagestion, appList, OSlist, channelList, showLoading } = storeToRefs(counterStore)
+
+    // 动态组件定义
     const components: any = {
         userTable,
         userList
     }
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
-    // 下载模板
+
+    // 下载Excel模板
     const downloadTemplate = async () => {
         try {
             showLoading.value = true
@@ -106,24 +122,23 @@
                 responseType: 'blob'
             });
 
-            // 尝试从Content-Disposition获取文件名，如果后端有设置的话
-            let fileName = '公司信息导入模板.xlsx'; // 设置一个默认或期望的文件名
+            // 从Content-Disposition响应头中获取文件名
+            let fileName = '公司信息导入模板.xlsx'; // 默认文件名
             const disposition = response.headers['content-disposition'];
             if (disposition) {
                 const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
                 const matches = filenameRegex.exec(disposition);
                 if (matches != null && matches[1]) {
                     fileName = matches[1].replace(/['"]/g, '');
-                    // 如果文件名是URL编码的，需要解码
                     try {
-                        fileName = decodeURIComponent(fileName);
+                        fileName = decodeURIComponent(fileName); // 解码URL编码的文件名
                     } catch (e) {
-                        // 解码失败，使用原始匹配到的文件名
-                        console.warn('Failed to decode filename from Content-Disposition', e);
+                        console.warn('解码Content-Disposition中的文件名失败', e);
                     }
                 }
             }
 
+            // 创建Blob对象并触发下载
             const blob = new Blob([response.data], {
                 type: response.headers['content-type'] || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             });
@@ -144,10 +159,9 @@
         }
     }
 
-    //导入excel
+    // 通过Excel导入公司信息
     const importCompany = async (options: any) => {
         try {
-            console.log('options', options);
             const { file } = options
             const formData = new FormData()
             formData.append('file', file)
@@ -158,7 +172,6 @@
                 }
             })
 
-            console.log('导入excel', res);
             if (res.data.code === 200) {
                 ElMessage.success(res.data.msg)
                 getUserList()
@@ -172,31 +185,29 @@
         }
     }
 
-
-    //分页
+    // 分页状态
     const pageNum = ref<number>(1)
     const pageSize = ref<number>(10)
     const totalData = ref<number>(0)
     watch(() => pageNum.value, () => {
         getUserList()
     })
-    //新增公司
-    const showCompanyEditor = ref<boolean>(false)
 
+    // 新增公司弹窗控制
+    const showCompanyEditor = ref<boolean>(false)
     watch(() => showCompanyEditor.value, (newV) => {
         if (!newV) {
-            companyInfo.value = {}
-            getUserList()
+            companyInfo.value = {} // 关闭弹窗时清空公司信息
+            getUserList() // 重新获取列表
         }
     })
     const addCompany = () => {
         showCompanyEditor.value = true
     }
 
-    //编辑公司
+    // 编辑公司信息
     const companyInfo = ref<any>()
     const editorCompany = (item: any) => {
-        console.log('编辑公司', item);
         companyInfo.value = item
         showCompanyEditor.value = true
     }

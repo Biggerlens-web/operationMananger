@@ -1,9 +1,13 @@
+<!-- 应用管理视图 -->
 <template>
     <div class="view">
+        <!-- 应用编辑器弹窗 -->
         <appEditor v-model:dialog-visible="showAppEditor" />
+        <!-- 过滤和操作卡片 -->
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
+                    <!-- 新增应用按钮 -->
                     <el-button type="primary" @click="addApp" class="add-button">
                         <el-icon>
                             <Plus />
@@ -16,14 +20,17 @@
 
             </div>
             <el-divider class="divider" />
+            <!-- 搜索过滤器容器 -->
             <div class="filter-container">
                 <div class="filter-row">
 
+                    <!-- 搜索输入框 -->
                     <div class="filter-item">
                         <el-input v-model="searchParams.searchInfo" placeholder="可查询内容：应用名|访问名|开发者|系统账号"></el-input>
                     </div>
 
 
+                    <!-- 操作按钮 -->
                     <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getAppList">
                             <el-icon>
@@ -45,29 +52,40 @@
 
 
         </el-card>
+        <!-- 内容显示卡片 -->
         <el-card class="content-card">
 
-
-            <appTable :tableData="tableData" /> <el-pagination v-show="showPagestion" class="pagesBox" background
+            <!-- 应用数据表格 -->
+            <appTable :tableData="tableData" /> 
+            <!-- 分页组件 -->
+            <el-pagination v-show="showPagestion" class="pagesBox" background
                 layout="prev, pager, next" :total="totalData" v-model:current-page="pageNum" :page-size="pageSize" />
         </el-card>
     </div>
 </template>
 
 <script setup lang="ts">
+    // 引入子组件
     import appTable from '@/components/app/appTable.vue'
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import appEditor from '@/components/app/appEditor.vue';
+    // 引入Vue相关API
     import { onMounted, ref, watch } from 'vue';
+    // 引入Pinia store
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    // 引入Element Plus组件
     import { ElMessageBox } from 'element-plus';
+    // 引入加密工具
     import { desEncrypt } from '@/utils/des';
+    // 引入axios实例
     import service from '@/axios';
+    // 使用Pinia store
     const counterStore = useCounterStore()
-    const { showPagestion, defaultCompanyNo, showLoading } = storeToRefs(counterStore)
+    const { showPagestion, defaultCompanyNo, showLoading } = storeToRefs(counterStore) // 从store中解构状态，保持响应式
+    // 动态组件定义 (当前未使用)
     const components: any = {
         userTable,
         userList
@@ -77,19 +95,22 @@
 
 
 
-    //分页
-    const pageNum = ref<number>(1)
-    const pageSize = ref<number>(10)
-    const totalData = ref<number>(0)
+    // 分页状态
+    const pageNum = ref<number>(1) // 当前页码
+    const pageSize = ref<number>(10) // 每页显示数量
+    const totalData = ref<number>(0) // 总数据条数
 
-    //新增应用
+    // 新增应用弹窗控制
     const showAppEditor = ref<boolean>(false)
+    // 打开新增应用弹窗
     const addApp = () => {
         showAppEditor.value = true
     }
+    // 搜索参数
     const searchParams = ref<any>({
         searchInfo: ''
     })
+    // 重置搜索参数并重新获取列表
     const resetSearch = () => {
         searchParams.value = {
             searchInfo: ''
@@ -99,6 +120,7 @@
 
 
 
+    // 表格数据 (此处为静态示例数据，应由API获取)
     const tableData = [
         {
             date: '2016-05-03',

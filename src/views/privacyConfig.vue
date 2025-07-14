@@ -14,9 +14,10 @@
                     <el-col :span="8">
                         <el-form-item label="语言:">
                             <el-select v-model="privacyForm.language" placeholder="请选择语言">
-                                <el-option label="en" value="en"></el-option>
-                                <el-option label="zh" value="zh"></el-option>
-                                <!-- Add more languages as needed -->
+                                <el-option v-for="item in international" :label="item.language" :value="item.value"
+                                    :key="item.value"></el-option>
+
+
                             </el-select>
                         </el-form-item>
                     </el-col>
@@ -78,12 +79,14 @@
                             </el-col>
                             <el-col :span="5">
                                 <el-form-item label-width="0px">
-                                    <el-input v-model="sdk.usageDescription" placeholder="使用场景描述" type="textarea" :autosize="{ minRows: 1, maxRows: 2 }"></el-input>
+                                    <el-input v-model="sdk.usageDescription" placeholder="使用场景描述" type="textarea"
+                                        :autosize="{ minRows: 1, maxRows: 2 }"></el-input>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="5">
                                 <el-form-item label-width="0px">
-                                    <el-input v-model="sdk.sharedInfoType" placeholder="共享个人信息类型" type="textarea" :autosize="{ minRows: 1, maxRows: 2 }"></el-input>
+                                    <el-input v-model="sdk.sharedInfoType" placeholder="共享个人信息类型" type="textarea"
+                                        :autosize="{ minRows: 1, maxRows: 2 }"></el-input>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="4">
@@ -98,9 +101,16 @@
                             </el-col>
                             <el-col :span="3" class="actions-col">
                                 <div class="actions">
-                                    <el-icon @click="moveUp(privacyForm.thirdPartySDKs, index)" :disabled="index === 0"><ArrowUpBold /></el-icon>
-                                    <el-icon @click="moveDown(privacyForm.thirdPartySDKs, index)" :disabled="index === privacyForm.thirdPartySDKs.length - 1"><ArrowDownBold /></el-icon>
-                                    <el-icon @click="removeSDK(index)"><CloseBold /></el-icon>
+                                    <el-icon @click="moveUp(privacyForm.thirdPartySDKs, index)" :disabled="index === 0">
+                                        <ArrowUpBold />
+                                    </el-icon>
+                                    <el-icon @click="moveDown(privacyForm.thirdPartySDKs, index)"
+                                        :disabled="index === privacyForm.thirdPartySDKs.length - 1">
+                                        <ArrowDownBold />
+                                    </el-icon>
+                                    <el-icon @click="removeSDK(index)">
+                                        <CloseBold />
+                                    </el-icon>
                                 </div>
                             </el-col>
                         </el-row>
@@ -122,19 +132,28 @@
                             </el-col>
                             <el-col :span="8">
                                 <el-form-item label-width="0px">
-                                    <el-input v-model="permission.description" placeholder="权限描述" type="textarea" :autosize="{ minRows: 1, maxRows: 2 }"></el-input>
+                                    <el-input v-model="permission.description" placeholder="权限描述" type="textarea"
+                                        :autosize="{ minRows: 1, maxRows: 2 }"></el-input>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="6">
                                 <el-form-item label-width="0px">
-                                    <el-input v-model="permission.usageScenario" placeholder="权限使用场景" type="textarea" :autosize="{ minRows: 1, maxRows: 2 }"></el-input>
+                                    <el-input v-model="permission.usageScenario" placeholder="权限使用场景" type="textarea"
+                                        :autosize="{ minRows: 1, maxRows: 2 }"></el-input>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="3" class="actions-col">
                                 <div class="actions">
-                                    <el-icon @click="moveUp(privacyForm.permissions, index)" :disabled="index === 0"><ArrowUpBold /></el-icon>
-                                    <el-icon @click="moveDown(privacyForm.permissions, index)" :disabled="index === privacyForm.permissions.length - 1"><ArrowDownBold /></el-icon>
-                                    <el-icon @click="removePermission(index)"><CloseBold /></el-icon>
+                                    <el-icon @click="moveUp(privacyForm.permissions, index)" :disabled="index === 0">
+                                        <ArrowUpBold />
+                                    </el-icon>
+                                    <el-icon @click="moveDown(privacyForm.permissions, index)"
+                                        :disabled="index === privacyForm.permissions.length - 1">
+                                        <ArrowDownBold />
+                                    </el-icon>
+                                    <el-icon @click="removePermission(index)">
+                                        <CloseBold />
+                                    </el-icon>
                                 </div>
                             </el-col>
                         </el-row>
@@ -151,14 +170,22 @@
                         <el-row :gutter="10" align="middle" style="width: 100%;">
                             <el-col :span="21">
                                 <el-form-item label-width="0px">
-                                    <el-input v-model="note.content" placeholder="说明内容" type="textarea" :autosize="{ minRows: 1, maxRows: 3 }"></el-input>
+                                    <el-input v-model="note.content" placeholder="说明内容" type="textarea"
+                                        :autosize="{ minRows: 1, maxRows: 3 }"></el-input>
                                 </el-form-item>
                             </el-col>
                             <el-col :span="3" class="actions-col">
                                 <div class="actions">
-                                    <el-icon @click="moveUp(privacyForm.otherNotes, index)" :disabled="index === 0"><ArrowUpBold /></el-icon>
-                                    <el-icon @click="moveDown(privacyForm.otherNotes, index)" :disabled="index === privacyForm.otherNotes.length - 1"><ArrowDownBold /></el-icon>
-                                    <el-icon @click="removeOtherNote(index)"><CloseBold /></el-icon>
+                                    <el-icon @click="moveUp(privacyForm.otherNotes, index)" :disabled="index === 0">
+                                        <ArrowUpBold />
+                                    </el-icon>
+                                    <el-icon @click="moveDown(privacyForm.otherNotes, index)"
+                                        :disabled="index === privacyForm.otherNotes.length - 1">
+                                        <ArrowDownBold />
+                                    </el-icon>
+                                    <el-icon @click="removeOtherNote(index)">
+                                        <CloseBold />
+                                    </el-icon>
                                 </div>
                             </el-col>
                         </el-row>
@@ -177,7 +204,10 @@
     import { ref, reactive } from 'vue';
     import { ElMessage, ElMessageBox } from 'element-plus';
     import { Plus, ArrowUpBold, ArrowDownBold, CloseBold } from '@element-plus/icons-vue';
-
+    import { useCounterStore } from '@/stores/counter';
+    import { storeToRefs } from 'pinia';
+    const stores = useCounterStore()
+    const { international } = storeToRefs(stores);
     const activePlatform = ref<string>('android'); // Default to Android
 
     interface Channel {
@@ -246,11 +276,11 @@
     };
 
     const addSystem = () => {
-        ElMessage.info('功能待实现: 添加系统');
+
     };
 
     const manageLanguages = () => {
-        ElMessage.info('功能待实现: 管理语言列表');
+
     };
 
     const addChannel = () => {
@@ -279,30 +309,30 @@
     };
 
     // SDK Functions
-const addSDKField = () => { // Removed sectionIndex as it's adding a new SDK row
-    const newSDK = { name: '', usageDescription: '', sharedInfoType: '', privacyPolicyUrl: '', company: '' };
-    privacyForm.thirdPartySDKs.push(newSDK);
-};
+    const addSDKField = () => { // Removed sectionIndex as it's adding a new SDK row
+        const newSDK = { name: '', usageDescription: '', sharedInfoType: '', privacyPolicyUrl: '', company: '' };
+        privacyForm.thirdPartySDKs.push(newSDK);
+    };
 
     const removeSDK = (index: number) => {
         privacyForm.thirdPartySDKs.splice(index, 1);
     };
 
-// Permission Functions
-const addPermissionField = () => { // Removed sectionIndex
-    const newPermission = { name: '', description: '', usageScenario: '' };
-    privacyForm.permissions.push(newPermission);
-};
+    // Permission Functions
+    const addPermissionField = () => { // Removed sectionIndex
+        const newPermission = { name: '', description: '', usageScenario: '' };
+        privacyForm.permissions.push(newPermission);
+    };
 
     const removePermission = (index: number) => {
         privacyForm.permissions.splice(index, 1);
     };
 
-// OtherNote Functions
-const addOtherNoteField = () => { // Removed sectionIndex
-    const newNote = { content: '' };
-    privacyForm.otherNotes.push(newNote);
-};
+    // OtherNote Functions
+    const addOtherNoteField = () => { // Removed sectionIndex
+        const newNote = { content: '' };
+        privacyForm.otherNotes.push(newNote);
+    };
 
     const removeOtherNote = (index: number) => {
         privacyForm.otherNotes.splice(index, 1);
@@ -341,49 +371,61 @@ const addOtherNoteField = () => { // Removed sectionIndex
     }
 
     .config-section {
-    border: 1px solid #ebeef5;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 4px;
-}
-
-.sdk-item-row, .config-item-row {
-    display: flex;
-    align-items: flex-start; /* Align items to the start for textarea height */
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px dashed #eee; /* Optional: separator for rows */
-}
-
-.sdk-item-row:last-child, .config-item-row:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-}
-
-.actions-col {
-    display: flex;
-    align-items: center; /* Vertically center icons with inputs */
-    justify-content: flex-end;
-    height: 100%; /* Ensure it takes full height of the row for alignment */
-
-    .actions .el-icon {
-        margin-left: 10px; /* Increased spacing between icons */
-        font-size: 18px; /* Slightly larger icons */
-        color: #73767a; /* Softer color */
-        transition: color 0.2s ease-in-out;
+        border: 1px solid #ebeef5;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
     }
-    .actions .el-icon:hover {
-        color: #409EFF;
+
+    .sdk-item-row,
+    .config-item-row {
+        display: flex;
+        align-items: flex-start;
+        /* Align items to the start for textarea height */
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px dashed #eee;
+        /* Optional: separator for rows */
     }
-    .actions .el-icon[disabled] {
-        color: #c8c9cc;
-        cursor: not-allowed;
+
+    .sdk-item-row:last-child,
+    .config-item-row:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
     }
-    .actions .el-icon:first-child {
-        margin-left: 0;
+
+    .actions-col {
+        display: flex;
+        align-items: center;
+        /* Vertically center icons with inputs */
+        justify-content: flex-end;
+        height: 100%;
+        /* Ensure it takes full height of the row for alignment */
+
+        .actions .el-icon {
+            margin-left: 10px;
+            /* Increased spacing between icons */
+            font-size: 18px;
+            /* Slightly larger icons */
+            color: #73767a;
+            /* Softer color */
+            transition: color 0.2s ease-in-out;
+        }
+
+        .actions .el-icon:hover {
+            color: #409EFF;
+        }
+
+        .actions .el-icon[disabled] {
+            color: #c8c9cc;
+            cursor: not-allowed;
+        }
+
+        .actions .el-icon:first-child {
+            margin-left: 0;
+        }
     }
-}
 
     .section-header {
         display: flex;

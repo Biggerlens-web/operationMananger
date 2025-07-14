@@ -1,37 +1,41 @@
 <template>
+    <!-- 视图主容器 -->
     <div class="view">
+        <!-- 服装编辑器组件 -->
         <clothEditor v-model:show-editor="showEditor" :editorInfo="editorItemInfo" :type="'clothing'" />
-        <parentManager v-model:dialog="showParentManage" /> <el-card class="filter-card">
+        <!-- 父类管理弹窗 -->
+        <parentManager v-model:dialog="showParentManage" />
+        <!-- 过滤和操作卡片 -->
+        <el-card class="filter-card">
+            <!-- 卡片头部 -->
             <div class="card-header" style="margin: 0;">
+                <!-- 左侧操作按钮 -->
                 <div class="left-actions">
+                    <!-- 新增按钮 -->
                     <el-button type="primary" @click="addSticker" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增
                     </el-button>
+                    <!-- 导出按钮 -->
                     <el-button type="primary" class="add-button" @click="exportExcel">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         导出
                     </el-button>
-
-
+                    <!-- 父类管理按钮 -->
                     <el-button type="primary" class="add-button" @click="parentManage">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         父类管理
                     </el-button>
-                    <!-- <el-button type="primary" class="add-button">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        导入国际化
-                    </el-button> -->
                 </div>
+                <!-- 右侧操作按钮 -->
                 <div class="right-actions">
+                    <!-- 导入国际化文件上传 -->
                     <el-upload style="margin-right: 50px;" action="#" :show-file-list="false"
                         :on-change="handleInternational" :auto-upload="false">
                         <el-button type="primary" class="add-button">
@@ -41,6 +45,7 @@
                             导入国际化
                         </el-button>
                     </el-upload>
+                    <!-- 表格操作组件 -->
                     <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" />
                 </div>
@@ -48,23 +53,17 @@
 
             <el-divider class="divider" />
 
+            <!-- 过滤器容器 -->
             <div class="filter-container">
                 <div class="filter-row">
-
-                    <!-- <div class="filter-item">
-                        <el-select filterable v-model="searchParams.appNo" placeholder="应用" class="filter-select"
-                            @change="getParentList">
-                            <el-option v-for="item in appList" :key="item.appNo"
-                                :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
-                                :value="item.appNo" />
-                        </el-select>
-                    </div> -->
+                    <!-- 地区选择器 -->
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
                             <el-option v-for="item in regionList" :key="item.value" :label="item.label"
                                 :value="item.value" />
                         </el-select>
                     </div>
+                    <!-- 父类选择器 -->
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.tid" placeholder="父类" class="filter-select"
                             clearable>
@@ -72,11 +71,11 @@
                                 :value="item.id" />
                         </el-select>
                     </div>
+                    <!-- 类名搜索输入框 -->
                     <div class="filter-item">
                         <el-input v-model="searchParams.query" placeholder="类名"></el-input>
-
                     </div>
-
+                    <!-- 查询和重置按钮 -->
                     <div class="filter-item filter-actions">
                         <el-button type="primary" @click="searching">
                             <el-icon>
@@ -92,18 +91,18 @@
                         </el-button>
                     </div>
                 </div>
-
-
             </div>
         </el-card>
+        <!-- 内容展示卡片 -->
         <el-card class="content-card" v-loading="loading">
+            <!-- 动态组件，带过渡效果 -->
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="appData"
                     :totalItems="totalItems" @editor="editSticker" @delete="deleteSticker" @view="viewDetail"
                     @moveIndex="moveIndex"></component>
             </Transition>
-
+            <!-- 分页组件 -->
             <el-pagination v-show="showPagestion" class="pagesBox" background layout=" prev, pager, next"
                 :total="totalItems" v-model:current-page="searchParams.pageNum" @current-change="handleCurrentChange" />
         </el-card>
@@ -111,6 +110,7 @@
 </template>
 
 <script setup lang="ts">
+    // 引入所需组件和模块
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
@@ -123,9 +123,13 @@
     import { useRouter } from 'vue-router';
     import service from '@/axios';
     import { desEncrypt } from '@/utils/des';
+
+    // 使用Pinia store和Vue Router
     const counterStore = useCounterStore()
     const router = useRouter()
     const { showPagestion, appList, regionList, operationClass, clothFliterParams, defaultAppNo, showLoading } = storeToRefs(counterStore)
+
+    // 动态组件定义
     const components: any = {
         userTable,
         userList
@@ -134,25 +138,19 @@
     const componentName = ref<any>(userTable)
     const loading = ref<boolean>(true)
 
-
-
-    //移动
+    // 移动素材项
     const moveIndex = async (item: any) => {
-        console.log('移动', item);
         try {
-
             const params = {
                 timestamp: Date.now(),
                 id: item.id,
                 type: item.moveType
             }
-            console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
             const res = await service.post('/clothingMaterials/move', {
                 enData
             })
-            console.log('移动', res);
             if (res.data.code === 200) {
                 ElMessage({
                     message: '移动成功',
@@ -166,18 +164,14 @@
                 })
             }
         } catch (err) {
-
-
             console.log('移动失败', err);
         } finally {
             showLoading.value = false
         }
-
     }
 
-
-    //获取服装分类列表
-    const totalItems = ref(0); // 用于存储总条目数
+    // 获取服装分类列表
+    const totalItems = ref(0); // 总条目数
     const getClothList = async () => {
         loading.value = true
         try {
@@ -190,14 +184,12 @@
                 pageSize: searchParams.value.pageSize,
                 timestamp: Date.now()
             }
-            console.log('服装分类列表参数参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
             const res: any = await service.post('/clothingMaterials/list', {
                 enData
             })
 
-            console.log('获取服装分类列表', res);
             totalItems.value = res.data.total
 
 

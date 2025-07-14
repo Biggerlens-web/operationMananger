@@ -4,10 +4,11 @@
             <el-tabs v-model="activeTabName">
                 <el-tab-pane label="Android" name="android">
                     <el-collapse v-model="activeCollapseNames">
-                        <el-collapse-item title="版本 1.1.0" name="1.1.0">
+                        <el-collapse-item :title="'版本 ' + key" :name="key" v-for="(value, key) in androidVersions"
+                            :key="key">
                             <div class="version-section">
                                 <h3>未加固</h3>
-                                <el-table :data="androidVersions['1.1.0']?.notReinforced" style="width: 100%" border>
+                                <el-table :data="value?.notReinforced" style="width: 100%" border>
                                     <el-table-column prop="id" label="编号" width="80" />
                                     <el-table-column prop="folderName" label="文件夹名" />
                                     <el-table-column prop="appName" label="应用名" />
@@ -39,71 +40,7 @@
                             </div>
                             <div class="version-section">
                                 <h3>已加固</h3>
-                                <el-table :data="androidVersions['1.1.0']?.reinforced" style="width: 100%" border>
-                                    <el-table-column prop="id" label="编号" width="80" />
-                                    <el-table-column prop="folderName" label="文件夹名" />
-                                    <el-table-column prop="appName" label="应用名" />
-                                    <el-table-column prop="packageName" label="包名" />
-                                    <el-table-column prop="buildVariant" label="Build Variant" />
-                                    <el-table-column prop="channel" label="渠道" />
-                                    <el-table-column prop="versionName" label="版本 (版本号)" />
-                                    <el-table-column prop="uploadTime" label="上传时间" />
-                                    <el-table-column prop="uploader" label="上传人" />
-                                    <el-table-column prop="fileSize" label="文件大小" />
-                                    <el-table-column prop="notes" label="备注" />
-                                    <el-table-column prop="usageScenario" label="使用场景" />
-                                    <el-table-column prop="fileMD5" label="文件MD5" />
-                                    <el-table-column label="操作" width="300" fixed="right">
-                                        <template #default="scope">
-                                            <el-button size="small" style="margin: 0;margin-right:5px ;"
-                                                @click="handleView(scope.row)">查看</el-button>
-                                            <el-button size="small" style="margin: 0;margin-right:5px ;" type="primary"
-                                                @click="handleModify(scope.row)">修改</el-button>
-                                            <el-button size="small" style="margin: 0;margin-right:5px ;" type="warning"
-                                                @click="handleDownload(scope.row)">下载</el-button>
-                                            <el-button size="small" style="margin: 0;margin-right:5px ;" type="danger"
-                                                @click="handleDelete(scope.row)">删除</el-button>
-                                        </template>
-                                    </el-table-column>
-                                </el-table>
-                            </div>
-                        </el-collapse-item>
-                        <el-collapse-item title="版本 1.0.0" name="1.0.0">
-                            <div class="version-section">
-                                <h3>未加固</h3>
-                                <el-table :data="androidVersions['1.0.0']?.notReinforced" style="width: 100%" border>
-                                    <el-table-column prop="id" label="编号" width="80" />
-                                    <el-table-column prop="folderName" label="文件夹名" />
-                                    <el-table-column prop="appName" label="应用名" />
-                                    <el-table-column prop="packageName" label="包名" />
-                                    <el-table-column prop="buildVariant" label="Build Variant" />
-                                    <el-table-column prop="channel" label="渠道" />
-                                    <el-table-column prop="versionName" label="版本 (版本号)" />
-                                    <el-table-column prop="uploadTime" label="上传时间" />
-                                    <el-table-column prop="uploader" label="上传人" />
-                                    <el-table-column prop="fileSize" label="文件大小" />
-                                    <el-table-column prop="notes" label="备注" />
-                                    <el-table-column prop="usageScenario" label="使用场景" />
-                                    <el-table-column prop="fileMD5" label="文件MD5" />
-                                    <el-table-column label="操作" width="300" fixed="right">
-                                        <template #default="scope">
-                                            <el-button size="small" style="margin: 0;margin-right:5px ;"
-                                                @click="handleView(scope.row)">查看</el-button>
-                                            <el-button size="small" type="primary" style="margin: 0;margin-right:5px ;"
-                                                @click="handleModify(scope.row)">修改</el-button>
-                                            <el-button size="small" type="success" style="margin: 0;margin-right:5px ;"
-                                                @click="handleReinforce(scope.row)">加固</el-button>
-                                            <el-button size="small" type="warning" style="margin: 0;margin-right:5px ;"
-                                                @click="handleDownload(scope.row)">下载</el-button>
-                                            <el-button size="small" type="danger"
-                                                @click="handleDelete(scope.row)">删除</el-button>
-                                        </template>
-                                    </el-table-column>
-                                </el-table>
-                            </div>
-                            <div class="version-section">
-                                <h3>已加固</h3>
-                                <el-table :data="androidVersions['1.0.0']?.reinforced" style="width: 100%" border>
+                                <el-table :data="value?.reinforced" style="width: 100%" border>
                                     <el-table-column prop="id" label="编号" width="80" />
                                     <el-table-column prop="folderName" label="文件夹名" />
                                     <el-table-column prop="appName" label="应用名" />

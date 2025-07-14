@@ -1,23 +1,31 @@
+<!-- 广告类型管理视图 -->
 <template>
     <div class="view">
+        <!-- 广告类型编辑器 -->
         <advTypeEditor v-model:dialog-visible="showAdvTypeEditor" :advTypeInfo="advTypeInfo" />
+        <!-- 过滤和操作区域 -->
         <el-card class="filter-card">
             <div>
+                <!-- 新增广告类型按钮 -->
                 <el-button type="primary" @click="addAdvType">
                     <el-icon>
                         <Plus />
                     </el-icon>新增广告类型</el-button>
+                <!-- 表格操作组件 -->
                 <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                     @changeView="changeView" />
             </div>
         </el-card>
+        <!-- 内容显示区域 -->
         <el-card class="content-card">
+            <!-- 动态组件，用于表格和列表视图切换 -->
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="advData" @editor="editorAdvType"
                     @delete="deleteAdvType"></component>
             </Transition>
 
+            <!-- 分页组件 -->
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
                 :total="totalData" v-model:current-page="pageNum" v-model:page-size="pageSize" />
         </el-card>
@@ -30,24 +38,28 @@
     import userList from '@/components/user/userList.vue'
     import advTypeEditor from '@/components/advType/advTypeEditor.vue'
     import { onMounted, ref, watch } from 'vue'
+    // 引入 Pinia store
     import { useCounterStore } from '@/stores/counter'
     import { storeToRefs } from 'pinia'
     import { ElMessage, ElMessageBox } from 'element-plus'
     import { desEncrypt } from '@/utils/des'
     import service from '@/axios'
+    // 使用 Pinia store
     const counterStore = useCounterStore()
-    const { showPagestion, showLoading } = storeToRefs(counterStore)
+    const { showPagestion, showLoading } = storeToRefs(counterStore) // 响应式地访问 store 中的状态
+    // 定义可切换的组件
     const components: any = {
-        userTable,
-        userList,
+        userTable, // 表格视图
+        userList,  // 列表视图
     }
-    const componentStr = ref('userTable')
-    const componentName = ref<any>(userTable)
+    const componentStr = ref('userTable') // 当前组件名称字符串
+    const componentName = ref<any>(userTable) // 当前动态组件的引用
 
-    //分页
-    const pageNum = ref<number>(1)
-    const pageSize = ref<number>(20)
-    const totalData = ref<number>(0)
+    // 分页状态
+    const pageNum = ref<number>(1) // 当前页码
+    const pageSize = ref<number>(20) // 每页显示数量
+    const totalData = ref<number>(0) // 总数据条数
+    // 监听页码变化，触发数据获取
     watch(
         () => pageNum.value,
         () => {
@@ -55,30 +67,37 @@
         },
     )
 
-    //新增广告类型
-    const showAdvTypeEditor = ref<boolean>(false)
+    // 新增广告类型逻辑
+    const showAdvTypeEditor = ref<boolean>(false) // 控制编辑器弹窗显示
+    // 监听弹窗关闭，重置信息并刷新列表
     watch(() => showAdvTypeEditor.value, (newV) => {
         if (!newV) {
-            advTypeInfo.value = {
+            advTypeInfo.value = { // 重置广告类型信息
                 typeId: '',
                 typeName: '',
                 id: 0,
             }
-            getUserList()
+            getUserList() // 刷新列表
         }
     })
+    // 打开新增广告类型弹窗
     const addAdvType = () => {
         showAdvTypeEditor.value = true
     }
-    //编辑广告类型
-    const advTypeInfo = ref<AdvItem>()
+    // 编辑广告类型逻辑
+    const advTypeInfo = ref<AdvItem>() // 存储待编辑的广告类型信息
+    // 打开编辑广告类型弹窗并传入数据
     const editorAdvType = (item: AdvItem) => {
         console.log('编辑广告类型', item)
         advTypeInfo.value = item
         showAdvTypeEditor.value = true
     }
 
-    //删除广告类型
+    // 删除广告类型逻辑
+    /**
+     * @description: 调用API删除广告类型
+     * @param {number} id 广告类型ID
+     */
     const delAdvFn = async (id: number) => {
         try {
             showLoading.value = true
@@ -96,6 +115,7 @@
             showLoading.value = false
         }
     }
+    // 弹出确认框并执行删除
     const deleteAdvType = (item: any) => {
         ElMessageBox.confirm('此操作将永久删除该广告类型, 是否继续?', '提示', {
             confirmButtonText: '确定',
@@ -105,6 +125,7 @@
             delAdvFn(item.id)
         })
     }
+    // 广告类型数据接口定义
     interface AdvItem {
         id: number // 编号
         typeId: string // 广告类型编号
@@ -112,19 +133,25 @@
         [key: string]: any
     }
 
+    // 用于表格列的显示名称映射
     const advNote: any = {
         id: '编号',
         typeId: '广告类型编号',
         typeName: '广告类型名称',
     }
-    // 生成用户数据
+    // 广告类型数据列表
     const advData = ref<AdvItem[]>([])
+    // 过滤参数接口定义
     interface filterParams {
-        note: string
-        isShow: boolean
-        key: string
+        note: string // 显示名称
+        isShow: boolean // 是否显示
+        key: string // 对应字段
     }
-    const filterParams = ref<filterParams[]>()
+    const filterParams = ref<filterParams[]>() // 过滤参数数组
+
+    /**
+     * @description: 获取广告类型列表数据
+     */
     const getUserList = async () => {
         try {
             const params = {
@@ -158,7 +185,11 @@
             showLoading.value = false
         }
     }
-    //参数显影
+    /**
+     * @description: 控制表格列的显示/隐藏
+     * @param {string} key 字段名
+     * @param {boolean} checked 是否选中
+     */
     const checkedParams = ({ key, checked }: any) => {
         console.log('修改参数', key, checked)
         const item = filterParams.value?.find((item) => item.key === key)
@@ -166,7 +197,9 @@
             item.isShow = checked
         }
     }
-    //切换显示模式
+    /**
+     * @description: 切换表格/列表视图
+     */
     const changeView = () => {
         const keys = Object.keys(components)
         const keyItem = keys.find((item) => item !== componentStr.value)
@@ -176,9 +209,10 @@
         }
         console.log('keyItem', keyItem)
     }
+    // 组件挂载后执行
     onMounted(() => {
-        getUserList()
-        showPagestion.value = true
+        getUserList() // 获取初始数据
+        showPagestion.value = true // 显示分页
     })
 </script>
 
