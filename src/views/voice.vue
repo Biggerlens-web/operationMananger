@@ -1,21 +1,24 @@
 <template>
     <div class="view">
         <voiceEdit v-model:dialog-visible="dialogVisible" :editData="editData" />
+        <uploadVoice v-model:dialog-visible="uploaddialog" :typeList="typeList" />
+        <voiceDetailList v-model:dialog-visible="detailDialogVisible" :voiceType="voiceType" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="left-actions">
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" class="add-button" @click="addVoice">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增
                     </el-button>
-                    <el-button type="primary" class="add-button">
+                    <el-button type="primary" class="add-button" @click="upload">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         上传
                     </el-button>
+
 
                 </div>
                 <div class="right-actions">
@@ -31,12 +34,13 @@
 
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.os" placeholder="系统" class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
+                            <el-option v-for="item in OSlist" :key="item.value" :label="item.note"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.voiceCate" placeholder="分类" class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
+                            <el-option v-for="item in typeList" :key="item.cid" :label="item.title" :value="item.cid" />
                         </el-select>
                     </div>
                     <div class="filter-item">
@@ -67,7 +71,7 @@
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="appData" @editor="handleEdit"
-                    @delete="handleDelete">
+                    @delete="handleDelete" @view="openVoiceDetail">
                 </component>
             </Transition>
 
@@ -83,6 +87,8 @@
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
     import voiceEdit from '@/components/voice/voiceEdit.vue';
+    import uploadVoice from '@/components/voice/uploadVoice.vue';
+    import voiceDetailList from '@/components/voice/voiceDetailList.vue';
     import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
@@ -98,7 +104,29 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
-
+    //获取分类列表
+    const typeList = ref<any>([])
+    const getTypeList = async () => {
+        showLoading.value = true
+        try {
+            const params = {
+                timestamp: Date.now(),
+                appNo: defaultAppNo.value
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get('/voice/index', {
+                params: {
+                    enData
+                }
+            })
+            console.log('获取分类', res);
+            typeList.value = res.data.data.voicePidList
+        } catch (err) {
+            console.log('获取分类失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
 
 
 
@@ -117,8 +145,32 @@
         dialogVisible.value = true
     }
 
+    //新增
+    const addVoice = () => {
+        dialogVisible.value = true
+    }
 
 
+    //上传语言包
+    const uploaddialog = ref<boolean>(false)
+    watch(() => uploaddialog.value, (newV) => {
+        if (!newV) {
+            getUserList()
+        }
+    })
+    const upload = () => {
+        uploaddialog.value = true
+    }
+
+    //语音包管理
+    const detailDialogVisible = ref<boolean>(false)
+    const voiceType = ref<number>(0)
+    const openVoiceDetail = (item: any) => {
+        console.log('item', item);
+        voiceType.value = item
+
+        detailDialogVisible.value = true
+    }
 
     //删除
     const handleDelete = (item: any) => {
@@ -130,7 +182,7 @@
             // 确认删除
             showLoading.value = true
             try {
-                const res = await service.post(`/voice/del${item.id}`)
+                const res = await service.post(`/voice/del/${item.id}`)
                 if (res.data.code === 200) {
                     ElMessage.success('删除成功')
                     getUserList()
@@ -161,7 +213,7 @@
     const searchParams = ref<SearchParams>(
         {
             query: '',
-            os: OSlist.value[0],
+            os: OSlist.value[0].value,
             voiceCate: '',
             pageNum: 1,
             pageSize: 10
@@ -172,7 +224,7 @@
     const resetSearch = () => {
         searchParams.value = {
             query: '',
-            os: OSlist.value[0],
+            os: OSlist.value[0].value,
             voiceCate: '',
             pageNum: 1,
             pageSize: 10
@@ -183,7 +235,7 @@
     interface AppContentItem {
         appAbbreviation: string;       // 所属应用
         os: string;          // 类型
-        aid: number;         // 层级
+        pid: number;         // 层级
         title: string;          // 名称
         imageName: string;     // 缩略图
         playCount: number;    // 点击量
@@ -196,7 +248,7 @@
     const appNote: any = {
         appAbbreviation: '所属应用',
         os: '类型',
-        aid: '层级',
+        pid: '层级',
         title: '名称',
         imageName: '缩略图',
         playCount: '点击量',
@@ -281,6 +333,7 @@
         console.log('keyItem', keyItem);
     }
     onMounted(() => {
+        getTypeList()
         getUserList();
         showPagestion.value = true
     })

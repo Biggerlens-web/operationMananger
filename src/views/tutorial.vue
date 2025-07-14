@@ -1,55 +1,13 @@
 <template>
     <div class="view">
-        <tutorialTypeEditor v-model:show-editor="showEditorType" />
-        <tutorialEditor v-model:show-editor="showEditor" />
-        <tutorialTemplateEdit v-model:dialog-visible="showTemplateEdit" />
+        <tutorialTypeEditor v-model:show-editor="showEditorType" :categoryTypes="categoryTypes" :isEdit="isEdit"
+            :searchParams="searchParams" />
+        <tutorialEditor v-model:show-editor="showEditor" :categoryTypes="categoryTypes" :tutorialTypes="tutorialTypes"
+            :deviceTypes="deviceTypes" :editInfo="editInfo" :levels="levels" />
+        <!-- <tutorialTemplateEdit v-model:dialog-visible="showTemplateEdit" /> -->
+        <batchEditEl v-model:dialog-batch="dialogBatch" :categoryTypes="categoryTypes" :selectedList="selectedList" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
-                <div class="left-actions">
-
-
-                    <customButton @click="addType">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        新增分类
-                    </customButton>
-                    <customButton @click="addType">
-                        <el-icon>
-                            <Minus />
-                        </el-icon>
-                        删除分类
-                    </customButton>
-
-                    <customButton @click="addTutorial">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                        新增教程
-                    </customButton>
-                    <customButton>
-                        全部选中
-                    </customButton>
-                    <customButton>
-                        删除所选
-                    </customButton>
-                    <customButton>
-                        <el-icon>
-                            <Edit />
-                        </el-icon>
-                        批量编辑
-                    </customButton>
-                    <customButton>
-                        <el-icon>
-                            <Edit />
-                        </el-icon>
-                        教程编辑
-                    </customButton>
-                    <customButton>
-                        保存改动
-                    </customButton>
-
-                </div>
                 <div class="right-actions">
                     <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" /> -->
@@ -64,34 +22,44 @@
 
 
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.os" placeholder="系统" class="filter-select">
-                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
+                        <el-select filterable @change="getTypeInfo" v-model="searchParams.os" placeholder="系统"
+                            class="filter-select">
+                            <el-option v-for="item in OSlist" :key="item.value" :label="item.note"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
+                        <el-select @change="getTypeInfo" filterable v-model="searchParams.region" placeholder="国内外"
+                            class="filter-select">
                             <el-option v-for="item in regionList" :key="item.value" :label="item.label"
+                                :value="item.value" />
+                        </el-select>
+                    </div>
+                    <div class="filter-item" v-show="searchParams.region !== 'domestic'">
+                        <el-select @change="getTypeInfo" filterable v-model="searchParams.language" placeholder="语言"
+                            class="filter-select">
+                            <el-option v-for="item in international" :key="item.value" :label="item.language"
                                 :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.tutorialType" placeholder="教程类型"
                             class="filter-select">
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
-                                :value="item.id" />
+                            <el-option v-for="item in tutorialTypes" :key="item.value" :label="item.note"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.categoryId" placeholder="教程" class="filter-select">
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
+                        <el-select filterable v-model="searchParams.category" placeholder="教程" class="filter-select">
+                            <el-option v-for="item in categoryTypes" :key="item.id" :label="item.categoryName"
                                 :value="item.id" />
                         </el-select>
                     </div>
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.deviceType" placeholder="设备类型"
                             class="filter-select">
-                            <el-option v-for="item in channelList" :key="item.id" :label="item.channelName"
-                                :value="item.id" />
+                            <el-option v-for="item in deviceTypes" :key="item.value" :label="item.note"
+                                :value="item.value" />
                         </el-select>
                     </div>
 
@@ -130,14 +98,13 @@
                         </div>
 
                         <div class="template_data" @click.stop>
-                            <p class="p_id">ID:{{ element.id }}</p>
+                            <p class="p_id">{{ element.labels[1] }}</p>
                             <p class="p_viewNum">点击数:{{ element.likeNum }}</p>
                             <p class="p_viewNum" v-if="element.viewNum">浏览数:{{ element.viewNum }}</p>
                         </div>
 
                         <div class="img-wrapper">
-                            <img :src="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
-                                class="template-img" />
+                            <img :src="element.coverImgUrl" alt="" class="template-img" />
                         </div>
                         <p class="template-name">
                             <el-button type="primary" @click="editorTemplate(element)" size='samll'>
@@ -149,6 +116,52 @@
                 </template>
             </draggable>
         </el-card>
+
+        <!-- 浮动操作栏 -->
+        <div class="floating-actions" ref="actionBox" @mousedown="dragStart" @mouseup="dragEnd">
+            <customButton @click="addType">
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                新增分类
+            </customButton>
+            <customButton @click="deleteType">
+                <el-icon>
+                    <Minus />
+                </el-icon>
+                删除分类
+            </customButton>
+            <customButton @click="addTutorial">
+                <el-icon>
+                    <Plus />
+                </el-icon>
+                新增教程
+            </customButton>
+            <customButton @click="selectAll">
+                全部选中
+            </customButton>
+            <customButton @click="delSelected">
+                <el-icon>
+                    <Minus />
+                </el-icon>
+                删除所选
+            </customButton>
+            <customButton @click="batchEdit">
+                <el-icon>
+                    <Edit />
+                </el-icon>
+                批量编辑
+            </customButton>
+            <customButton @click="tutorialEdit">
+                <el-icon>
+                    <Edit />
+                </el-icon>
+                教程分类编辑
+            </customButton>
+            <customButton @click="saveChange">
+                保存改动
+            </customButton>
+        </div>
     </div>
 </template>
 
@@ -156,6 +169,7 @@
 
     import draggable from 'vuedraggable'
     import { onMounted, ref, watch } from 'vue';
+    import batchEditEl from '@/components/tutorial/batchEdit.vue'
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import tutorialTypeEditor from '@/components/tutorial/tutorialTypeEditor.vue';
@@ -166,8 +180,94 @@
     import { ElMessage } from 'element-plus';
     import customButton from '@/components/button/customButton.vue';
     const counterStore = useCounterStore()
-    const { showPagestion, regionList, OSlist, channelList, defaultAppNo, showLoading } = storeToRefs(counterStore)
+    const { showPagestion, regionList, OSlist, international, defaultAppNo, showLoading } = storeToRefs(counterStore)
 
+    // 浮动操作栏拖动相关
+    const actionBox = ref<HTMLElement>()
+    const isDraging = ref<boolean>(false)
+    const dragOffset = ref<{ x: number, y: number }>({ x: 0, y: 0 })
+    const elementSize = ref<{ width: number, height: number }>({ width: 0, height: 0 })
+
+    const dragStart = (e: MouseEvent) => {
+        if (actionBox.value) {
+            const rect = actionBox.value.getBoundingClientRect()
+            // 缓存元素尺寸，避免重复计算
+            elementSize.value.width = rect.width
+            elementSize.value.height = rect.height
+
+            dragOffset.value.x = e.clientX - rect.left
+            dragOffset.value.y = e.clientY - rect.top
+            isDraging.value = true
+            actionBox.value.style.right = 'auto'
+            actionBox.value.style.bottom = 'auto'
+            actionBox.value.style.left = rect.left + 'px'
+            actionBox.value.style.top = rect.top + 'px'
+            window.addEventListener('mousemove', dragMove)
+            // 防止文本选择
+            document.body.style.userSelect = 'none'
+        }
+    }
+
+    const dragMove = (e: MouseEvent) => {
+        if (actionBox.value && isDraging.value) {
+            const innerWidth = window.innerWidth
+            const innerHeight = window.innerHeight
+            const newX = Math.max(0, Math.min(e.clientX - dragOffset.value.x, innerWidth - elementSize.value.width))
+            const newY = Math.max(0, Math.min(e.clientY - dragOffset.value.y, innerHeight - elementSize.value.height))
+            actionBox.value.style.left = newX + 'px'
+            actionBox.value.style.top = newY + 'px'
+        }
+    }
+
+    const dragEnd = (e: MouseEvent) => {
+        isDraging.value = false
+        document.body.style.userSelect = ''
+        window.removeEventListener('mousemove', dragMove)
+    }
+
+    const initSearchParams = () => {
+        searchParams.value.os = OSlist.value[0].value
+        searchParams.value.region = regionList.value[0].value
+        searchParams.value.language = searchParams.value.region === 'domestic' ? 'zh' : international.value[0].value
+
+    }
+
+    //分类
+    const categoryTypes = ref<any>([]) //目录
+    const deviceTypes = ref<any>([])//设备
+    const tutorialTypes = ref<any>([])//教程
+    const levels = ref<any>([])//等级
+    const getTypeInfo = async () => {
+        showLoading.value = true
+        try {
+            const params = {
+                timestamp: Date.now(),
+                appNo: defaultAppNo.value,
+                os: searchParams.value.os,
+                region: searchParams.value.region,
+                language: searchParams.value.region === 'domestic' ? 'zh' : searchParams.value.language
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            console.log('分类信息参数', params);
+            const res = await service.get('/tutorial/index', {
+                params: {
+                    enData
+                }
+            })
+            console.log('分类信息', res);
+            categoryTypes.value = res.data.data.categoryTypes
+            deviceTypes.value = res.data.data.deviceTypes
+            tutorialTypes.value = res.data.data.tutorialTypes
+            levels.value = res.data.data.levels
+
+            searchParams.value.tutorialType = tutorialTypes.value[0].value
+            searchParams.value.deviceType = deviceTypes.value[0].value
+        } catch (err) {
+            console.log('获取分类信息失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
 
 
     //保存改动
@@ -177,13 +277,14 @@
                 "appNo": defaultAppNo.value,
                 "os": searchParams.value.os,
                 "region": searchParams.value.region,
-                "language": searchParams.value.language,
                 "tutorialType": searchParams.value.tutorialType,
-                "categoryType": searchParams.value.categoryId,
+                "categoryType": searchParams.value.category,
                 "deviceType": searchParams.value.deviceType,
                 "tutorialIds": appData.value.map((item: any) => item.id),
+                language: searchParams.value.region === 'domestic' ? 'zh' : searchParams.value.language,
                 timestamp: Date.now()
             }
+            console.log('保存改动参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
             const res = await service.post('/tutorial/saveItem', {
@@ -207,22 +308,103 @@
 
     // 新增分类
     const showEditorType = ref<boolean>(false)
+    watch(() => showEditorType.value, (newV) => {
+        if (!newV) {
+            getTypeInfo()
+            isEdit.value = false
+        }
+    })
     const addType = () => {
         showEditorType.value = true
     }
     // 新增教程    
     const showEditor = ref<boolean>(false)
+    watch(() => showEditor.value, (newV) => {
+        if (!newV) {
+            getUserList()
+            editInfo.value = ''
+        }
+
+    })
     const addTutorial = () => {
         showEditor.value = true
+    }
+
+    // 删除分类
+    const deleteType = async () => {
+        if (!searchParams.value.category) {
+            ElMessage.warning('请先选择要删除的分类')
+            return
+        }
+        // TODO: 实现删除分类功能
+        showLoading.value = true
+        try {
+            const res = await service.post(`/category/delCategory/${searchParams.value.category}`)
+            if (res.data.code === 200) {
+                ElMessage.success('删除成功')
+                searchParams.value.category = ''
+                await getTypeInfo()
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('删除失败', err);
+        } finally {
+            showLoading.value = false
+        }
+
+    }
+
+    // 全部选中
+    const selectAll = () => {
+        selectedList.value = appData.value.map((item: any) => item.id)
+    }
+
+    // 删除所选
+    const delSelected = () => {
+        if (selectedList.value.length === 0) {
+            ElMessage.warning('请先选择要删除的项目')
+            return
+        }
+        appData.value = appData.value.filter((item: any) => !selectedList.value.includes(item.id))
+        selectedList.value = []
+    }
+
+    // 批量编辑
+    const dialogBatch = ref<boolean>(false)
+    watch(() => dialogBatch.value, (newV) => {
+        if (!newV) {
+            selectedList.value = []
+            getUserList()
+        }
+    })
+    const batchEdit = () => {
+        if (selectedList.value.length === 0) {
+            ElMessage.warning('请先选择要编辑的教程')
+            return
+        }
+        console.log('批量编辑', selectedList.value)
+        // TODO: 实现批量编辑功能
+        dialogBatch.value = true
+    }
+
+    // 教程编辑
+    const isEdit = ref<boolean>(false)
+    const tutorialEdit = () => {
+        console.log('教程编辑')
+        // TODO: 实现教程编辑功能
+        isEdit.value = true
+        showEditorType.value = true
     }
     //搜索参数
     interface SearchParams {
         os: string
         region: string
         tutorialType: string
+        category: number | string
+        deviceType: string
         language: string
-        categoryId: number | string
-        deviceType: ''
 
 
     }
@@ -230,39 +412,30 @@
         {
             os: '',
             region: '',
-            language: '',
             tutorialType: '',
-            categoryId: '',
-            deviceType: ''
-
+            category: '',
+            deviceType: '',
+            language: "zh"
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            os: '',
-            region: '',
-            language: '',
-            tutorialType: '',
-            categoryId: '',
-            deviceType: ''
-
+            os: OSlist.value[0].value,
+            region: regionList.value[0].value,
+            tutorialType: tutorialTypes.value[0].value,
+            category: '',
+            deviceType: deviceTypes.value[0].value,
+            language: "zh"
         }
         getUserList()
     }
-    interface AppItem {
-        appId: string;        // 应用编号
-        shortName: string;    // 应用简称
-        companyName: string;  // 所属公司
-        accessName: string;   // 应用访问名
-        systemId: string;     // 系统账号id
-        developer: string;    // 开发者
-    }
+
 
 
 
     // 生成用户数据
-    const appData = ref<AppItem[]>([
+    const appData = ref<any>([
 
     ])
     interface filterParams {
@@ -271,6 +444,9 @@
         key: string
     }
     const filterParams = ref<filterParams[]>()
+    watch(() => defaultAppNo.value, () => {
+        resetSearch()
+    })
     const getUserList = async () => {
         try {
             const params = {
@@ -279,11 +455,11 @@
                 os: searchParams.value.os,
                 region: searchParams.value.region,
                 tutorialType: searchParams.value.tutorialType,
-                language: searchParams.value.language,
-                categoryId: searchParams.value.categoryId,
+                category: searchParams.value.category,
                 deviceType: searchParams.value.deviceType,
-
+                language: searchParams.value.region !== 'domestic' ? searchParams.value.language : "zh",
             }
+            console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
             const res = await service.post('/tutorial/list', {
@@ -291,7 +467,13 @@
             })
             console.log('获取教程列表', res);
             appData.value = res.data.rows
-
+            appData.value.forEach((element: any) => {
+                element.likeNum = element.labels[0].split(':')[1]
+                element.levels = element.level
+                element.level = element.levels.value
+                element.osObj = element.os
+                element.os = element.osObj.value.toUpperCase()
+            });
         } catch (err) {
             console.log('获取教程列表失败', err);
         } finally {
@@ -300,7 +482,9 @@
     }
 
 
-    onMounted(() => {
+    onMounted(async () => {
+        initSearchParams()
+        await getTypeInfo()
         getUserList();
         showPagestion.value = true
     })
@@ -321,9 +505,11 @@
 
 
     //编辑
-    const showTemplateEdit = ref<boolean>(false)
+    // const showTemplateEdit = ref<boolean>(false)
+    const editInfo = ref<any>()
     const editorTemplate = (item?: any) => {
-        showTemplateEdit.value = true
+        editInfo.value = item
+        showEditor.value = true
         console.log('item', item)
 
     }
@@ -341,19 +527,7 @@
                 justify-content: space-between;
                 margin-bottom: 8px;
 
-                .left-actions {
-                    display: flex;
-                    align-items: center;
-                    column-gap: 12px;
 
-                    .add-button {
-                        font-weight: 500;
-
-                        .el-icon {
-                            margin-right: 4px;
-                        }
-                    }
-                }
 
                 .right-actions {
                     display: flex;
@@ -628,6 +802,24 @@
                 transform: rotate(3deg);
                 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             }
+        }
+
+        /* 浮动操作栏样式 */
+        .floating-actions {
+            position: fixed;
+            user-select: none;
+            cursor: move;
+            bottom: 7px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
         }
     }
 </style>

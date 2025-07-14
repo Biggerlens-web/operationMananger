@@ -57,9 +57,9 @@
                     @delete="deleteLabels"></component>
             </Transition>
 
-            <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
+            <!-- <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
                 :total="totalData" v-model:current-page="searchParams.pageNum"
-                v-model:page-size="searchParams.pageSize" />
+                v-model:page-size="searchParams.pageSize" /> -->
         </el-card>
     </div>
 </template>
@@ -96,6 +96,12 @@
 
     //编辑标签
     const editInfo = ref<any>()
+    watch(() => showLabelsEditor.value, (newV) => {
+        if (!newV) {
+            editInfo.value = ''
+            getUserList()
+        }
+    })
     const editorLabels = (item: any) => {
         editInfo.value = item
         showLabelsEditor.value = true
@@ -115,7 +121,7 @@
             showLoading.value = true
             try {
 
-                const res = await service.post(`/labels/del${item.id}`)
+                const res = await service.post(`/labels/del/${item.id}`)
                 if (res.data.code === 200) {
                     ElMessage.success('删除成功')
                     getUserList()
@@ -191,17 +197,17 @@
         try {
             const params = {
                 timestamp: Date.now(),
-                pageNum: searchParams.value.pageNum,
-                pageSize: searchParams.value.pageSize,
+
                 appNo: defaultAppNo.value
             }
+            console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
             const res = await service.post('/labels/list', {
                 enData
             })
-            appData.value = res.data.rows
-            totalData.value = res.data.total
+            appData.value = res.data.data.list
+
             console.log('获取用户标签', res);
 
             const keys = Object.keys(appNote)

@@ -1,0 +1,3 @@
+[
+  "{\"watermarkAlpha\":1.0,\"gap\":1.0,\"miscut\":1.0,\"rotate\":1.0,\"cover\":\"封面图名称\",\"cell\":{\"backgroundImage\":\"背景图片名称\",\"rotate\":1.0,\"textArr\":[{\"text\":\"\",\"rect\":\"\",\"textModel\":{\"color\":\"#000000\",\"colorAlpha\":1.0,\"shadowRadius\":1.0,\"shadowAlpha\":1.0,\"shadowColor\":\"#000000\",\"shadowAngle\":1.0,\"shadowOffsetX\":1.0,\"borderWidth\":1.0,\"borderColor\":\"#000000\",\"borderAlpha\":1.0,\"backgroundColor\":\"#000000\",\"backgroundAlpha\":1.0,\"backgroundRadius\":1.0,\"charSpacing\":1.0,\"lineSpacing\":1.0,\"bubbleIndex\":1,\"alignment\":1.0,\"textfont\":\"\",\"verticalForm\":true,\"useStrokeColor\":true,\"strikethrough\":true,\"glyphTransform\":true,\"newColorFormat\":true,\"underline\":true}}]}}"
+]

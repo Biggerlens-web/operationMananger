@@ -14,7 +14,7 @@
             </el-form-item>
             <el-form-item label="系统" prop="os">
                 <el-select filterable v-model="formData.os" placeholder="请选择系统" class="filter-select">
-                    <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
+                    <el-option v-for="item in OSlist" :key="item.value" :label="item.note" :value="item.value" />
                 </el-select>
             </el-form-item>
             <el-form-item label="地区" prop="region">

@@ -124,8 +124,8 @@
     watch(() => props.dialogVisible, (newV) => {
         if (newV && props.appNo) {
 
-            OSlist.value.forEach((item: string) => {
-                getAppInfo(item)
+            OSlist.value.forEach((item: any) => {
+                getAppInfo(item.value)
             })
         }
         if (!newV) {

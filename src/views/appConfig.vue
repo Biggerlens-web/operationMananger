@@ -41,7 +41,7 @@
           <span class="label">系统:</span>
           <el-select filterable v-model="activeOS" placeholder="请选择系统" @change="getAutoConfig" clearable
             class="filter-select">
-            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
+            <el-option v-for="item in OSlist" :key="item.value" :label="item.note" :value="item.value" />
           </el-select>
         </div>
 

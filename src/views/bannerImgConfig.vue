@@ -35,7 +35,8 @@
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.os" placeholder="系统" class="filter-select"
                             @change="getBannerList">
-                            <el-option v-for="item in OSlist" :key="item" :label="item" :value="item" />
+                            <el-option v-for="item in OSlist" :key="item.value" :label="item.note"
+                                :value="item.value" />
                         </el-select>
                     </div>
                     <div class="filter-item">
@@ -210,7 +211,7 @@
     const searchParams = ref<SearchParams>(
         {
             appNo: defaultAppNo.value,
-            os: OSlist.value[0],
+            os: OSlist.value[0].value,
             lang: international.value[0].value,
             channelId: channelList.value[0].id,
             bannerId: ''
@@ -360,7 +361,7 @@
         console.log('query', query);
         if (query) {
             searchParams.value.appNo = query.appNo ? Number(query.appNo) : defaultAppNo.value
-            searchParams.value.os = query.os?.toString() || OSlist.value[0]
+            searchParams.value.os = query.os?.toString() || OSlist.value[0].value
             searchParams.value.channelId = query.channelId ? Number(query.channelId) : channelList.value[0].id
             searchParams.value.lang = query.lang?.toString() || international.value[0].value
             await getBannerList()

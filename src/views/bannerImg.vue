@@ -65,6 +65,7 @@
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
                 :total="totalData" v-model:page-size="pageSize" v-model:current-page="pageNum" />
+
         </el-card>
     </div>
 </template>
@@ -240,7 +241,7 @@
                 item.folder = item.parentObj.folder
                 item.endpoint = item.parentObj.parentObj.endpoint
                 item.bucketName = item.parentObj.parentObj.bucketName
-                item.image = item.imgUrl
+                item.image = item.imgUrl + `?time=${Date.now()}`
             })
             bannerImgData.value = res.data.rows
             totalData.value = res.data.total

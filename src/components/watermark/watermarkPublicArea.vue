@@ -10,12 +10,12 @@
                             <span class="template-id">{{ element.id }}</span>
                         </div>
                         <div class="card-image">
-                            <img :src="element.coverUrl" :alt="element.title" />
+                            <img :src="templateType ? `${host}${element.coverUrl}` : element.coverUrl"
+                                :alt="element.title" />
                         </div>
                         <div class="card-actions">
                             <el-button size="small" type="primary" @click="handleEdit(element)">编辑</el-button>
-                            <el-button size="small" @click="showSizeEdit(element)">其他尺寸</el-button>
-                            <el-button size="small" type="danger" @click="showForceTemplate(element)">模板前景</el-button>
+
                         </div>
                     </div>
                 </template>
@@ -24,10 +24,9 @@
 
         <template #footer>
             <div style="display: flex;flex: 1;justify-content: flex-end;column-gap: 12px;">
-                <el-upload action="#" :show-file-list="false" :http-request="importTemplate">
+                <el-upload action="#" :show-file-list="false" :http-request="importTemplate" accept=".json">
                     <el-button style="margin: 0;" type="primary">导入</el-button>
                 </el-upload>
-
                 <el-button style="margin: 0;" type="primary" @click="assign">分配</el-button>
                 <el-button style="margin: 0;" type="primary" @click="checkALl">全部选中</el-button>
                 <el-button style="margin: 0;" type="danger" @click="deleteChosed">删除所选</el-button>
@@ -37,10 +36,9 @@
 
         </template>
     </el-dialog>
-    <sizeEdit v-model:dialogVisible="dialogSizeEdit" @addChildTemplate="addChildTemplate"
-        @editChildTemplate="editChildTemplate" :isAddChild="isAddChild" />
-    <stickerTemplateEditor :editData="editInfo" v-model:dialogEditor="dialogEditor" :isAddChild="isAddChild" />
-    <forceTemplate v-model:dialogVisible="dialogForceTemplate" :parentTemplateId="parentTemplateId" />
+    <watermarkEditor v-model:dialogVisible="dialogEditor" :editInfo="editInfo" :isPublic="true" />
+    <textTemplateEditor v-model:showEditor="dialogEditorFont" :editInfo="editInfo"
+        :textTemplateTypeList="textTemplateTypeList" />
 </template>
 
 <script lang="ts" setup>
@@ -48,16 +46,17 @@
     import forceTemplate from '@/components/templates/forceTemplate.vue'
     import sizeEdit from '@/components/templates/sizeEdit.vue'
     import { useCounterStore } from '@/stores/counter'
+    import textTemplateEditor from '../textTemplate/textTemplateEditor.vue'
     import { desEncrypt } from '@/utils/des'
     import { storeToRefs } from 'pinia'
     import { watch, ref } from 'vue'
     import { useRoute } from 'vue-router'
     import draggable from 'vuedraggable'
-    import stickerTemplateEditor from '../clothingMaterials/stickerTemplateEditor.vue'
+    import watermarkEditor from './watermarkEditor.vue'
     import { ElMessage } from 'element-plus'
     import type { UploadRequestOptions } from 'element-plus'
     const route = useRoute()
-
+    const host = ref(service.defaults.baseURL)
     const stores = useCounterStore()
     const { defaultAppNo, showLoading } = storeToRefs(stores)
     const dialogVisible = defineModel('dialogVisible', {
@@ -66,6 +65,9 @@
     })
     const props = defineProps<{
         region: string
+        type: string
+        templateType?: number | string
+        textTemplateTypeList?: any
     }>()
     // 拖拽相关状态
     const isDragging = ref(false)
@@ -110,23 +112,38 @@
     const getTemplateList = async () => {
         try {
             showLoading.value = true
-            const params = {
+            const params: any = {
                 timestamp: Date.now(),
                 appNo: defaultAppNo.value,
                 region: props.region,
                 isPublic: true,
             }
+            let url: string = ''
+            switch (props.type) {
+                case 'watermark':
+                    url = '/watermark/list'
+                    break;
+                case 'texttemplate':
+                    url = '/textTemplate/list'
+                    params.textTemplateType = props.templateType
+                    break;
+
+            }
             const enData = desEncrypt(JSON.stringify(params))
 
-            const res = await service.post('/watermark/list', {
+
+            const res = await service.post(url, {
                 enData
             })
-            res.data.data.rows.forEach((item: any) => {
+            console.log('公共空间列表', res);
+            res.data.rows.forEach((item: any) => {
                 item.isSelected = false
             })
-            templateList.value = res.data.data.rows
-        } catch (err) {
+            templateList.value = res.data.rows
 
+            console.log('templateList', templateList.value);
+        } catch (err) {
+            console.log('获取公共空间列表失败', err);
         } finally {
             showLoading.value = false
         }
@@ -170,16 +187,36 @@
     //保存改动
     const saveChange = async () => {
         try {
-            const params = {
-                timestamp: Date.now(),
-                appNo: defaultAppNo.value,
-                isPublic: true,
-                region: props.region,
-                templateIds: templateList.value.map((item: any) => item.id)
+            let url = ''
+            let params: any = {}
+            switch (props.type) {
+                case 'watermark':
+                    url = '/watermark/saveItem'
+                    params = {
+                        timestamp: Date.now(),
+                        appNo: defaultAppNo.value,
+                        isPublic: true,
+                        region: props.region,
+                        templateIds: templateList.value.map((item: any) => item.id)
+                    }
+                    break;
+                case 'texttemplate':
+                    url = '/textTemplate/saveItem'
+                    params = {
+                        timestamp: Date.now(),
+                        appNo: defaultAppNo.value,
+                        isPublic: true,
+                        region: props.region,
+                        templateIds: templateList.value.map((item: any) => item.id),
+                        templateType: props.templateType
+                    }
+                    break;
+
             }
+
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
-            const res = await service.post('/watermark/saveItem', {
+            const res = await service.post(url, {
                 enData
             })
             if (res.data.code === 200) {
@@ -214,11 +251,25 @@
         showLoading.value = true
         try {
             const form = new FormData()
-            form.append('templates', file)
-            form.append('region', props.region)
-            form.append('appNo', defaultAppNo.value as string)
+            let url = ''
+            switch (props.type) {
+                case 'watermark':
+                    form.append('templates', file)
+                    form.append('region', props.region)
+                    form.append('appNo', defaultAppNo.value as string)
+                    url = '/watermark/importWatermark'
+                    break;
+                case 'texttemplate':
+                    form.append('templates', file)
+                    form.append('region', props.region)
+                    form.append('appNo', defaultAppNo.value as string)
+                    form.append('textTemplateType', String(props.templateType))
 
-            const res = await service.post('/watermark/importWatermark', form, {
+                    url = '/textTemplate/importTextTemplate'
+                    break;
+
+            }
+            const res = await service.post(url, form, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -248,15 +299,36 @@
                 ElMessage.error('请选择模板')
                 return
             }
-            const params = {
-                timestamp: Date.now(),
-                region: props.region,
-                templateIds: isSelectedList.map((item: any) => item.id),
+            let params: any = {
+
+            }
+            let url = ''
+            switch (props.type) {
+                case 'watermark':
+                    params = {
+                        timestamp: Date.now(),
+                        region: props.region,
+                        templateIds: isSelectedList.map((item: any) => item.id),
+                        appNo: defaultAppNo.value,
+                    }
+                    url = '/watermark/copyTemplate'
+                    break;
+                case 'texttemplate':
+                    params = {
+                        appNo: defaultAppNo.value,
+                        timestamp: Date.now(),
+                        region: props.region,
+                        templateIds: isSelectedList.map((item: any) => item.id),
+                        templateType: props.templateType
+                    }
+                    url = '/textTemplate/copyTemplate'
+                    break;
+
             }
             console.log('分配参数', params);
             const enData = desEncrypt(JSON.stringify(params))
 
-            const res = await service.post('/watermark/copyTemplate', {
+            const res = await service.post(url, {
                 enData
             })
             console.log('分配', res);
@@ -277,7 +349,7 @@
 
 
 
-    //编辑
+    //水印编辑
     const dialogEditor = ref<boolean>(false)
     watch(() => dialogEditor.value, (newV) => {
         if (!newV) {
@@ -285,11 +357,32 @@
             getTemplateList()
         }
     })
+
+    //文字模板编辑
+    const dialogEditorFont = ref<boolean>(false)
+    watch(() => dialogEditorFont.value, (newV) => {
+        if (!newV) {
+            editInfo.value = ''
+            getTemplateList()
+        }
+    })
+    //qq
+
     const editInfo = ref<any>()
     const handleEdit = (item: any) => {
         console.log('编辑', item);
+
         editInfo.value = item
-        dialogEditor.value = true
+        switch (props.type) {
+            case 'watermark':
+                dialogEditor.value = true
+                break;
+            case 'texttemplate':
+                dialogEditorFont.value = true
+                break;
+        }
+
+
     }
 
 
@@ -427,7 +520,7 @@
         img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             transition: transform 0.3s ease;
         }
 
