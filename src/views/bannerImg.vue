@@ -65,6 +65,7 @@
 
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
                 :total="totalData" v-model:page-size="pageSize" v-model:current-page="pageNum" />
+
         </el-card>
     </div>
 </template>
