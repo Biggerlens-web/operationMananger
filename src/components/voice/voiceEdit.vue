@@ -6,7 +6,7 @@
             </el-form-item>
             <el-form-item label="渠道">
                 <el-select v-model="formData.os" placeholder="请选择">
-                    <el-option v-for="item in OSlist" :key="item.appNo" :label="item" :value="item" />
+                    <el-option v-for="item in OSlist" :key="item.value" :label="item.note" :value="item.value" />
                 </el-select>
             </el-form-item>
         </el-form>
@@ -25,7 +25,7 @@
     import { storeToRefs } from 'pinia';
     import { reactive, watch } from 'vue';
     const stores = useCounterStore()
-    const { OSlist, showLoading } = storeToRefs(stores)
+    const { OSlist, showLoading, defaultAppNo } = storeToRefs(stores)
     const dialogVisible = defineModel('dialogVisible', {
         type: Boolean,
         default: false
@@ -60,15 +60,23 @@
     const submitForm = async () => {
         showLoading.value = true
         try {
+            let url: string = ''
             const params = {
-                timestampe: Date.now(),
+                timestamp: Date.now(),
                 title: formData.title,
                 os: formData.os,
                 id: formData.id,
-                type: formData.id ? 'update' : 'add'
+                type: formData.id ? 'update' : 'add',
+                appNo: defaultAppNo.value
             }
+            if (formData.id) {
+                url = '/voice/save'
+            } else {
+                url = '/voice/cateAdd'
+            }
+            console.log('保存参数', params);
             const enData = desEncrypt(JSON.stringify(params))
-            const res = await service.post('/voice/save', {
+            const res = await service.post(url, {
                 enData
             })
             if (res.data.code === 200) {

@@ -161,10 +161,10 @@ const getBaseData = async () => {
     console.log('基础表单数据', res)
     useCounterStore(pinia).appList = res.data.data.apps
     useCounterStore(pinia).channelList = res.data.data.channels
-    const allIndex = res.data.data.oss.findIndex((item: any) => item == 'ALL')
-    if (allIndex != -1) {
-      res.data.data.oss.splice(allIndex, 1)
-    }
+    // const allIndex = res.data.data.oss.findIndex((item: any) => item == 'ALL')
+    // if (allIndex != -1) {
+    //   res.data.data.oss.splice(allIndex, 1)
+    // }
     useCounterStore(pinia).OSlist = res.data.data.oss
   } catch (err) {
     console.log('获取基础数据失败')

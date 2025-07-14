@@ -19,7 +19,7 @@
                     <el-input placeholder="请输入标签名称(EN)" v-model="item.labelEn"></el-input>
                     <el-button type="danger" @click="removeLabelName(inex)">删除</el-button>
                 </li>
-                <li class="addbuton">
+                <li class="addbuton" v-if="!editInfo?.id">
                     <el-button @click="addLabelName">
                         添加标签
                     </el-button>
@@ -51,9 +51,41 @@
         editInfo: any
     }>()
 
-    watch(() => props.dialogVisible, (newV) => {
-        if (newV && props.editInfo) {
 
+
+    const getLabelsInfo = async () => {
+        showLoading.value = true
+        try {
+            const params = {
+                timestamp: Date.now(),
+                appNo: defaultAppNo.value,
+                id: props.editInfo?.id ?? null
+            }
+            console.log('获取信息参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get('/labels/edit', {
+                params: {
+                    enData
+                }
+            })
+            console.log('获取编辑信息', res);
+            labelOptions.value = res.data.data.result
+
+        } catch (err) {
+            console.log('获取编辑信息失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
+
+    watch(() => props.dialogVisible, (newV) => {
+        if (newV) {
+            getLabelsInfo()
+        }
+        if (newV && props.editInfo) {
+            Object.assign(formData.value, props.editInfo)
+            labelsList.value[0].label = props.editInfo.label
+            labelsList.value[0].labelEn = props.editInfo.labelEn
         }
     })
     const emit = defineEmits<{
@@ -62,7 +94,7 @@
 
     const formData = ref<any>({
         id: '',
-        pid: 0,
+        pid: '',
 
         labelIndex: 1,
 
@@ -75,47 +107,16 @@
     // 级联选择器配置
     const cascaderProps = ref({
         expandTrigger: 'click' as const,
-        value: 'value',
+        value: 'id',
         label: 'label',
         children: 'children',
-        checkStrictly: false, // 是否严格的遵守父子节点不互相关联
+        checkStrictly: true, // 是否严格的遵守父子节点不互相关联
         emitPath: true // 在选中节点改变时，是否返回由该节点所在的各级菜单的值所组成的数组
     })
 
     // 标签层级数据 - 模拟数据结构，实际应从接口获取
     const labelOptions = ref([
-        {
-            value: '1',
-            label: '1 - 111',
-            children: [
-                {
-                    value: '1-1',
-                    label: '1 - new',
-                },
-                {
-                    value: '1-22',
-                    label: '1 - 22',
-                    children: [
-                        {
-                            value: '1-22-1',
-                            label: '2 - 33'
-                        }
-                    ]
-                },
-                {
-                    value: '1-123',
-                    label: '3 - 123'
-                }
-            ]
-        },
-        {
-            value: '111',
-            label: '111'
-        },
-        {
-            value: 0,
-            label: '新增层级标签'
-        }
+
     ])
 
     // 处理级联选择器变化
@@ -149,9 +150,13 @@
     const resetForm = () => {
         formData.value = {
             id: '',
-            pid: 0,
-            labelIndex: 1,
+            pid: '',
+
         }
+        labelsList.value = [{
+            label: '',
+            labelEn: '',
+        }]
         ruleFormRef.value?.resetFields()
     }
     const handleClose = () => {
@@ -163,21 +168,28 @@
     const saveChange = async () => {
         showLoading.value = true
         try {
-            const params = {
+            const params: any = {
                 timestamp: Date.now(),
                 appNo: defaultAppNo.value,
                 id: formData.value.id,
                 type: formData.value.id ? 'edit' : 'add',
                 pid: Array.isArray(formData.value.pid) ? formData.value.pid[formData.value.pid.length - 1] : formData.value.pid,
-                label: labelsList.value.map((item: any) => item.label).join(','),
-                labelEn: labelsList.value.map((item: any) => item.labelEn).join(','),
-                labelIndex: formData.value.labelIndex,
+                labels: labelsList.value.map((item: any) => item.label),
+                labelEns: labelsList.value.map((item: any) => item.labelEn),
+
+            }
+            if (formData.value.id) {
+                delete params.labels
+                delete params.labelEns
+                params.label = labelsList.value[0].label
+                params.labelEn = labelsList.value[0].labelEn
             }
             console.log('保存参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             const res = await service.post('/labels/save', {
                 enData
             })
+            console.log('保存标签', res);
             if (res.data.code === 200) {
                 ElMessage.success('保存成功')
                 handleClose()

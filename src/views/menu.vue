@@ -32,21 +32,24 @@
             </el-select>
           </div>
           <div class="filter-item">
-            <el-input v-model="searchParams.menuUrl" placeholder="输入菜单链接查询" clearable prefix-icon="Link" />
+            <el-input :disabled="searchParams.menuType !== 1" v-model="searchParams.menuUrl" placeholder="输入菜单链接查询"
+              clearable prefix-icon="Link" />
           </div>
           <div class="filter-item">
-            <el-select v-model="searchParams.menuUrlType" placeholder="请选择菜单链接类型" clearable>
+            <el-select :disabled="searchParams.menuType !== 1" v-model="searchParams.menuUrlType"
+              placeholder="请选择菜单链接类型" clearable>
               <el-option label="内部路由" :value="1" />
               <el-option label="外部链接" :value="0" />
 
             </el-select>
           </div>
-          <!-- <div class="filter-item">
-            <el-select v-model="searchParams.parentId" placeholder="请选择上级菜单" clearable>
+          <div class="filter-item">
+            <el-select :disabled="searchParams.menuType !== 1" v-model="searchParams.parentId" placeholder="请选择上级菜单"
+              clearable>
 
               <el-option v-for="item in menuFolderList" :label="item.menuText" :value="item.id" />
             </el-select>
-          </div> -->
+          </div>
           <div class="filter-item filter-actions">
             <el-button type="primary" @click="getUserList">
               <el-icon>
@@ -185,9 +188,9 @@
   //搜索参数
   interface SearchParams {
     menuText: string
-    menuType: string
+    menuType: string | number
     menuUrl: string
-    menuUrlType: string
+    menuUrlType: string | number
     parentId: number | string
   }
   const searchParams = ref<SearchParams>(
@@ -266,7 +269,7 @@
         menuUrl: searchParams.value.menuUrl,
         menuType: searchParams.value.menuType,
         menuUrlType: searchParams.value.menuUrlType,
-        // parentId: searchParams.value.menuUrlType,
+        parentId: searchParams.value.menuUrlType === 0 ? '' : searchParams.value.parentId,
         timestamp: Date.now()
       }
       console.log('搜索参数', params);

@@ -106,7 +106,7 @@
             </customButton>
         </div>
     </div>
-    <watermarkPublicArea v-model:dialog-visible="showPublicSpace" :region="searchParams.region" />
+    <watermarkPublicArea :type="'watermark'" v-model:dialog-visible="showPublicSpace" :region="searchParams.region" />
 </template>
 
 <script setup lang="ts">
@@ -247,7 +247,7 @@
         try {
             const params = {
                 timestamp: Date.now(),
-                ids: appData.value.map(item => item.id),
+                templateIds: appData.value.map(item => item.id),
                 appNo: defaultAppNo.value,
                 region: searchParams.value.region
             }
@@ -288,7 +288,7 @@
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            region: '',
+            region: regionList.value[0].value,
 
 
         }
