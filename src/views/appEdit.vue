@@ -232,7 +232,7 @@
 
     const handleEditPackageName = (pkaName: string, vendor?: string) => {
         console.log('编辑包名');
-        ElMessageBox.prompt(`请输入${activePlatform.value === 'android' ? '包名' : 'Bundle ID'}和厂商（可选，用空格分隔）`, `编辑${activePlatform.value === 'android' ? '包名' : 'Bundle ID'}`, {
+        ElMessageBox.prompt(`请输入${activePlatform.value === 'android' ? '包名' : 'Bundle ID'}和厂商（可选，用&分隔）`, `编辑${activePlatform.value === 'android' ? '包名' : 'Bundle ID'}`, {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             inputValue: `${pkaName} ${vendor}`,
@@ -266,17 +266,17 @@
 
     const addPackage = (platform: 'android' | 'ios') => {
         const placeholder = platform === 'android' ? 'com.example.app' : 'com.example.bundleid';
-        ElMessageBox.prompt(`请输入${platform === 'android' ? '包名' : 'Bundle ID'}和厂商（可选，用空格分隔）`, `添加${platform === 'android' ? '包' : 'Bundle ID'}`, {
+        ElMessageBox.prompt(`请输入${platform === 'android' ? '包名' : 'Bundle ID'}和厂商（可选，用&分隔）`, `添加${platform === 'android' ? '包' : 'Bundle ID'}`, {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             inputPlaceholder: `${placeholder} 小米`,
         })
             .then(({ value }) => {
                 if (value) {
-                    const parts = value.split(' ');
+                    const parts = value.split('&');
                     console.log('parts', parts);
                     const name = parts[0];
-                    const vendor = parts.length > 1 ? parts.slice(1).join(' ') : '';
+                    const vendor = parts.length > 1 ? parts.slice(1).join('&') : '';
                     if (platform === 'android') {
                         appForm.androidInfo.packages.push({ name, vendor });
                     } else {
@@ -337,7 +337,7 @@
 
     const handleEditChannelName = (name: string, vendor?: string) => {
         console.log('编辑渠道名');
-        ElMessageBox.prompt(`请输入渠道名和厂商（可选，用空格分隔）`, `编辑渠道名`, {
+        ElMessageBox.prompt(`请输入渠道名和厂商（可选，用&分隔）`, `编辑渠道名`, {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             inputValue: `${name} ${vendor}`,
@@ -350,16 +350,16 @@
 
 
     const addChannel = (platform: 'android' | 'ios') => {
-        ElMessageBox.prompt('请输入渠道名和厂商（可选，用空格分隔）', '添加渠道', {
+        ElMessageBox.prompt('请输入渠道名和厂商（可选，用&分隔）', '添加渠道', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             inputPlaceholder: 'mychannel 小米'
         })
             .then(({ value }) => {
                 if (value) {
-                    const parts = value.split(' ');
+                    const parts = value.split('&');
                     const name = parts[0];
-                    const vendor = parts.length > 1 ? parts.slice(1).join(' ') : '';
+                    const vendor = parts.length > 1 ? parts.slice(1).join('&') : '';
                     if (platform === 'android') {
                         appForm.androidInfo.channels.push({ name, vendor });
                     } else {

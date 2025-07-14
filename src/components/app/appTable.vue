@@ -162,14 +162,14 @@
             </template>
         </el-table-column>
         <el-table-column label="应用编号" prop="appNo" />
-        <el-table-column label="应用名称" prop="appName" />
+        <el-table-column label="应用名称" prop="appAbbreviation" />
         <el-table-column label="公司名称" prop="companyName" />
         <el-table-column label="AppKey" prop="appKey" />
         <el-table-column label="" prop="appMemberId" />
         <el-table-column label="操作">
             <template #default="scope">
-                <el-button type="primary" size="small">获取隐私协议</el-button>
-                <el-button type="" size="small">进入</el-button>
+                <el-button type="primary" size="small" @click="getPrivacyProtocol(scope.row)">获取隐私协议</el-button>
+                <el-button type="" size="small" @click="jumpDetail(scope.row)">进入</el-button>
             </template>
         </el-table-column>
 
@@ -183,6 +183,16 @@
         tableData: any
     }>()
 
+    const emit = defineEmits<{
+        'goDetail': [value: any],
+        'getPrivacyProtocol': [value: any]
+    }>()
+    const jumpDetail = (item: any) => {
+        emit('goDetail', item)
+    }
+    const getPrivacyProtocol = (item: any) => {
+        emit('getPrivacyProtocol', item)
+    }
     const activeTab = ref('android');
 
     // 为每一行存储选中的语言，以 appNo 作为键

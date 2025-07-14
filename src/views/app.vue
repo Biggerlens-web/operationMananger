@@ -56,10 +56,10 @@
         <el-card class="content-card">
 
             <!-- 应用数据表格 -->
-            <appTable :tableData="tableData" /> 
+            <appTable :tableData="tableData" @goDetail="goDetail" @getPrivacyProtocol="getPrivacyProtocol" />
             <!-- 分页组件 -->
-            <el-pagination v-show="showPagestion" class="pagesBox" background
-                layout="prev, pager, next" :total="totalData" v-model:current-page="pageNum" :page-size="pageSize" />
+            <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
+                :total="totalData" v-model:current-page="pageNum" :page-size="pageSize" />
         </el-card>
     </div>
 </template>
@@ -82,9 +82,10 @@
     import { desEncrypt } from '@/utils/des';
     // 引入axios实例
     import service from '@/axios';
+    import { useRouter } from 'vue-router';
     // 使用Pinia store
     const counterStore = useCounterStore()
-    const { showPagestion, defaultCompanyNo, showLoading } = storeToRefs(counterStore) // 从store中解构状态，保持响应式
+    const { showPagestion, defaultCompanyNo, showLoading, defaultAppNo } = storeToRefs(counterStore) // 从store中解构状态，保持响应式
     // 动态组件定义 (当前未使用)
     const components: any = {
         userTable,
@@ -93,15 +94,33 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
+    const router = useRouter()
+    const goDetail = (item: any) => {
+        console.log('goDetail', item);
+        defaultAppNo.value = item.appNo
+        router.push('/appEdit/index')
+    }
 
+    const getPrivacyProtocol = (item: any) => {
+        console.log('getPrivacyProtocol', item);
+    }
 
     // 分页状态
     const pageNum = ref<number>(1) // 当前页码
-    const pageSize = ref<number>(10) // 每页显示数量
+    const pageSize = ref<number>(15) // 每页显示数量
     const totalData = ref<number>(0) // 总数据条数
-
+    watch(pageNum, (newVal, oldVal) => {
+        if (newVal !== oldVal) {
+            getAppList()
+        }
+    })
     // 新增应用弹窗控制
     const showAppEditor = ref<boolean>(false)
+    watch(() => showAppEditor.value, (newVal, oldVal) => {
+        if (!newVal) {
+            getAppList()
+        }
+    })
     // 打开新增应用弹窗
     const addApp = () => {
         showAppEditor.value = true
@@ -121,225 +140,14 @@
 
 
     // 表格数据 (此处为静态示例数据，应由API获取)
-    const tableData = [
-        {
-            date: '2016-05-03',
-            name: 'Tom',
-            state: 'California',
-            city: 'San Francisco',
-            address: '3650 21st St, San Francisco',
-            zip: 'CA 94114',
-            family: [
-                {
-                    name: 'Jerry',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-                {
-                    name: 'Spike',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-                {
-                    name: 'Tyke',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-            ],
-        },
-        {
-            date: '2016-05-02',
-            name: 'Tom',
-            state: 'California',
-            city: 'San Francisco',
-            address: '3650 21st St, San Francisco',
-            zip: 'CA 94114',
-            family: [
-                {
-                    name: 'Jerry',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-                {
-                    name: 'Spike',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-                {
-                    name: 'Tyke',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-            ],
-        },
-        {
-            date: '2016-05-04',
-            name: 'Tom',
-            state: 'California',
-            city: 'San Francisco',
-            address: '3650 21st St, San Francisco',
-            zip: 'CA 94114',
-            family: [
-                {
-                    name: 'Jerry',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-                {
-                    name: 'Spike',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-                {
-                    name: 'Tyke',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-            ],
-        },
-        {
-            date: '2016-05-01',
-            name: 'Tom',
-            state: 'California',
-            city: 'San Francisco',
-            address: '3650 21st St, San Francisco',
-            zip: 'CA 94114',
-            family: [
-                {
-                    name: 'Jerry',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-                {
-                    name: 'Spike',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-                {
-                    name: 'Tyke',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-            ],
-        },
-        {
-            date: '2016-05-08',
-            name: 'Tom',
-            state: 'California',
-            city: 'San Francisco',
-            address: '3650 21st St, San Francisco',
-            zip: 'CA 94114',
-            family: [
-                {
-                    name: 'Jerry',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-                {
-                    name: 'Spike',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-                {
-                    name: 'Tyke',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-            ],
-        },
-        {
-            date: '2016-05-06',
-            name: 'Tom',
-            state: 'California',
-            city: 'San Francisco',
-            address: '3650 21st St, San Francisco',
-            zip: 'CA 94114',
-            family: [
-                {
-                    name: 'Jerry',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-                {
-                    name: 'Spike',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-                {
-                    name: 'Tyke',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-            ],
-        },
-        {
-            date: '2016-05-07',
-            name: 'Tom',
-            state: 'California',
-            city: 'San Francisco',
-            address: '3650 21st St, San Francisco',
-            zip: 'CA 94114',
-            family: [
-                {
-                    name: 'Jerry',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-                {
-                    name: 'Spike',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-                {
-                    name: 'Tyke',
-                    state: 'California',
-                    city: 'San Francisco',
-                    address: '3650 21st St, San Francisco',
-                    zip: 'CA 94114',
-                },
-            ],
-        },
-    ]
+    const tableData = ref<any>([
+
+    ])
+
+
+    watch(() => defaultCompanyNo.value, () => {
+        getAppList()
+    })
     const getAppList = async () => {
         try {
             const params = {
@@ -355,6 +163,8 @@
                 enData
             })
             console.log('应用列表', res);
+            tableData.value = res.data.rows
+            totalData.value = res.data.total
         } catch (err) {
             console.log('获取应用列表失败', err);
         } finally {
