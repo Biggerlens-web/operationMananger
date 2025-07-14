@@ -240,7 +240,7 @@
                 item.folder = item.parentObj.folder
                 item.endpoint = item.parentObj.parentObj.endpoint
                 item.bucketName = item.parentObj.parentObj.bucketName
-                item.image = item.imgUrl
+                item.image = item.imgUrl + `?time=${Date.now()}`
             })
             bannerImgData.value = res.data.rows
             totalData.value = res.data.total

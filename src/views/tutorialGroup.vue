@@ -1,7 +1,7 @@
 <template>
     <div class="view">
-        <tutorialGroupEditor v-model:show-editor="showEditor" :tutorialTypeList="tutorialTypeList" />
-        <assginTutorial v-bind:dialog-assgin="dialogAssgin" />
+        <tutorialGroupEditor v-model:show-editor="showEditor" :tutorialTypeList="tutorialTypeList" :id="groupInfo" />
+        <assginTutorial v-model:dialog-assgin="dialogAssgin" :searchParams="searchParams" :groupId="groupId" />
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
 
@@ -47,14 +47,15 @@
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select @change="getGroupList" filterable v-model="groupId" placeholder="教程组"
+                        <el-select @change="getUserList" filterable v-model="groupId" placeholder="教程组"
                             class="filter-select">
                             <el-option v-for="item in groupList" :key="item.id" :label="item.name" :value="item.id" />
                         </el-select>
                     </div>
 
 
-                    <div class="filter-item filter-actions">
+
+                    <!-- <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getUserList">
                             <el-icon>
                                 <Search />
@@ -68,7 +69,7 @@
                             重置
                         </el-button>
 
-                    </div>
+                    </div> -->
                 </div>
 
 
@@ -97,12 +98,12 @@
                         <div class="img-wrapper">
                             <img :src="element.coverImgUrl" alt="" class="template-img" />
                         </div>
-                        <p class="template-name">
+                        <!-- <p class="template-name">
                             <el-button type="primary" @click="editorTemplate(element)" size='samll'>
                                 编辑
                             </el-button>
 
-                        </p>
+                        </p> -->
                     </li>
                 </template>
             </draggable>
@@ -116,13 +117,13 @@
                 </el-icon>
                 新增教程组
             </customButton>
-            <customButton>
+            <customButton @click="editTutorialGroup">
                 <el-icon>
                     <Edit />
                 </el-icon>
                 编辑组信息
             </customButton>
-            <customButton>
+            <customButton @click="delTutorialGroup">
                 <el-icon>
                     <Minus />
                 </el-icon>
@@ -143,7 +144,7 @@
                 </el-icon>
                 删除所选
             </customButton>
-            <customButton @click="addTutorialGroup">
+            <customButton @click="saveChangeAll">
                 保存改动
             </customButton>
 
@@ -198,7 +199,7 @@
     import service from '@/axios'
     import { desEncrypt } from '@/utils/des'
     import assginTutorial from '@/components/tutorialGroup/assginTutorial.vue'
-    import { ElMessage } from 'element-plus'
+    import { ElMessage, ElMessageBox } from 'element-plus'
     const counterStore = useCounterStore()
     const { showPagestion, OSlist, international, regionList, showLoading, defaultAppNo } = storeToRefs(counterStore)
     const components: any = {
@@ -232,7 +233,6 @@
         editInfo.value = item
         showEditor.value = true
         console.log('item', item)
-
     }
 
     //新增教程组
@@ -241,6 +241,7 @@
         if (!newV) {
             // getUserList()
             getGroupList()
+            groupInfo.value = ''
         }
     })
     const addTutorialGroup = () => {
@@ -249,9 +250,64 @@
     }
 
 
+    //编辑组信息
+    const groupInfo = ref<any>()
+    const editTutorialGroup = () => {
+        if (!groupId.value) {
+            ElMessage.warning('请先选择教程组')
+            return
+        }
+        groupInfo.value = groupId.value
+        showEditor.value = true
+    }
+
+
+
+    //删除教程组
+    const delTutorialGroup = async () => {
+        ElMessageBox.confirm('该操作将会删除当前教程级及与教程关联信息（仅关联信息，非教程本身），确定要删除?', '删除确认', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+        })
+            .then(async () => {
+                if (showLoading.value) {
+                    ElMessage.warning('正在删除中，请稍后')
+                    return
+                }
+                showLoading.value = true
+                if (!groupId.value) {
+                    ElMessage.warning('请先选择教程组')
+                    return
+                }
+
+                try {
+                    const res = await service.post(`/tutorialGroup/del/${groupId.value}`)
+                    if (res.data.code === 200) {
+                        ElMessage.success('删除成功')
+                        groupId.value = ''
+                        getGroupList()
+                        getUserList()
+
+                    } else {
+                        ElMessage.error(res.data.msg)
+                    }
+                } catch (error) {
+                    ElMessage.error('删除失败')
+                } finally {
+                    showLoading.value = false
+                }
+            })
+
+    }
 
     //分配教程
     const dialogAssgin = ref<boolean>(false)
+    watch(() => dialogAssgin.value, (newV) => {
+        if (!newV) {
+            getUserList()
+        }
+    })
     const assignTutorial = () => {
         console.log('分配教程');
         if (!groupId.value) {
@@ -278,6 +334,36 @@
         selectedList.value = []
     }
 
+    const saveChangeAll = async () => {
+        if (showLoading.value) {
+            ElMessage.warning('正在保存中，请稍后')
+            return
+        }
+        showLoading.value = true
+        try {
+            const params = {
+                timestamp: Date.now(),
+                groupId: groupId.value,
+                tutorialIds: appData.value.map((item: any) => item.id)
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/tutorialGroup/saveItem', {
+                enData
+            })
+            if (res.data.code === 200) {
+                ElMessage.success('保存成功')
+                getUserList()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+
+        } catch (err) {
+            console.log('保存失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
+
     //搜索参数
     interface SearchParams {
         "os": string
@@ -298,6 +384,12 @@
             "tutorialType": ""
         }
     )
+
+
+
+    watch(() => defaultAppNo.value, () => {
+        resetSearch()
+    })
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
@@ -305,9 +397,11 @@
             "region": '',
             "language": "",
             "tutorialType": ""
-
         }
-        getUserList()
+        groupId.value = ''
+        appData.value = []
+        groupList.value = []
+
     }
 
 
@@ -395,6 +489,7 @@
     const tutorialTypeList = ref<any>([
 
     ])
+    const deviceTypes = ref<any>([])
     const getTutorialTypeList = async () => {
         showLoading.value = true
         try {
@@ -402,6 +497,7 @@
             const res = await service.get('/tutorial/index')
             console.log('获取分类信息', res);
             tutorialTypeList.value = res.data.data.tutorialTypes
+
         } catch (err) {
             console.log('获取分类信息失败', err);
         } finally {

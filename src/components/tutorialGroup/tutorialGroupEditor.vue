@@ -62,12 +62,42 @@
     import { desEncrypt } from '@/utils/des';
     import { ElMessage } from 'element-plus';
     import { storeToRefs } from 'pinia';
-    import { ref } from 'vue'
+    import { ref, watch } from 'vue'
     const props = defineProps<{
         showEditor: boolean
         tutorialTypeList: any[]
+        id?: number | string
     }>()
 
+    watch(() => props.showEditor, async (newV) => {
+        if (newV) {
+            if (props.id) {
+                showLoading.value = true
+                try {
+                    const params = {
+                        timestamp: Date.now(),
+                        id: props.id
+                    }
+                    console.log('参数', params);
+                    const enData = desEncrypt(JSON.stringify(params))
+                    const res = await service.get('/tutorialGroup/edit', {
+                        params: {
+                            enData
+                        }
+                    })
+
+                    console.log('获取教程组信息', res);
+                    if (res.data.data.tutorialGroup) {
+                        Object.assign(formData.value, res.data.data.tutorialGroup)
+                    }
+                } catch (err) {
+                    console.log('获取教程组信息失败', err);
+                } finally {
+                    showLoading.value = false
+                }
+            }
+        }
+    })
     const counterStore = useCounterStore()
     const { appList, OSlist, regionList, showLoading, international } = storeToRefs(counterStore)
     const emit = defineEmits<{
