@@ -1,11 +1,16 @@
+<!-- 广告管理视图 -->
 <template>
     <div class="ad-management-view">
+        <!-- 渠道广告编辑器 -->
         <channelAdvEditor v-model:show-editor="showChannelEditor" @refresh="refreshTables" :type="channelType"
             :rowList="currentRow" />
+        <!-- 定时任务编辑器 -->
         <cornEditor v-model:show-editor="showCornEditor" @refresh="refreshTables" :type="cornType"
             :rowList="currentRow" />
 
+        <!-- 内容区域卡片 -->
         <el-card class="content-card">
+            <!-- 循环渲染广告表格 -->
             <adTable v-for="(item, index) in tableELArray" :key="item.type" :title="item.title" :filter="item.filter"
                 :type="item.type" class="ad-table" @add="addData" @editor="editorData" @delete="deleteData"
                 @save="saveAttr" :ref="el => { if (el) adTableRefs[index] = el }" />
@@ -14,6 +19,7 @@
 </template>
 
 <script lang="ts" setup>
+    // 引入 Pinia store
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import { onMounted, reactive, ref } from 'vue'
@@ -26,6 +32,8 @@
     import { ElMessageBox, ElMessage } from 'element-plus';
     const counterStore = useCounterStore()
     const { appList, defaultAppNo, showLoading } = storeToRefs(counterStore)
+
+    // 定义表格元素的数组，用于渲染不同类型的广告表格
     const tableELArray = reactive<{
         type: string
         title: string
@@ -51,8 +59,12 @@
 
 
     ])
+
+    // 存储 adTable 组件实例的引用
     const adTableRefs = ref<any[]>([]);
-    // 添加这个函数来刷新表格数据
+    /**
+     * @description 刷新所有表格数据
+     */
     const refreshTables = () => {
         console.log('刷新表格数据');
         // 调用每个表格组件的 getData 方法
@@ -66,11 +78,16 @@
         getAdList();
     }
 
-    //新增数据
-    const showChannelEditor = ref<boolean>(false) // 新增渠道广告弹窗
-    const channelType = ref<string>('') // 新增 or 编辑渠道广告弹窗
-    const showCornEditor = ref<boolean>(false) // 新增定时任务弹窗
-    const cornType = ref<string>('') // 新增 or 编辑定时任务弹窗
+    // 控制编辑器弹窗的显示状态
+    const showChannelEditor = ref<boolean>(false) // 渠道广告编辑器弹窗
+
+    const channelType = ref<string>('') // 渠道广告编辑器模式 ('add' or 'update')
+    const showCornEditor = ref<boolean>(false) // 定时任务编辑器弹窗
+    const cornType = ref<string>('') // 定时任务编辑器模式 ('add' or 'update')
+    /**
+     * @description 处理新增数据事件
+     * @param {string} type - 广告类型
+     */
     const addData = (type: string) => {
         console.log('type', type);
         if (type === '渠道广告') {
@@ -84,9 +101,13 @@
 
         }
     }
-    //编辑数据
-    //当前编辑数据
+    // 存储当前正在编辑的数据行
     const currentRow = ref<any>({})
+    /**
+     * @description 处理编辑数据事件
+     * @param {any} row - 当前行数据
+     * @param {any} type - 广告类型
+     */
     const editorData = (row: any, type: any) => {
         console.log('row', row, 'type', type);
         if (type === '渠道广告') {
@@ -100,7 +121,9 @@
         }
     }
 
-    //插屏广告新增
+    /**
+     * @description 新增插屏广告
+     */
     const addInterstitialAds = async () => {
         const params = {
             appNo: defaultAppNo.value,
@@ -124,7 +147,11 @@
         showLoading.value = false
     }
 
-    //删除数据
+    /**
+     * @description 处理删除数据事件
+     * @param {any} row - 当前行数据
+     * @param {any} type - 广告类型
+     */
     const deleteData = (row: any, type: any) => {
         console.log('row', row, 'type', type);
         if (type === '渠道广告') {
@@ -136,7 +163,10 @@
         }
     }
 
-    //渠道广告删除
+    /**
+     * @description 删除渠道广告
+     * @param {number} id - 渠道广告ID
+     */
     const handleChannelDelete = async (id: number) => {
         console.log('参数', id);
         ElMessageBox.confirm('确定删除吗？', '提示', {
@@ -163,7 +193,10 @@
                 console.log('取消');
             })
     }
-    //定时任务删除
+    /**
+     * @description 删除定时任务
+     * @param {number} id - 定时任务ID
+     */
     const handleTaskDelete = async (id: number) => {
         ElMessageBox.confirm('确定删除吗？', '提示', {
             confirmButtonText: '确定',
@@ -184,7 +217,10 @@
                 console.log('取消');
             })
     }
-    //插屏广告删除
+    /**
+     * @description 删除插屏广告
+     * @param {number} id - 插屏广告ID
+     */
     const handleInterstitialAdsDelete = async (id: number) => {
         ElMessageBox.confirm('确定删除吗？', '提示', {
             confirmButtonText: '确定',
@@ -205,7 +241,11 @@
             })
     }
 
-    //提交修改数据
+    /**
+     * @description 保存属性修改
+     * @param {any} row - 当前行数据
+     * @param {any} type - 广告类型
+     */
     const saveAttr = async (row: any, type: any) => {
         console.log('row', row, 'type', type);
         if (type === '渠道广告') {
@@ -217,7 +257,10 @@
         }
     }
 
-    //渠道广告提交修改
+    /**
+     * @description 保存渠道广告属性修改
+     * @param {any} row - 当前行数据
+     */
     const handleChannelSaveAttr = async (row: any) => {
         console.log('row', row);
         const params = {
@@ -275,7 +318,10 @@
     }
 
 
-    //定时任务提交修改
+    /**
+     * @description 保存定时任务属性修改
+     * @param {any} row - 当前行数据
+     */
     const handleTaskSaveAttr = async (row: any) => {
         const params = {
             id: row.id?.toString(),
@@ -314,7 +360,10 @@
         }
     }
 
-    //插屏广告提交修改
+    /**
+     * @description 保存插屏广告属性修改
+     * @param {any} row - 当前行数据
+     */
     const handleInterstitialAdsSaveAttr = async (row: any) => {
         console.log('row', row);
         const params = {
@@ -341,7 +390,9 @@
         showLoading.value = false
     }
 
-    //获取广告列表
+    /**
+     * @description 获取广告类型列表并存储到 Pinia
+     */
     const getAdList = async () => {
         const params = {
             appNo: defaultAppNo.value,
@@ -361,6 +412,7 @@
         showLoading.value = false
     }
 
+    // 组件挂载时获取广告列表
     onMounted(() => {
         getAdList()
     })

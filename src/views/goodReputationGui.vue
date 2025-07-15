@@ -1,17 +1,23 @@
 <template>
+    <!-- 视图主容器 -->
     <div class="view">
+        <!-- 好评引导编辑器组件 -->
         <goodRepationEditor v-model:show-editor="showEditor" :goodInfo="goodInfo" :defaultApp="defaultApp" />
+        <!-- 过滤和操作卡片 -->
         <el-card class="filter-card">
+            <!-- 卡片头部 -->
             <div class="card-header" style="margin: 0;">
+                <!-- 左侧操作按钮 -->
                 <div class="left-actions">
+                    <!-- 新增按钮 -->
                     <el-button type="primary" @click="addConfig" class="add-button">
                         <el-icon>
                             <Plus />
                         </el-icon>
                         新增
                     </el-button>
-
                 </div>
+                <!-- 右侧表格操作组件 -->
                 <div class="right-actions">
                     <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" />
@@ -19,9 +25,10 @@
             </div>
 
             <el-divider class="divider" />
+            <!-- 过滤器容器 -->
             <div class="filter-container">
                 <div class="filter-row">
-
+                    <!-- 应用选择器 -->
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.appNo" placeholder="应用" class="filter-select">
                             <el-option v-for="item in appList" :key="item.appNo"
@@ -29,12 +36,14 @@
                                 :value="item.appNo" />
                         </el-select>
                     </div>
+                    <!-- 系统选择器 -->
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.os" placeholder="系统" class="filter-select">
                             <el-option v-for="item in OSlist" :key="item.value" :label="item.note"
                                 :value="item.value" />
                         </el-select>
                     </div>
+                    <!-- 开关状态选择器 -->
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.open" placeholder="开关" class="filter-select">
                             <el-option label="开&关" :value="''" />
@@ -43,6 +52,7 @@
                         </el-select>
                     </div>
 
+                    <!-- 查询和重置按钮 -->
                     <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getUserList">
                             <el-icon>
@@ -58,11 +68,11 @@
                         </el-button>
                     </div>
                 </div>
-
-
             </div>
         </el-card>
+        <!-- 内容展示卡片 -->
         <el-card class="content-card">
+            <!-- 动态组件，带过渡效果 -->
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :isUpdate="true" :filterParams="filterParams" :tableData="appData"
@@ -70,6 +80,7 @@
                 </component>
             </Transition>
 
+            <!-- 分页组件 -->
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
                 :total="totalData" v-model:current-page="pageNum" v-model:page-size="pageSize" />
         </el-card>
@@ -77,6 +88,7 @@
 </template>
 
 <script setup lang="ts">
+    // 引入所需组件和模块
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
@@ -87,8 +99,12 @@
     import { ElMessage, ElMessageBox } from 'element-plus';
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
+
+    // 使用Pinia store
     const counterStore = useCounterStore()
     const { showPagestion, appList, OSlist, showLoading } = storeToRefs(counterStore)
+
+    // 动态组件定义
     const components: any = {
         userTable,
         userList
@@ -96,8 +112,7 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
-
-    //分页
+    // 分页状态
     const pageNum = ref<number>(1)
     const pageSize = ref<number>(10)
     const totalData = ref<number>(0)
@@ -105,7 +120,7 @@
         getUserList()
     })
 
-    //新增弹幕弹窗配置
+    // 新增好评引导配置
     const defaultApp = ref<any>()
     const showEditor = ref<boolean>(false)
     watch(() => showEditor.value, (newV) => {
@@ -120,8 +135,7 @@
         showEditor.value = true
     }
 
-    //切换开关
-
+    // 切换开关状态
     const switchChange = async (item: any) => {
         try {
             const params = {
@@ -155,11 +169,10 @@
             showLoading.value = false
         }
     }
-    //选择概率
 
+    // 保存概率变化
     const saveChangeProbability = async (item: any) => {
         try {
-
             const params: any = {
                 timestamp: Date.now(),
                 type: 'update',
@@ -173,9 +186,8 @@
                 probabilitys: JSON.parse(item.probabilitys).join(','),
                 functionStartNum: item.functionStartNum,
                 timeOn: item.timeOn,
-
             }
-            console.log('保存参数', params);
+            // 移除未定义的值
             for (let key in params) {
                 if (params[key] === undefined) {
                     delete params[key]

@@ -1,13 +1,15 @@
+<!-- 整体布局容器 -->
 <template>
   <el-container class="layout-container">
-    <!-- 左侧菜单 -->
+    <!-- 左侧菜单栏 -->
     <el-aside :width="isCollapse ? '64px' : '200px'" class="aside">
+      <!-- Logo区域 -->
       <div class="logo">
         <!-- <img src="@/assets/logo.png" alt="Logo" /> -->
         <span class="logo_text" :class="{ hidden: isCollapse }">运营管理后台</span>
       </div>
 
-      <!-- 公司筛选 -->
+      <!-- 公司选择器 -->
       <div class="company-selector" :class="{ collapsed: isCollapse }">
         <el-select v-model="defaultCompanyNo" placeholder="选择公司" size="small" style="width: 100%"
           @change="handleCompanyChange">
@@ -15,6 +17,7 @@
             :value="company.companyNo" />
         </el-select>
       </div>
+      <!-- 菜单容器 -->
       <div class="menu-container">
         <el-menu :default-active="activeMenu" class="el-menu-vertical" :collapse="isCollapse" background-color="#304156"
           text-color="#bfcbd9" active-text-color="#409EFF" router>
@@ -35,8 +38,9 @@
     </el-aside>
 
     <el-container>
-      <!-- 顶部导航 -->
+      <!-- 顶部 Header -->
       <el-header class="header">
+        <!-- 左侧区域：折叠按钮和面包屑导航 -->
         <div class="header-left">
           <el-icon class="collapse-btn" @click="toggleCollapse">
             <Fold v-if="!isCollapse" />
@@ -48,7 +52,7 @@
           </el-breadcrumb>
         </div>
 
-        <!-- 中间应用筛选区域 -->
+        <!-- 中间区域：应用选择器 -->
         <div class="header-center" v-if='showAppSelcet()'>
           <div class="app-selector">
             <el-select v-model="defaultAppNo" placeholder="🔍 请选择应用" size="default" @change="handleAppChange"
@@ -58,6 +62,7 @@
             </el-select>
           </div>
         </div>
+        <!-- 右侧区域：用户信息和下拉菜单 -->
         <div class="header-right">
           <el-dropdown>
             <span class="user-info">
@@ -76,8 +81,9 @@
         </div>
       </el-header>
 
-      <!-- 主要内容区 -->
+      <!-- 主内容区域 -->
       <el-main class="main" style="overflow-y: scroll;">
+        <!-- 路由视图，用于显示子页面 -->
         <router-view></router-view>
       </el-main>
     </el-container>
@@ -85,21 +91,37 @@
 </template>
 
 <script setup lang="ts">
+  // 引入Vue相关API
   import { ref, computed, onMounted, watch, nextTick } from 'vue'
+  // 引入Vue Router
   import { useRouter, useRoute } from 'vue-router'
+  // 引入Element Plus图标
   import { Fold, Expand } from '@element-plus/icons-vue'
 
+  // 引入Pinia状态管理
   import { useCounterStore } from '@/stores/counter'
   import { storeToRefs } from 'pinia'
+  // 引入axios实例
   import service from '@/axios'
+  // 引入加密工具
   import { desEncrypt } from '@/utils/des'
+  // 获取路由实例
   const router = useRouter()
+  // 获取当前路由信息
   const route = useRoute()
+  // 获取Pinia store实例
   const counterStore = useCounterStore()
+  // 从store中解构状态和action，并保持响应式
   const { userName, userAvatar, appList, menuList, companyList, defaultCompanyNo, defaultAppNo, appListInCom, showLoading } = storeToRefs(counterStore)
+  // 控制菜单是否折叠
   const isCollapse = ref(false)
+  // 计算属性，获取当前激活的菜单项路径
   const activeMenu = computed(() => route.path)
 
+  /**
+   * @description: 判断是否显示应用选择器
+   * @returns {boolean} 是否显示
+   */
   const showAppSelcet = () => {
     const hotshowarr = ['/templateMaterial', '/bannerImgConfig/index']
     const path = route.path
@@ -111,6 +133,7 @@
     }
   }
 
+  // 监听公司列表的变化，设置默认选中的公司
   watch(() => companyList.value, (newV) => {
     console.log('companyList 发生变化:', newV)
     if (newV && newV.length > 0) {
@@ -127,8 +150,10 @@
 
 
 
-  //获取公司下的应用
-
+  /**
+   * @description: 根据公司编号获取应用列表
+   * @param {number | string} id 公司编号
+   */
   const getAppByCom = async (id: number | string) => {
     try {
 
@@ -159,6 +184,7 @@
       showLoading.value = false
     }
   }
+  // 监听默认公司编号的变化，获取对应公司的应用列表
   watch(() => defaultCompanyNo.value, (newValue) => {
     console.log('defaultCompanyNo 发生变化:', newValue)
     if (newValue) {
@@ -173,19 +199,26 @@
 
 
 
+  // 计算属性，获取当前路由的标题
   const currentRoute = computed(() => route.meta.title || '页面')
 
 
+  // 切换菜单的折叠状态
   const toggleCollapse = () => {
     isCollapse.value = !isCollapse.value
   }
 
+  // 处理用户退出登录
   const handleLogout = () => {
     // 清除token等登录信息
     localStorage.removeItem('token')
     router.push('/login')
   }
 
+  /**
+   * @description: 处理公司选择变化的事件
+   * @param {string} companyNo 选择的公司编号
+   */
   const handleCompanyChange = (companyNo: string) => {
     console.log('选择的公司ID:', companyNo)
     // 这里可以添加公司切换的逻辑，比如更新store中的当前公司
@@ -193,6 +226,10 @@
     getAppByCom(companyNo)
   }
 
+  /**
+   * @description: 处理应用选择变化的事件
+   * @param {string} appNo 选择的应用编号
+   */
   const handleAppChange = (appNo: string) => {
     console.log('选择的应用编号:', appNo)
 

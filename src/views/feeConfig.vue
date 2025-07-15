@@ -1,9 +1,15 @@
 <template>
+    <!-- 视图主容器 -->
     <div class="view">
+        <!-- 付费配置编辑器弹窗 -->
         <freeConfigEditor v-model:show-editor="showEditor" />
+        <!-- 过滤和操作卡片 -->
         <el-card class="filter-card">
+            <!-- 卡片头部 -->
             <div class="card-header" style="margin: 0;">
+                <!-- 左侧操作按钮 -->
                 <div class="left-actions">
+                    <!-- 新增付费弹窗配置按钮 -->
                     <el-button type="primary" @click="addConfig" class="add-button">
                         <el-icon>
                             <Plus />
@@ -11,6 +17,7 @@
                         新增付费弹窗配置
                     </el-button>
                 </div>
+                <!-- 右侧表格操作组件 -->
                 <div class="right-actions">
                     <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
                         @changeView="changeView" />
@@ -18,9 +25,10 @@
             </div>
 
             <el-divider class="divider" />
+            <!-- 过滤器容器 -->
             <div class="filter-container">
                 <div class="filter-row">
-
+                    <!-- 系统选择器 -->
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.os" placeholder="请选择系统" class="filter-select">
                             <el-option v-for="item in OSlist" :key="item.value" :label="item.note"
@@ -28,7 +36,7 @@
                         </el-select>
                     </div>
 
-
+                    <!-- 查询和重置按钮 -->
                     <div class="filter-item filter-actions">
                         <el-button type="primary" @click="getUserList">
                             <el-icon>
@@ -44,11 +52,11 @@
                         </el-button>
                     </div>
                 </div>
-
-
             </div>
         </el-card>
+        <!-- 内容展示卡片 -->
         <el-card class="content-card">
+            <!-- 动态组件，带过渡效果 -->
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="appData" @editor="editorConfig"
@@ -57,6 +65,7 @@
                 </component>
             </Transition>
 
+            <!-- 分页组件 -->
             <el-pagination v-show="showPagestion" class="pagesBox" background layout="prev, pager, next"
                 :total="totalData" v-model:current-page="pageNum" :page-size="pageSize" />
         </el-card>
@@ -64,10 +73,10 @@
 </template>
 
 <script setup lang="ts">
+    // 引入所需组件和模块
     import tableAciton from '@/components/public/tableAciton.vue';
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
-
     import freeConfigEditor from '@/components/freeConfig/freeConfigEditor.vue';
     import { onMounted, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
@@ -75,8 +84,12 @@
     import { ElMessage, ElMessageBox } from 'element-plus';
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
+
+    // 使用Pinia store
     const counterStore = useCounterStore()
     const { showPagestion, OSlist, defaultAppNo, showLoading } = storeToRefs(counterStore)
+
+    // 动态组件定义
     const components: any = {
         userTable,
         userList
@@ -84,8 +97,7 @@
     const componentStr = ref('userTable')
     const componentName = ref<any>(userTable)
 
-
-    //分页
+    // 分页状态
     const pageNum = ref<number>(1)
     const pageSize = ref<number>(10)
     const totalData = ref<number>(0)
@@ -93,21 +105,23 @@
         getUserList()
     })
 
-    //新增配置
+    // 新增配置弹窗控制
     const showEditor = ref<boolean>(false)
     watch(() => showEditor.value, (newV) => {
         if (!newV) {
-            getUserList()
+            getUserList() // 关闭弹窗时重新获取列表
         }
     })
     const addConfig = () => {
         showEditor.value = true
     }
-    //编辑配置
+
+    // 编辑配置
     const editorConfig = (item: any) => {
         showEditor.value = true
     }
-    //删除配置
+
+    // 删除配置
     const delConfigFn = async (id: number) => {
         try {
             showLoading.value = true
@@ -119,13 +133,12 @@
                 ElMessage.error(res.data.msg)
             }
         } catch (err) {
-
+            // 错误处理
         } finally {
             showLoading.value = false
         }
     }
     const deleteConfig = (item: any) => {
-        console.log('删除', item)
         ElMessageBox.confirm(
             '此操作将永久删除该配置, 是否继续?',
             '提示',
@@ -139,13 +152,9 @@
         })
     }
 
-    //切换开关
+    // 切换开关状态
     const switchChange = async (item: any) => {
-
-        console.log('切换开关', item);
-
-
-
+        showLoading.value = true
         try {
             const { key } = item
             const params = {
@@ -154,11 +163,10 @@
                 [key]: item[key]
             }
             const enData = desEncrypt(JSON.stringify(params))
-            showLoading.value = true
+
             const res = await service.post('/feeConfig/save', {
                 enData
             })
-            console.log('保存成功', res);
             if (res.data.code === 200) {
                 ElMessage.success('修改成功')
                 getUserList()
@@ -171,7 +179,8 @@
             showLoading.value = false
         }
     }
-    //修改数字输入框
+
+    // 处理数字输入框变化
     const handleNumInput = async (item: any) => {
         try {
             const { key } = item
@@ -185,7 +194,6 @@
             const res = await service.post('/feeConfig/save', {
                 enData
             })
-            console.log('保存成功', res);
             if (res.data.code === 200) {
                 ElMessage.success('修改成功')
                 getUserList()

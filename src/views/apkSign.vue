@@ -1,3 +1,4 @@
+<!-- APK签名和渠道管理视图 -->
 <template>
     <div>
 
@@ -10,14 +11,18 @@
             </el-select>
 
         </el-card> -->
+        <!-- 内容卡片区域，包含可拖动布局 -->
         <el-card class="content_card" @click="enMove">
             <div class="parentBox" ref="parentRef">
+                <!-- 左侧区域，显示签名和渠道列表 -->
                 <div class="left" :style="{ width: leftWidth + '%' }">
                     <signTable :signList="signList" @delete='deleteFn' @update="getData" />
                     <channelTable :channelList="channelList" @delete='deleteFn2' @update="getData" />
                 </div>
+                <!-- 中间可拖动分割线 -->
                 <div class="middle_line" :style="{ left: middlePosition + '%' }" @mousedown="moveline"
                     @mouseup="enMove"></div>
+                <!-- 右侧区域，显示APK编辑器 -->
                 <div class="right" :style="{ width: (100 - leftWidth) + '%' }">
                     <apkEditor :signsList="signList" />
                 </div>
@@ -27,24 +32,32 @@
 </template>
 
 <script lang="ts" setup>
+    // 引入Pinia store
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
+    // 引入Vue相关API
     import { onMounted, reactive, ref, watch } from 'vue';
+    // 引入子组件
     import signTable from '@/components/apk/signTable.vue';
     import channelTable from '@/components/apk/channelTable.vue';
     import apkEditor from '@/components/apk/apkEditor.vue';
+    // 引入加密工具
     import { desEncrypt } from '@/utils/des';
+    // 引入axios实例
     import service from '@/axios';
+    // 引入Element Plus组件
     import { ElMessage, ElMessageBox } from 'element-plus';
 
+    // 使用Pinia store
     const counterStore = useCounterStore()
-    const { defaultAppNo, showLoading } = storeToRefs(counterStore)
+    const { defaultAppNo, showLoading } = storeToRefs(counterStore) // 从store中解构状态，保持响应式
 
 
-    //分页
+    // 分页状态 (当前未使用)
     const pageNum = ref<number>(1)
     const pageSize = ref<number>(10)
     const totalData = ref<number>(0)
+    // 搜索参数
     const searchParams = reactive({
         appNo: defaultAppNo.value
     })
@@ -54,13 +67,18 @@
 
 
 
-    const parentRef = ref<HTMLElement>()
-    const middlePosition = ref<number>(70)
-    const leftWidth = ref(70);
-    //拖动状态
+    // 布局相关引用和状态
+    const parentRef = ref<HTMLElement>() // 父容器引用
+    const middlePosition = ref<number>(70) // 分割线位置百分比
+    const leftWidth = ref(70); // 左侧区域宽度百分比
+    // 拖动状态变量
     let isDragging = false;
-    let startX = 0;
-    let parentWidth = 0;
+    let startX = 0; // 拖动起始X坐标
+    let parentWidth = 0; // 父容器宽度
+    /**
+     * @description: 鼠标移动事件，处理分割线拖动
+     * @param {MouseEvent} e 事件对象
+     */
     const move = (e: any) => {
 
         if (!isDragging) return
@@ -77,6 +95,10 @@
         }
     }
 
+    /**
+     * @description: 鼠标按下事件，开始拖动
+     * @param {MouseEvent} e 事件对象
+     */
     const moveline = (e: any) => {
         e.preventDefault()
         startX = e.clientX
@@ -87,6 +109,9 @@
         document.addEventListener('mousemove', move)
     }
 
+    /**
+     * @description: 鼠标松开事件，停止拖动
+     */
     const enMove = () => {
         console.log('停止移动');
         isDragging = false;
@@ -94,7 +119,10 @@
     }
 
 
-    //删除签名
+    /**
+     * @description: 删除签名
+     * @param {any} item 要删除的签名项
+     */
     const deleteFn = async (item: any) => {
         ElMessageBox.confirm('确认删除吗？', '提示', {
             confirmButtonText: '确定',
@@ -118,7 +146,10 @@
             //取消删除
         })
     }
-    //删除渠道
+    /**
+     * @description: 删除渠道
+     * @param {any} item 要删除的渠道项
+     */
     const deleteFn2 = (item: any) => {
         ElMessageBox.confirm('确认删除吗？', '提示', {
             confirmButtonText: '确定',
@@ -141,16 +172,22 @@
             //取消删除
         })
     }
+    // 签名列表数据
     const signList = ref<any>([
 
 
     ])
 
+    // 渠道列表数据
     const channelList = ref<any>([
 
 
     ])
 
+    /**
+     * @description: 获取签名列表数据
+     * @returns {Promise<any>} API响应
+     */
     const getSignList = async () => {
         try {
             const params = {
@@ -172,6 +209,10 @@
 
         }
     }
+    /**
+     * @description: 获取渠道列表数据
+     * @returns {Promise<any>} API响应
+     */
     const getChannelsList = async () => {
         try {
 
@@ -195,6 +236,9 @@
         }
     }
 
+    /**
+     * @description: 统一获取签名和渠道列表数据
+     */
     const getData = async () => {
         try {
 
