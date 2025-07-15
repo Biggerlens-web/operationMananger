@@ -22,7 +22,7 @@
     // 引入 Pinia store
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { onMounted, reactive, ref } from 'vue'
+    import { onMounted, reactive, ref, watch } from 'vue'
     import adTable from '@/components/AdSubscription/adTable.vue';
     import channelAdvEditor from '@/components/AdSubscription/editor/channelAdvEditor.vue';
     import cornEditor from '@/components/AdSubscription/editor/cornEditor.vue';
@@ -390,6 +390,11 @@
         showLoading.value = false
     }
 
+
+    watch(() => defaultAppNo.value, async () => {
+        getAdList()
+    })
+
     /**
      * @description 获取广告类型列表并存储到 Pinia
      */
@@ -420,12 +425,13 @@
 </script>
 
 <style lang="scss" scoped>
+
     .ad-management-view {
         display: flex;
         flex-direction: column;
         gap: 24px;
         padding: 16px;
-        height: 100%;
+
         box-sizing: border-box;
 
         .filter-card {
@@ -460,8 +466,7 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
             transition: box-shadow 0.3s ease;
-            max-height: calc(100vh - 180px);
-            overflow-y: hidden; // 改为 hidden 而不是 auto
+
 
             &:hover {
                 box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
@@ -470,27 +475,7 @@
             :deep(.el-card__body) {
                 padding: 20px;
                 overflow-y: auto;
-                height: 100%;
                 box-sizing: border-box;
-
-                /* 自定义滚动条样式 */
-                &::-webkit-scrollbar {
-                    width: 8px;
-                }
-
-                &::-webkit-scrollbar-track {
-                    background: #f1f1f1;
-                    border-radius: 4px;
-                }
-
-                &::-webkit-scrollbar-thumb {
-                    background: #c1c1c1;
-                    border-radius: 4px;
-                }
-
-                &::-webkit-scrollbar-thumb:hover {
-                    background: #a8a8a8;
-                }
             }
 
             .ad-table {
