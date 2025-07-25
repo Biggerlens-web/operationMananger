@@ -477,7 +477,7 @@
         }
 
         .content-card {
-            height: calc(100vh - 220px);
+            height: max-content;
 
             .pagesBox {
                 margin-top: 30px;

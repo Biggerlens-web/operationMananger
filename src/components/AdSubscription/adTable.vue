@@ -106,13 +106,14 @@
 
             <el-table-column label="操作" fixed="right" width="150">
                 <template #default="scope">
-                    <div class="action-buttons" style="display: flex; flex-direction: column; gap: 4px;">
-                        <el-button v-if="type !== 'InterstitialAds'" type="primary" size="small" text
+                    <div class="action-buttons" style="display: flex; flex-direction: column; row-gap: 4px;">
+                        <el-button style="margin: 0;" v-if="type !== 'InterstitialAds'" type="primary" size="small" text
                             @click="handleEditor(scope.row)">
                             编辑
                         </el-button>
-                        <el-button type="primary" size="small" text @click="handleResult(scope.row)">提交修改</el-button>
-                        <el-button type="danger" size="small" text @click="handleDelete(scope.row)">
+                        <el-button style="margin: 0;" type="primary" size="small" text
+                            @click="handleResult(scope.row)">提交修改</el-button>
+                        <el-button style="margin: 0;" type="danger" size="small" text @click="handleDelete(scope.row)">
                             删除
                         </el-button>
                     </div>

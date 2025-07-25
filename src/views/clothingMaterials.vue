@@ -58,7 +58,8 @@
                 <div class="filter-row">
                     <!-- 地区选择器 -->
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
+                        <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select"
+                            @change="getParentList">
                             <el-option v-for="item in regionList" :key="item.value" :label="item.label"
                                 :value="item.value" />
                         </el-select>
@@ -541,6 +542,7 @@
             console.log('获取父类列表', res);
 
             parentList.value = res.data.data.list
+            searchParams.value.tid = ''
         } catch (err) {
             console.log('获取父类列表失败', err);
         } finally {
@@ -656,7 +658,7 @@
         }
 
         .content-card {
-            height: calc(100vh - 220px);
+            height: max-content;
 
             .pagesBox {
                 margin-top: 30px;

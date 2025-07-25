@@ -27,7 +27,7 @@
     <!-- 筛选条件卡片 -->
     <el-card class="filter-card">
       <div class="filter-box">
-        <div class="filter-item">
+        <!-- <div class="filter-item">
           <span class="label">应用:</span>
           <el-select filterable v-model="activeApp" placeholder="请选择应用" @change="getAutoConfig" clearable
             class="filter-select">
@@ -35,7 +35,7 @@
               :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
               :value="item.appNo" />
           </el-select>
-        </div>
+        </div> -->
         <div class="filter-item">
           <span class="label">渠道:</span>
           <el-select filterable v-model="activeChannel" placeholder="请选择渠道" @change="getAutoConfig" clearable
@@ -169,7 +169,7 @@
   const autoOprationStore = useAutoOpration()
   const { JSONEditorValue, JSONEditorNote } = storeToRefs(autoOprationStore) // 从store中解构状态
   const {
-    appList, channelList, OSlist, showLoading
+    appList, channelList, OSlist, showLoading, defaultAppNo
   } = storeToRefs(counterStore) // 从store中解构公共数据
   // 筛选条件状态
   const activeApp = ref<string | number>('') // 当前选中的应用
@@ -242,22 +242,7 @@
   //编辑JSON
   type JsonDataType = Record<string, any>;
   const jsonData = ref<JsonDataType>({
-    // "netip": "会员服务ip",
-    // "piCutConfigBean": "皮卡配置",
-    // "questionnaireConfigBeanList": "调查问卷配置",
-    // "xiaomiConfig": "小米配置",
-    // "adsConfig": "广告配置",
-    // "vipConfig": "vip配置",
-    // "xiaomiFirstPayDistanceOpen": "注释",
-    // "xiaomiFirstPayDistance": "注释",
-    // "huaweiConfig": "华为配置",
-    // "feeConfig": "付费点配置",
-    // "jsonUpdateTime": "2023-07-11 11:11:11",
-    // "helpMeRetouchConfig": {
-    //   "version": '123123',
-    //   "isShowTaobao": true,
-    //   "isCanPay": true,
-    // },
+
   })
   const comments = ref<JsonDataType>({})
 
@@ -505,6 +490,15 @@
     }
   }
 
+
+
+  watch(() => defaultAppNo.value, (newV) => {
+    if (newV) {
+      activeApp.value = newV
+      getAutoConfig()
+    }
+  })
+
   const getAutoConfig = async () => {
     try {
       loading.value = true
@@ -585,7 +579,8 @@
 
   onMounted(() => {
     if (appList.value.length > 0) {
-      activeApp.value = appList.value[0].appNo
+      // activeApp.value = appList.value[0].appNo
+      activeApp.value = defaultAppNo.value
       getAutoConfig()
     }
   })

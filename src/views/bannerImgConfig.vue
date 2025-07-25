@@ -452,7 +452,7 @@
         }
 
         .content-card {
-            height: calc(100vh - 220px);
+            height: max-content;
             overflow-y: scroll;
 
             .pagesBox {

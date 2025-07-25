@@ -53,7 +53,7 @@
 
         </el-card>
         <!-- 内容显示卡片 -->
-        <el-card class="content-card">
+        <el-card class="content-card" v-loading="showLoading">
 
             <!-- 应用数据表格 -->
             <appTable :tableData="tableData" @goDetail="goDetail" @getPrivacyProtocol="getPrivacyProtocol" />
@@ -240,7 +240,7 @@
         }
 
         .content-card {
-            height: calc(100vh - 220px);
+            height: max-content;
 
             .pagesBox {
                 margin-top: 30px;

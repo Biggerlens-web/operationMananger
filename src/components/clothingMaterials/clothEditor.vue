@@ -173,7 +173,7 @@
 
     watch(() => props.showEditor, async (newV) => {
         if (newV) {
-
+            console.log("🚀 ~ watch ~ props.editorInfo:", props.editorInfo)
             if (props.editorInfo && props.editorInfo.classImageUrl) {
                 // try {
                 //     const response = await fetch(props.editorInfo.classImageUrl);
@@ -214,6 +214,7 @@
             getParentList()
 
         }
+
 
     })
 
@@ -457,8 +458,9 @@
                 isOperationClass: formData.value.isOperationClass,
 
             }
+
             if (formData.value.classImageBase64.includes('http')) {
-                params.classImageName = props.editorInfo.classImageName
+                params.classImageName = props.editorInfo?.classImageName
             }
             if (props.noHaveParent) {
                 delete params.tids
@@ -512,6 +514,7 @@
         } finally {
             showLoading.value = false
         }
+
     }
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate(async (valid: any) => {
