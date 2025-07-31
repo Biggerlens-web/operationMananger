@@ -8,6 +8,7 @@
                         :value="item.appNo" />
                 </el-select>
             </el-form-item>
+
             <el-form-item label="功能点" prop="functionValue">
                 <el-select v-model="ruleForm.functionValue" placeholder="请选择功能点" @change="changeFunction">
                     <el-option v-for="item in functionList" :key="item.value" :label="item.note"
@@ -49,7 +50,7 @@
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
     const counterStore = useCounterStore()
-    const { defaultAppNo, functionList, showLoading, appList } = storeToRefs(counterStore)
+    const { defaultAppNo, functionList, showLoading, appList, regionList } = storeToRefs(counterStore)
 
     interface Props {
 

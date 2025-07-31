@@ -11,6 +11,11 @@
                         :value="item.appNo" />
                 </el-select>
             </el-form-item>
+            <el-form-item label="地区" prop="region">
+                <el-select v-model="ruleForm.region" placeholder="请选择地区" filterable @change="changeFunction">
+                    <el-option v-for="item in regionList" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+            </el-form-item>
             <el-form-item label="功能点" prop="functionValue">
                 <el-select v-model="ruleForm.functionValue" placeholder="请选择功能点" @change="changeFunction">
                     <el-option v-for="item in functionList" :key="item.value" :label="item.note"
@@ -88,7 +93,7 @@
     import { desEncrypt } from '@/utils/des'
     import service from '@/axios'
     const counterStore = useCounterStore()
-    const { appList, functionList, international } = storeToRefs(counterStore)
+    const { appList, functionList, international, regionList } = storeToRefs(counterStore)
     const dialogVisible = defineModel('dialogVisible', {
         type: Boolean,
         default: false
@@ -107,6 +112,7 @@
         languageText: '',
         prompt: '',
         exPrompt: '',
+        region: '',
         diffusionValue: 0
 
     })

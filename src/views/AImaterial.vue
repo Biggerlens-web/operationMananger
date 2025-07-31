@@ -11,8 +11,10 @@
                         </el-icon>
                     </div>
 
-                    <el-button v-for="item in actionBtnList" @click="handleActionBtn(item)" :key="item.key">{{
-                        item.label }}</el-button>
+                    <el-button v-for="item in actionBtnList"
+                        :type="item.key === 'deleteMaterial' && isDelete ? 'danger' : ''" @click="handleActionBtn(item)"
+                        :key="item.key">{{
+                            item.label }}</el-button>
                 </div>
 
             </div>
@@ -23,7 +25,15 @@
                 <div class="filter-row">
 
 
+                    <div class="filter-item">
+                        <el-select filterable v-model="searchParams.region" clearable placeholder="地区"
+                            @change="changeFunction" class="filter-select">
+                            <el-option v-for="item in regionList" :key="item.value" :label="item.label"
+                                :value="item.value" />
+                        </el-select>
 
+
+                    </div>
 
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.functionValue" clearable placeholder="功能"
@@ -50,7 +60,7 @@
                     </div>
 
                     <div class="filter-item filter-actions">
-                        <el-button type="primary" @click="getUserList">
+                        <el-button type="primary" @click="callSpecificMethod">
                             <el-icon>
                                 <Search />
                             </el-icon>
@@ -73,7 +83,7 @@
         <el-card class="manage">
             <keep-alive>
                 <component :is="activeCom" :key="activeKey" :isDelete="isDelete" @editMaterial="EditingMaterial"
-                    ref="childComponentRef" />
+                    ref="childComponentRef" :functionValue="searchParams.functionValue" :searchParams="searchParams" />
             </keep-alive>
         </el-card>
 
@@ -149,11 +159,10 @@
     import service from '@/axios';
     import normalMaterial from '@/components/AImaterial/normalMaterial.vue'
     import weightedManagement from '@/components/AImaterial/weightedManagement.vue'
-    import userMaterial from '@/components/AImaterial/userMaterial.vue'
     import { ElMessage } from 'element-plus'
     import { computed } from '@vue/reactivity'
     const counterStore = useCounterStore()
-    const { defaultAppNo, showLoading, functionList } = storeToRefs(counterStore)
+    const { defaultAppNo, functionList, regionList } = storeToRefs(counterStore)
 
     // 子组件引用
     const childComponentRef = ref<any>(null)
@@ -167,10 +176,7 @@
                 childComponentRef.value.getMaterialData?.()
                 break
             case 'weightedManagement':
-                childComponentRef.value.refreshWeightData?.()
-                break
-            case 'userMaterial':
-                childComponentRef.value.refreshUserData?.()
+                childComponentRef.value.getWeightData?.()
                 break
         }
     }
@@ -261,10 +267,6 @@
         {
             com: weightedManagement,
             key: 'weightedManagement'
-        },
-        {
-            com: userMaterial,
-            key: 'userMaterial'
         }
     ])
 
@@ -289,10 +291,10 @@
             label: '加权管理',
             key: 'weightedManagement'
         },
-        {
-            label: '用户上传',
-            key: 'userUpload'
-        },
+        // {
+        //     label: '用户上传',
+        //     key: 'userUpload'
+        // },
         {
             label: '删除素材',
             key: 'deleteMaterial'
@@ -310,11 +312,9 @@
             case 'weightedManagement':
                 activeKey.value = 'weightedManagement'
                 break;
-            case 'userUpload':
-                activeKey.value = 'userUpload'
-                break;
+
             case 'deleteMaterial':
-                // 调用子组件的方法刷新数据
+                isDelete.value = !isDelete.value
 
                 break;
             default:
@@ -357,7 +357,7 @@
         functionValue: string | number
         classId: string | number
         secondClassId: string | number
-
+        region: string
 
 
 
@@ -367,7 +367,8 @@
 
             functionValue: '',
             classId: '',
-            secondClassId: ''
+            secondClassId: '',
+            region: regionList.value[0].value
         }
     )
     //重置搜索
@@ -375,78 +376,19 @@
         searchParams.value = {
             functionValue: '',
             classId: '',
-            secondClassId: ''
+            secondClassId: '',
+            region: regionList.value[0].value
         }
-        getUserList()
-    }
-    interface AppItem {
-        id: number
-        appId: string;        // 应用编号
-        shortName: string;    // 应用简称
-        companyName: string;  // 所属公司
-        accessName: string;   // 应用访问名
-        systemId: string;     // 系统账号id
-        developer: string;    // 开发者
+        callSpecificMethod()
     }
 
 
-    const appNote: any = {
-        appId: '应用编号',
-        shortName: '应用简称',
-        companyName: '所属公司',
-        accessName: '应用访问名',
-        systemId: '系统账号id',
-        developer: '开发者'
 
-    }
-    // 生成用户数据
-    const appData = ref<AppItem[]>([
-    ])
-    interface filterParams {
-        note: string
-        isShow: boolean
-        key: string
-    }
-    const filterParams = ref<filterParams[]>()
+
 
     watch(() => defaultAppNo.value, () => {
-        getUserList()
+        callSpecificMethod()
     })
-
-    const getUserList = async () => {
-        showLoading.value = true
-        try {
-            const params = {
-                timestamp: new Date().getTime(),
-                appNo: defaultAppNo.value,
-                region: searchParams.value.functionValue,
-                isPublic: false
-            }
-            console.log('获取水印参数', params);
-            const enData = desEncrypt(JSON.stringify(params))
-            const res = await service.post('/watermark/list', {
-                enData
-            })
-
-            console.log('获取水印', res);
-            appData.value = res.data.rows
-        } catch (err) {
-            console.log('获取水印失败', err);
-        } finally {
-            showLoading.value = false
-        }
-
-
-        const keys = Object.keys(appNote)
-        filterParams.value = keys.map((item) => {
-            return {
-                note: appNote[item],
-                isShow: true,
-                key: item
-            }
-        })
-        console.log('filterParams', filterParams.value);
-    }
 
 
 
@@ -475,7 +417,7 @@
     onMounted(async () => {
         await getFunctionList()
         await getCategoryList()
-        // getUserList();
+        callSpecificMethod()
     })
 </script>
 

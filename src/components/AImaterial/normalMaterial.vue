@@ -44,6 +44,7 @@
 
     interface Props {
         isDelete: boolean;
+        searchParams: any
     }
     const props = withDefaults(defineProps<Props>(), {
         isDelete: false
@@ -52,7 +53,8 @@
         'editMaterial': [value: AppItem]
     }>()
     onActivated(() => {
-        console.log('普通素材激活');
+
+        getMaterialData()
     })
     interface AppItem {
         id: number
@@ -194,7 +196,7 @@
     //获取素材
     const getMaterialData = async () => {
         try {
-            console.log('子组件获取数据');
+            console.log('子组件获取数据', props.searchParams);
         } catch (err) {
 
         } finally {
