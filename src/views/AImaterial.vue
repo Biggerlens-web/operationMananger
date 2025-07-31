@@ -1,13 +1,20 @@
 <template>
     <div class="view">
 
-        <watermarkEditor v-model:dialog-visible="showWatermarkEditor" :editInfo="editInfo" />
+
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
-                <div class="right-actions">
-                    <!-- <tableAciton @update="getUserList" :filterParams="filterParams" @checkedParams="checkedParams"
-                        @changeView="changeView" /> -->
+                <div class="right-actions ">
+                    <div class="home" @click="back">
+                        <el-icon>
+                            <House />
+                        </el-icon>
+                    </div>
+
+                    <el-button v-for="item in actionBtnList" @click="handleActionBtn(item)" :key="item.key">{{
+                        item.label }}</el-button>
                 </div>
+
             </div>
 
             <el-divider class="divider" />
@@ -19,9 +26,26 @@
 
 
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
-                            <el-option v-for="item in regionList" :key="item.value" :label="item.label"
+                        <el-select filterable v-model="searchParams.functionValue" clearable placeholder="功能"
+                            @change="changeFunction" class="filter-select">
+                            <el-option v-for="item in functionList" :key="item.value" :label="item.note"
                                 :value="item.value" />
+                        </el-select>
+
+
+                    </div>
+                    <div class="filter-item">
+                        <el-select filterable v-model="searchParams.classId" clearable placeholder="一级分类"
+                            class="filter-select" @change="changeFirstClass">
+                            <el-option v-for="item in firstCategoryList" :key="item.id" :label="item.className"
+                                :value="item.id" />
+                        </el-select>
+                    </div>
+                    <div class="filter-item">
+                        <el-select filterable v-model="searchParams.secondClassId" clearable placeholder="二级分类"
+                            class="filter-select">
+                            <el-option v-for="item in secondCategoryList" :key="item.id" :label="item.className"
+                                :value="item.id" />
                         </el-select>
                     </div>
 
@@ -46,67 +70,24 @@
 
             </div>
         </el-card>
-        <el-card class="stickTp_manage">
-            <draggable tag="ul" v-model="appData" item-key="id" :animation="200" class="template-grid"
-                ghost-class="ghost-class" chosen-class="chosen-class" drag-class="dragging-class"
-                :group="{ name: 'items' }">
-                <template #item="{ element, index }">
-                    <li :key="element.id" class="template-item">
-                        <!-- 右上角复选框 -->
-                        <div class="checkbox-wrapper" @click.stop>
-                            <input type="checkbox" :id="`checkbox-${element.id}`" :checked="isSelected(element.id)"
-                                @change="handleCheckBoxChange($event, element.id)" class="custom-checkbox" />
-                            <label :for="`checkbox-${element.id}`" class="checkbox-label"></label>
-                        </div>
-
-                        <div class="template_data" @click.stop>
-                            <p class="p_id">ID:{{ element.id }}</p>
-                            <p class="p_viewNum">点击数:{{ element.likeNum }}</p>
-                            <p class="p_viewNum" v-if="element.viewNum">浏览数:{{ element.viewNum }}</p>
-                        </div>
-
-                        <div class="img-wrapper">
-                            <img :src="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
-                                class="template-img" />
-                        </div>
-                        <p class="template-name">
-                            <el-button type="primary" @click="editorTemplate(element)" size='samll'>
-                                编辑
-                            </el-button>
-
-                        </p>
-                    </li>
-                </template>
-            </draggable>
+        <el-card class="manage">
+            <keep-alive>
+                <component :is="activeCom" :key="activeKey" :isDelete="isDelete" @editMaterial="EditingMaterial"
+                    ref="childComponentRef" />
+            </keep-alive>
         </el-card>
 
         <!-- 浮动操作栏 -->
-        <div class="floating-actions" ref="actionBox" @mousedown="dragStart" @mouseup="dragEnd">
+        <!-- <div class="floating-actions" ref="actionBox" @mousedown="dragStart" @mouseup="dragEnd">
 
-            <customButton @click="openPublicSpace">
-                公共空间
-            </customButton>
-            <customButton @click="addWatermark">
-                <el-icon>
-                    <Plus />
-                </el-icon>
-                新增水印
-            </customButton>
-            <customButton @click="selectAll">
-                全部选中
-            </customButton>
-            <customButton @click="delSelected">
-                <el-icon>
-                    <Minus />
-                </el-icon>
-                删除所选
-            </customButton>
-            <customButton @click="saveChange">
+
+            <customButton @click="back">
                 保存改动
             </customButton>
-        </div>
+        </div> -->
     </div>
-    <watermarkPublicArea :type="'watermark'" v-model:dialog-visible="showPublicSpace" :region="searchParams.region" />
+    <editMaterial v-model:dialog-visible="dialogEditMaterial" />
+    <addClass v-model:dialog-visible="dialogAddClass" :firstCategoryList="firstCategoryList" />
 </template>
 
 <script setup lang="ts">
@@ -158,120 +139,224 @@
 
     }
 
-    import customButton from '@/components/button/customButton.vue';
-    import draggable from 'vuedraggable'
-    import userTable from '@/components/user/userTable.vue';
-    import userList from '@/components/user/userList.vue';
-    import watermarkPublicArea from '@/components/watermark/watermarkPublicArea.vue'
-    import watermarkEditor from '@/components/watermark/watermarkEditor.vue';
-    import { onMounted, ref, watch } from 'vue';
+
+    import editMaterial from '@/components/AImaterial/editMaterial.vue'
+    import addClass from '@/components/AImaterial/addClass.vue'
+    import { onMounted, reactive, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
+    import normalMaterial from '@/components/AImaterial/normalMaterial.vue'
+    import weightedManagement from '@/components/AImaterial/weightedManagement.vue'
+    import userMaterial from '@/components/AImaterial/userMaterial.vue'
     import { ElMessage } from 'element-plus'
+    import { computed } from '@vue/reactivity'
     const counterStore = useCounterStore()
-    const { showPagestion, defaultAppNo, regionList, showLoading } = storeToRefs(counterStore)
-    const components: any = {
-        userTable,
-        userList
-    }
-    const componentStr = ref('userTable')
-    const componentName = ref<any>(userTable)
+    const { defaultAppNo, showLoading, functionList } = storeToRefs(counterStore)
 
-    //选中模板集合
-    const selectedList = ref<any>([])
-    const isSelected = (id: number) => {
-        return selectedList.value.includes(id)
-    }
-    const handleCheckBoxChange = (e: any, id: number) => {
-        if (e.target.checked) {
-            selectedList.value.push(id)
-        } else {
-            selectedList.value = selectedList.value.filter((item: number) => item !== id)
+    // 子组件引用
+    const childComponentRef = ref<any>(null)
+
+    // 调用子组件暴露的方法
+    const callSpecificMethod = () => {
+        if (!childComponentRef.value) return
+
+        switch (activeKey.value) {
+            case 'normalMaterial':
+                childComponentRef.value.getMaterialData?.()
+                break
+            case 'weightedManagement':
+                childComponentRef.value.refreshWeightData?.()
+                break
+            case 'userMaterial':
+                childComponentRef.value.refreshUserData?.()
+                break
         }
     }
 
 
 
+    //获取功能列表
+    const getFunctionList = async () => {
 
-    //新增水印
-    const showWatermarkEditor = ref<boolean>(false)
-    const addWatermark = () => {
-        showWatermarkEditor.value = true
-    }
-
-
-    //编辑
-    watch(() => showWatermarkEditor.value, () => {
-        if (!showWatermarkEditor.value) {
-            editInfo.value = ''
-            getUserList()
-        }
-    })
-    const editInfo = ref<any>()
-    const editorTemplate = (item?: any) => {
-        editInfo.value = item
-        showWatermarkEditor.value = true
-        console.log('item', item)
-
-    }
-
-
-
-    //公共空间
-    const showPublicSpace = ref<boolean>(false)
-    const openPublicSpace = () => {
-        console.log('打开公共空间')
-
-        // TODO: 实现公共空间功能
-        showPublicSpace.value = true
-    }
-
-    //全部选中
-    const selectAll = () => {
-        selectedList.value = appData.value.map((item: any) => item.id)
-    }
-
-    //删除所选
-    const delSelected = () => {
-        appData.value = appData.value.filter((item: any) => !selectedList.value.includes(item.id))
-    }
-
-    //保存改动
-    const saveChange = async () => {
-        console.log('保存改动')
-        // TODO: 实现保存功能
-        showLoading.value = true
         try {
-            const params = {
-                timestamp: Date.now(),
-                templateIds: appData.value.map(item => item.id),
-                appNo: defaultAppNo.value,
-                region: searchParams.value.region
-            }
-            const enData = desEncrypt(JSON.stringify(params))
-            const res = await service.post('/watermark/saveItem', {
-                enData
-            })
-            if (res.data.code === 200) {
-                ElMessage.success('保存成功')
-                getUserList()
-            } else {
+            const res = await service.get('/hairMaterials/functionValues')
+            console.log("🚀 ~ getFunctionList ~ res:", res)
 
+            if (res.data.code === 200) {
+                functionList.value = res.data.data.functionType
+                searchParams.value.functionValue = res.data.data.functionType[0].value
+            } else {
                 ElMessage.error(res.data.msg)
             }
         } catch (err) {
-            console.log('保存改动失败', err);
-        } finally {
-            showLoading.value = false
+            console.log("🚀 ~ getFunctionList ~ err:", err)
+
+        }
+    }
+
+
+    //获取分类列表
+    const firstCategoryList = ref<any>([])
+    const secondCategoryList = ref<any>([])
+    const getCategoryList = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                functionValue: searchParams.value.functionValue,
+                appNo: defaultAppNo.value
+            }
+            console.log('分类参数params', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/hairMaterials/classification/list', {
+                enData
+            })
+            console.log("🚀 ~ getCategoryList ~ res:", res)
+
+
+            if (res.data.code === 200) {
+                firstCategoryList.value = res.data.data.hairMaterialClassification
+                secondCategoryList.value = []
+
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log("🚀 ~ getCategoryList ~ err:", err)
+        }
+    }
+
+
+    //切换功能点
+    const changeFunction = () => {
+        searchParams.value.classId = ''
+        searchParams.value.secondClassId = ''
+        getCategoryList()
+    }
+
+    //切换一级分类
+    const changeFirstClass = () => {
+        secondCategoryList.value = firstCategoryList.value.find((item: any) => item.id === searchParams.value.classId)?.children
+    }
+
+
+    //默认显示视图
+    const activeCom = computed(() => {
+        return componentList.find(item => item.key === activeKey.value)?.com
+    })
+    const activeKey = ref('normalMaterial')
+
+
+
+    //删除素材
+    const isDelete = ref<boolean>(false)
+
+    //组件列表
+    const componentList = reactive([
+        {
+            com: normalMaterial,
+            key: 'normalMaterial'
+        },
+        {
+            com: weightedManagement,
+            key: 'weightedManagement'
+        },
+        {
+            com: userMaterial,
+            key: 'userMaterial'
+        }
+    ])
+
+
+
+
+    interface ActionBtnItem {
+        label: string
+        key: string
+    }
+
+    const actionBtnList = reactive<ActionBtnItem[]>([
+        {
+            label: '新增分类',
+            key: 'addCategory'
+        },
+        {
+            label: '新增素材',
+            key: 'addMaterial'
+        },
+        {
+            label: '加权管理',
+            key: 'weightedManagement'
+        },
+        {
+            label: '用户上传',
+            key: 'userUpload'
+        },
+        {
+            label: '删除素材',
+            key: 'deleteMaterial'
+        },
+    ])
+
+    const handleActionBtn = (item: ActionBtnItem) => {
+        switch (item.key) {
+            case 'addCategory':
+                dialogAddClass.value = true
+                break;
+            case 'addMaterial':
+                dialogEditMaterial.value = true
+                break;
+            case 'weightedManagement':
+                activeKey.value = 'weightedManagement'
+                break;
+            case 'userUpload':
+                activeKey.value = 'userUpload'
+                break;
+            case 'deleteMaterial':
+                // 调用子组件的方法刷新数据
+
+                break;
+            default:
+                break;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //返回
+    const back = () => {
+        if (activeKey.value === 'normalMaterial') {
+            callSpecificMethod()
+        } else {
+            activeKey.value = 'normalMaterial'
+            callSpecificMethod()
         }
     }
 
 
     //搜索参数
     interface SearchParams {
-        region: string
+        functionValue: string | number
+        classId: string | number
+        secondClassId: string | number
 
 
 
@@ -280,16 +365,17 @@
     const searchParams = ref<SearchParams>(
         {
 
-            region: '',
-
+            functionValue: '',
+            classId: '',
+            secondClassId: ''
         }
     )
     //重置搜索
     const resetSearch = () => {
         searchParams.value = {
-            region: regionList.value[0].value,
-
-
+            functionValue: '',
+            classId: '',
+            secondClassId: ''
         }
         getUserList()
     }
@@ -333,7 +419,7 @@
             const params = {
                 timestamp: new Date().getTime(),
                 appNo: defaultAppNo.value,
-                region: searchParams.value.region,
+                region: searchParams.value.functionValue,
                 isPublic: false
             }
             console.log('获取水印参数', params);
@@ -361,34 +447,35 @@
         })
         console.log('filterParams', filterParams.value);
     }
-    //参数显影
-    const checkedParams = ({ key, checked }: any) => {
-        console.log('修改参数', key, checked);
-        const item = filterParams.value?.find((item) => item.key === key)
-        if (item) {
-            item.isShow = checked
+
+
+
+
+
+
+
+    //新增分类
+    const dialogAddClass = ref<boolean>(false)
+    watch(() => dialogAddClass.value, (newV) => {
+        if (!newV) {
+            getCategoryList()
         }
+    })
 
-    }
-    //切换显示模式
-    const changeView = () => {
 
-        const keys = Object.keys(components)
-        const keyItem = keys.find((item) => item !== componentStr.value)
-        if (keyItem) {
-            componentStr.value = keyItem
-            componentName.value = components[keyItem]
-        }
-        console.log('keyItem', keyItem);
+    //编辑素材
+    const dialogEditMaterial = ref<boolean>(false)
+    const EditingMaterial = (info: any) => {
+        console.log('编辑数据', info);
+        dialogEditMaterial.value = true
     }
 
 
 
-    onMounted(() => {
-
-        searchParams.value.region = regionList.value[0].value
-        getUserList();
-        showPagestion.value = true
+    onMounted(async () => {
+        await getFunctionList()
+        await getCategoryList()
+        // getUserList();
     })
 </script>
 
@@ -443,6 +530,12 @@
                 .right-actions {
                     display: flex;
                     align-items: center;
+
+                    .home {
+                        font-size: 30px;
+                        margin-right: 20px;
+                        cursor: pointer;
+                    }
                 }
             }
 
@@ -476,7 +569,7 @@
             }
         }
 
-        .stickTp_manage {
+        .manage {
             /* position: relative;  不再需要，因为 back-icon 改为 fixed 定位 */
             height: 700px;
             overflow-y: scroll;
