@@ -34,9 +34,9 @@
                         :value="item.id"></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="素材图片" prop="image">
+            <el-form-item label="素材图片" prop="imageUrl">
                 <el-upload action="#" list-type="picture-card" :auto-upload="false" v-model:file-list="fileList" drag
-                    :limit="1" :on-remove="handleRemove" :before-upload="beforeUpload">
+                    :limit="1" :on-remove="handleRemove" :on-change="handleFileChange">
                     <el-icon>
                         <Plus />
                     </el-icon>
@@ -63,15 +63,20 @@
             <el-form-item label="输入其他语言" prop="languageText">
                 <el-input v-model="ruleForm.languageText" placeholder="请输入其他语言" />
             </el-form-item>
-            <el-form-item label="提示词" prop="prompt">
-                <el-input type="textarea" v-model="ruleForm.prompt" placeholder="请用英文逗号隔开每一个提示词','" />
+            <el-form-item label="UID" prop="uid">
+                <el-input v-model="ruleForm.uid" placeholder="" :disabled="true" />
             </el-form-item>
-            <el-form-item label="反向提示词" prop="exPrompt">
-                <el-input type="textarea" v-model="ruleForm.exPrompt" placeholder="请用英文逗号隔开每一个提示词','" />
+            <el-form-item label="提示词" prop="promptWords">
+                <el-input type="textarea" v-model="ruleForm.promptWords" placeholder="请用英文逗号隔开每一个提示词','" />
+            </el-form-item>
+            <el-form-item label="反向提示词" prop="reversePrompts">
+                <el-input type="textarea" v-model="ruleForm.reversePrompts" placeholder="请用英文逗号隔开每一个提示词','" />
             </el-form-item>
             <el-form-item label="扩散值" prop="diffusionValue">
                 <el-input-number v-model="ruleForm.diffusionValue" />
             </el-form-item>
+
+
         </el-form>
         <template #footer>
 
@@ -84,7 +89,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { reactive, ref } from 'vue'
+    import { reactive, ref, watch } from 'vue'
     import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
     import { Plus, Delete } from '@element-plus/icons-vue'
     import { useCounterStore } from '@/stores/counter'
@@ -93,36 +98,97 @@
     import { desEncrypt } from '@/utils/des'
     import service from '@/axios'
     const counterStore = useCounterStore()
-    const { appList, functionList, international, regionList } = storeToRefs(counterStore)
+    const { appList, functionList, international, regionList, showLoading } = storeToRefs(counterStore)
     const dialogVisible = defineModel('dialogVisible', {
         type: Boolean,
         default: false
     })
-
+    interface Props {
+        materialInfo: any
+    }
+    const props = defineProps<Props>()
     const ruleFormRef = ref<FormInstance>()
     const ruleForm = reactive<any>({
         id: '',
         name: '',
         appNo: '',
         functionValue: '',
+        uid: '',
         language: '',
         classId: '',
         secondClassId: '',
-        image: [],
+        imageUrl: '',
         languageText: '',
-        prompt: '',
-        exPrompt: '',
+        promptWords: '',
+        reversePrompts: '',
         region: '',
-        diffusionValue: 0
+        diffusionValue: 0,
+
 
     })
+
+    const getUid = async () => {
+        try {
+            const params = {
+                timestamp: Date.now(),
+                functionValue: ruleForm.functionValue
+            }
+            console.log("🚀 ~ getUid ~ params:", params)
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get('/hairMaterials/getUid', {
+                params: {
+                    enData
+                }
+            })
+            console.log("🚀 ~ getUid ~ res:", res)
+            if (res.data.code === 200) {
+                ruleForm.uid = res.data.data.uid
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log("🚀 ~ getUid ~ err:", err)
+
+        }
+    }
+    watch(() => dialogVisible.value, (newV) => {
+
+        if (newV) {
+
+            if (props.materialInfo) {
+                initEditData(props.materialInfo)
+            }
+        }
+    })
+
     const rules = reactive<FormRules>({
         name: [
             { required: true, message: '请输入素材名称', trigger: 'blur' },
             { min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur' }
         ],
-        diffusionValue: [
+        appNo: [
+            { required: true, message: '请选择应用', trigger: 'change' },
 
+        ],
+        functionValue: [
+            { required: true, message: '请选择功能点', trigger: 'change' }
+        ],
+        region: [
+            { required: true, message: '请选择区域', trigger: 'change' }
+        ],
+        imageUrl: [
+            {
+                validator: (rule: any, value: any, callback: any) => {
+                    if (!ruleForm.imageUrl) {
+                        callback(new Error('请上传素材图片'))
+                    } else {
+                        callback()
+                    }
+                },
+                trigger: 'change'
+            }
+        ],
+        diffusionValue: [
             // { required: true, message: '请输入扩散值', trigger: 'blur' },
             // { type: 'number', min: 0, max: 100, message: '扩散值必须在0-100之间', trigger: 'blur' }
         ]
@@ -130,9 +196,66 @@
 
     const submitForm = async (formEl: FormInstance | undefined) => {
         if (!formEl) return
-        await formEl.validate((valid, fields) => {
+        await formEl.validate(async (valid, fields) => {
             if (valid) {
+                if (!ruleForm.classId) {
+                    ElMessage.error('请选择一级分类')
+                    return
+                }
+                if (showLoading.value) return
                 console.log('submit!')
+                showLoading.value = true
+
+                try {
+                    const params: any = {
+                        timestamp: Date.now(),
+                        id: ruleForm.id,
+                        name: ruleForm.name,
+                        appNo: ruleForm.appNo,
+                        functionValue: ruleForm.functionValue,
+                        uid: ruleForm.uid,
+                        promptWords: ruleForm.promptWords,
+                        reversePrompts: ruleForm.reversePrompts,
+                        region: ruleForm.region,
+                        diffusionValue: ruleForm.diffusionValue,
+
+                        classificationId: ruleForm.secondClassId ? ruleForm.secondClassId : ruleForm.classId,
+                    }
+                    console.log("🚀 ~ submitForm ~ params:", params)
+                    console.log('ruleForm', ruleForm);
+
+                    console.log("🚀 ~ submitForm ~ ruleForm.imageUrl:", ruleForm.imageUrl)
+
+                    if (ruleForm.imageUrl.startsWith('data')) {
+
+                        params.imageUrl = ruleForm.imageUrl.split(',')[1]
+                    }
+                    if (ruleForm.language) {
+                        const langObj = {
+                            [ruleForm.language]: ruleForm.languageText
+                        }
+                        params.international = JSON.stringify(langObj)
+                    }
+
+
+                    const enData = desEncrypt(JSON.stringify(params))
+                    const res = await service.post('/hairMaterials/save', {
+                        enData
+                    })
+                    console.log("🚀 ~ submitForm ~ res:", res)
+                    if (res.data.code === 200) {
+                        ElMessage.success('保存成功')
+                        resetForm(ruleFormRef.value)
+                    } else {
+                        ElMessage.error(res.data.msg)
+                    }
+                } catch (err) {
+                    console.log("🚀 ~ submitForm ~ err:", err)
+
+                } finally {
+                    showLoading.value = false
+                }
+
             } else {
                 console.log('error submit!', fields)
             }
@@ -142,14 +265,58 @@
     const resetForm = (formEl: FormInstance | undefined) => {
         if (!formEl) return
         formEl.resetFields()
+        // 清空文件列表和图片URL
+        fileList.value = []
+        ruleForm.imageUrl = ''
         dialogVisible.value = false
+    }
+
+    // 初始化编辑数据（用于编辑模式）
+    const initEditData = (data: any) => {
+
+        Object.assign(ruleForm, data)
+        console.log("🚀 ~ initEditData ~ ruleForm:", ruleForm)
+        getCategoryList(true)
+        // 如果有图片URL，需要初始化文件列表
+        if (data.imageUrl) {
+            let imageUrl = data.imageUrl
+
+            // 判断图片URL类型并正确处理
+            if (data.imageUrl.startsWith('data:')) {
+                // 已经是base64格式，直接使用
+                imageUrl = data.imageUrl
+            } else if (data.imageUrl.startsWith('http://') || data.imageUrl.startsWith('https://')) {
+                // 在线图片地址，直接使用
+                imageUrl = data.imageUrl
+            } else {
+                // 假设是base64编码字符串，添加前缀
+                imageUrl = `data:image/jpeg;base64,${data.imageUrl}`
+            }
+
+            fileList.value = [{
+                name: 'image',
+                url: imageUrl,
+                uid: Date.now(),
+                status: 'success'
+            }]
+        } else {
+            fileList.value = []
+        }
+        if (data.international) {
+            const langObj = JSON.parse(data.international)
+            ruleForm.language = Object.keys(langObj)[0]
+            ruleForm.languageText = langObj[Object.keys(langObj)[0]]
+        }
     }
 
 
 
 
+
+
     const firstCategoryList = ref<any>([])
-    const getCategoryList = async () => {
+    const getCategoryList = async (initEdit: boolean = false) => {
+        if (!ruleForm.functionValue) return
         try {
             const params = {
                 timestamp: Date.now(),
@@ -163,6 +330,23 @@
             console.log("🚀 ~ getCategoryList ~ res:", res)
             if (res.data.code === 200) {
                 firstCategoryList.value = res.data.data.hairMaterialClassification
+                ruleForm.classId = ''
+                ruleForm.secondClassId = ''
+                secondCategoryList.value = []
+                if (initEdit) {
+                    if (ruleForm.classificationId) {
+                        const isFirstClass = firstCategoryList.value.some((item: any) => item.id === ruleForm.classificationId)
+                        if (isFirstClass) {
+                            ruleForm.classId = ruleForm.classificationId
+                            secondCategoryList.value = firstCategoryList.value.find((item: any) => item.id === ruleForm.classificationId)?.children
+                        } else {
+                            ruleForm.secondClassId = ruleForm.classificationId
+                            ruleForm.classId = firstCategoryList.value.find((item: any) => item.children.some((child: any) => child.id === ruleForm.classificationId))?.id
+                            secondCategoryList.value = firstCategoryList.value.find((item: any) => item.id === ruleForm.classId)?.children
+                        }
+                    }
+                }
+
             } else {
                 ElMessage.error(res.data.msg)
             }
@@ -173,6 +357,9 @@
     }
     const changeFunction = () => {
         getCategoryList()
+        if (ruleForm.functionValue) {
+            getUid()
+        }
     }
 
 
@@ -193,34 +380,57 @@
             fileList.value.splice(index, 1)
         }
         // 清空表单中的图片字段
-        ruleForm.image = ''
+        ruleForm.imageUrl = ''
         console.log('文件已删除，当前文件列表:', fileList.value)
+
+        // 触发表单验证
+        ruleFormRef.value?.validateField('image')
     }
 
-    const beforeUpload = (file: File) => {
-        console.log('准备上传文件:', file)
-        // 可以在这里添加文件类型和大小验证
-        const isImage = file.type.startsWith('image/')
-        const isLt2M = file.size / 1024 / 1024 < 2
-
-        if (!isImage) {
-            console.error('只能上传图片文件!')
-            return false
+    // 文件变化时触发（选择文件时）
+    const handleFileChange = (file: UploadFile, fileList: UploadFile[]) => {
+        console.log('文件变化事件触发:', file, fileList)
+        if (file.raw) {
+            processFile(file.raw)
         }
-        if (!isLt2M) {
-            console.error('图片大小不能超过 2MB!')
-            return false
-        }
+    }
 
-        // 将文件转换为 base64 或处理文件上传逻辑
+    // 处理文件的通用方法
+    const processFile = (file: File) => {
+        console.log('处理文件:', file)
+
+        // 文件类型和大小验证
+        // const isImage = file.type.startsWith('image/')
+        // const isLt2M = file.size / 1024 / 1024 < 2
+
+        // if (!isImage) {
+        //     ElMessage.error('只能上传图片文件!')
+        //     return false
+        // }
+        // if (!isLt2M) {
+        //     ElMessage.error('图片大小不能超过 2MB!')
+        //     return false
+        // }
+
+        // 将文件转换为 base64
         const reader = new FileReader()
         reader.onload = (e) => {
-            ruleForm.image = e.target?.result as string
+            ruleForm.imageUrl = e.target?.result as string
+
+            ElMessage.success('图片上传成功')
+
+            // 触发表单验证
+            ruleFormRef.value?.validateField('image')
+        }
+        reader.onerror = () => {
+            ElMessage.error('文件读取失败')
         }
         reader.readAsDataURL(file)
 
-        return false // 阻止自动上传
+        return true
     }
+
+
 </script>
 
 <style lang="scss" scoped>

@@ -3,7 +3,7 @@
         <el-form :model="ruleForm" :rules="rules" ref="ruleFormRef" label-width="auto" class="demo-ruleForm">
             <el-form-item label="算法应用功能" prop="functionValue">
                 <el-select v-model="ruleForm.functionValue" :disabled="true">
-                    <el-option v-for="item in functionList" :key="item.value" :label="item.note" :value="item.value" />
+                    <el-option v-for="item in functionList" :key="item.id" :label="item.name" :value="item.id" />
                 </el-select>
             </el-form-item>
             <el-form-item label="算法当前参数调整" prop="weight">
@@ -18,7 +18,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { reactive, ref, computed } from 'vue'
+    import { reactive, ref, computed, watch } from 'vue'
     import type { FormRules, FormInstance } from 'element-plus'
     import { useCounterStore } from '@/stores/counter'
     import { storeToRefs } from 'pinia'
@@ -27,12 +27,16 @@
     const ruleFormRef = ref<any>()
     interface Props {
         functionValue: string | number
+        weight: number
     }
     const props = defineProps<Props>()
     const dialogVisible = defineModel('dialogVisible', {
         type: Boolean,
         default: false
     })
+    const emit = defineEmits<{
+        'update': [value: number]
+    }>()
     const ruleForm = reactive<any>({
         id: '',
         functionValue: computed(() => props.functionValue),
@@ -53,6 +57,8 @@
         await formEl.validate((valid) => {
             if (valid) {
                 console.log('submit!')
+                emit('update', ruleForm.weight)
+                resetForm(ruleFormRef.value)
             } else {
                 console.log('error submit!')
             }
@@ -65,6 +71,16 @@
         dialogVisible.value = false
     }
 
+    watch(() => dialogVisible.value, (newV) => {
+        if (newV) {
+            if (props.weight) {
+                initData()
+            }
+        }
+    })
+    const initData = () => {
+        ruleForm.weight = props.weight
+    }
 </script>
 
 <style lang="scss" scoped></style>

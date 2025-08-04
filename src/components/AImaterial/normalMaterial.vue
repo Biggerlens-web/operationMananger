@@ -14,14 +14,15 @@
 
                     <div class="template_data" @click.stop>
                         <p class="p_id">ID:{{ element.id }}</p>
-                        <p class="p_viewNum">点击量:{{ element.clickCount }}</p>
-                        <p class="p_viewNum">喜欢数:{{ element.likeCount }}</p>
-                        <p class="p_viewNum">上线日期:{{ element.onlineDate }}</p>
-                        <p class="p_viewNum">权值:{{ element.weight }}</p>
+                        <p class="p_viewNum">点击量:{{ element.viewNum ? element.viewNum : '0' }}</p>
+                        <p class="p_viewNum">喜欢数:{{ element.likeNum ? element.likeNum : '0' }}</p>
+                        <p class="p_viewNum">上线日期:{{ element.createDate ? dayjs(element.createDate).format('YYYY-MM-DD')
+                            : '--' }}</p>
+                        <p class="p_viewNum">权值:{{ element.weights }}</p>
                     </div>
 
                     <div class="img-wrapper">
-                        <img :src="element.coverImage" alt="素材封面" class="template-img" />
+                        <img :src="element.imageUrl" alt="素材封面" class="template-img" />
                     </div>
                     <p class="template-name">
                         <el-button v-if="!isDelete" type="primary" @click="editorTemplate(element)" size='samll'>
@@ -39,9 +40,16 @@
 </template>
 
 <script lang="ts" setup>
+    import service from '@/axios';
+    import { useCounterStore } from '@/stores/counter';
+    import { desEncrypt } from '@/utils/des';
+    import { ElMessage, ElMessageBox } from 'element-plus';
+    import { storeToRefs } from 'pinia';
     import { onActivated, ref } from 'vue';
     import draggable from 'vuedraggable'
-
+    import dayjs from 'dayjs'
+    const counterStore = useCounterStore()
+    const { showLoading, defaultAppNo } = storeToRefs(counterStore)
     interface Props {
         isDelete: boolean;
         searchParams: any
@@ -72,90 +80,7 @@
     }
 
     const appData = ref<AppItem[]>([
-        {
-            id: 1,
-            appId: 'APP001',
-            shortName: '时尚穿搭',
-            companyName: '美图科技',
-            accessName: 'fashion-style',
-            systemId: 'SYS001',
-            developer: '张三',
-            clickCount: 15420,
-            likeCount: 2340,
-            onlineDate: '2024-01-15',
-            weight: 0.85,
-            coverImage: 'https://picsum.photos/300/200?random=1'
-        },
-        {
-            id: 2,
-            appId: 'APP002',
-            shortName: '美妆教程',
-            companyName: '美图科技',
-            accessName: 'makeup-tutorial',
-            systemId: 'SYS002',
-            developer: '李四',
-            clickCount: 23680,
-            likeCount: 4120,
-            onlineDate: '2024-02-20',
-            weight: 0.92,
-            coverImage: 'https://picsum.photos/300/200?random=2'
-        },
-        {
-            id: 3,
-            appId: 'APP003',
-            shortName: '风景摄影',
-            companyName: '创意工坊',
-            accessName: 'landscape-photo',
-            systemId: 'SYS003',
-            developer: '王五',
-            clickCount: 8950,
-            likeCount: 1580,
-            onlineDate: '2024-03-10',
-            weight: 0.78,
-            coverImage: 'https://picsum.photos/300/200?random=3'
-        },
-        {
-            id: 4,
-            appId: 'APP004',
-            shortName: '卡通头像',
-            companyName: '趣味设计',
-            accessName: 'cartoon-avatar',
-            systemId: 'SYS004',
-            developer: '赵六',
-            clickCount: 31200,
-            likeCount: 5670,
-            onlineDate: '2024-01-28',
-            weight: 0.95,
-            coverImage: 'https://picsum.photos/300/200?random=4'
-        },
-        {
-            id: 5,
-            appId: 'APP005',
-            shortName: '商务模板',
-            companyName: '专业设计',
-            accessName: 'business-template',
-            systemId: 'SYS005',
-            developer: '孙七',
-            clickCount: 12750,
-            likeCount: 2890,
-            onlineDate: '2024-02-14',
-            weight: 0.88,
-            coverImage: 'https://picsum.photos/300/200?random=5'
-        },
-        {
-            id: 6,
-            appId: 'APP006',
-            shortName: '节日贺卡',
-            companyName: '节庆创意',
-            accessName: 'holiday-card',
-            systemId: 'SYS006',
-            developer: '周八',
-            clickCount: 18640,
-            likeCount: 3450,
-            onlineDate: '2024-03-05',
-            weight: 0.82,
-            coverImage: 'https://picsum.photos/300/200?random=6'
-        }
+
     ])
 
 
@@ -187,6 +112,37 @@
     //删除素材
     const deleteTemplate = (item: any) => {
 
+
+
+
+        ElMessageBox.confirm('确认删除吗？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+        }).then(async () => {
+            if (showLoading.value) return
+            showLoading.value = true
+            try {
+                const res = await service.post(`/hairMaterials/del/${item.id}`)
+                if (res.data.code === 200) {
+                    ElMessage.success('删除成功')
+                    getMaterialData()
+                } else {
+                    ElMessage.error(res.data.msg)
+                }
+            } catch (err) {
+                console.log("🚀 ~ deleteTemplate ~ err:", err)
+
+            } finally {
+                showLoading.value = false
+            }
+        }).catch(() => {
+            ElMessage({
+                type: 'info',
+                message: '已取消删除'
+            })
+        })
+
     }
 
 
@@ -195,12 +151,32 @@
 
     //获取素材
     const getMaterialData = async () => {
+        showLoading.value = true
         try {
             console.log('子组件获取数据', props.searchParams);
+            const params = {
+                timestamp: Date.now(),
+                appNo: defaultAppNo.value,
+                functionValue: props.searchParams.functionValue,
+                classificationId: props.searchParams.secondClassId ? props.searchParams.secondClassId : props.searchParams.classId,
+                region: props.searchParams.region
+            }
+            console.log("🚀 ~ getMaterialData ~ params:", params)
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/hairMaterials/list', {
+                enData
+            })
+            console.log("🚀 ~ getMaterialData ~ res:", res)
+            if (res.data.code === 200) {
+                appData.value = res.data.data.list
+            } else {
+                ElMessage.error(res.data.msg)
+            }
         } catch (err) {
+            console.log("🚀 ~ getMaterialData ~ err:", err)
 
         } finally {
-
+            showLoading.value = false
         }
     }
 

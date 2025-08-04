@@ -6,76 +6,134 @@
             <el-table-column fixed="right" label="操作" width="120">
                 <template #default="scope">
                     <el-button link type="primary" size="small" @click="handleClick(scope.row)">
-                        Edit
+                        编辑
                     </el-button>
 
                 </template>
             </el-table-column>
         </el-table>
     </div>
-    <editWeight v-model:dialogVisible="dialogVisible" :functionValue="functionValue" />
+    <editWeight v-model:dialogVisible="dialogVisible" :functionValue="functionValue" :weight="weight"
+        @update="changeWeight" />
 </template>
 
 <script lang="ts" setup>
     import { onActivated, ref } from 'vue'
     import editWeight from './editWeight.vue'
+    import { useCounterStore } from '@/stores/counter'
+    import { storeToRefs } from 'pinia'
+    import { desEncrypt } from '@/utils/des'
+    import service from '@/axios'
+    import { ElMessage } from 'element-plus'
     const dialogVisible = ref<boolean>(false)
-
+    const counterStore = useCounterStore()
+    const { showLoading, defaultAppNo } = storeToRefs(counterStore)
 
     interface Props {
         functionValue: string | number
         searchParams: any
     }
     const props = defineProps<Props>()
+
+
+
+    const weightNameList: any = {
+        likeWeight: '点赞量权值',
+        viewWeight: '点击量权值',
+        timeWeight: '时间衰减权值'
+    }
+
+
     // 权重管理数据数组
-    const tableData = [
-        {
-            name: '高优先级素材',
-            weight: 10
-        },
-        {
-            name: '中优先级素材',
-            weight: 5
-        },
-        {
-            name: '低优先级素材',
-            weight: 2
-        },
-        {
-            name: '默认素材',
-            weight: 1
-        },
-        {
-            name: '特殊推荐素材',
-            weight: 15
-        },
-        {
-            name: '季节性素材',
-            weight: 8
-        },
-        {
-            name: '热门素材',
-            weight: 12
-        },
-        {
-            name: '新上架素材',
-            weight: 6
-        }
-    ]
+    const tableData = ref<any>([
 
+    ])
 
+    const name = ref('')
+
+    const weight = ref(0)
     const handleClick = (row: any) => {
         console.log(row)
+        name.value = row.key
+        weight.value = row.weight
         dialogVisible.value = true
     }
 
 
     const getWeightData = async () => {
+        showLoading.value = true
         try {
             console.log('权重管理数据', props.searchParams);
+            const params = {
+                timestamp: Date.now(),
+                appNo: defaultAppNo.value,
+                id: props.searchParams.functionValue
+            }
+            console.log("🚀 ~ getWeightData ~ params:", params)
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/hairMaterials/function/list', {
+                enData
+            })
+            console.log("🚀 ~ getWeightData ~ res:", res)
+            if (res.data.code === 200) {
+                const arr = [
+                    {
+                        name: weightNameList.likeWeight,
+                        weight: res.data.data.list[0].likeWeight,
+                        key: 'likeWeight'
+                    },
+                    {
+                        name: weightNameList.viewWeight,
+                        weight: res.data.data.list[0].viewWeight,
+                        key: 'viewWeight'
+                    },
+                    {
+                        name: weightNameList.timeWeight,
+                        weight: res.data.data.list[0].timeWeight,
+                        key: 'timeWeight'
+                    }
+                ]
+                tableData.value = arr
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+
         } catch (err) {
 
+        } finally {
+            showLoading.value = false
         }
+    }
+
+
+
+    const changeWeight = async (weight: number) => {
+        if (showLoading.value) return
+        showLoading.value = true
+        try {
+            const params = {
+                timestamp: Date.now(),
+                id: props.functionValue,
+                [name.value]: weight
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/hairMaterials/function/save', {
+                enData
+            })
+            console.log("🚀 ~ changeWeight ~ res:", res)
+            if (res.data.code === 200) {
+                ElMessage.success('修改成功')
+                getWeightData()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log("🚀 ~ changeWeight ~ err:", err)
+
+        } finally {
+            showLoading.value = false
+        }
+
     }
 
     onActivated(() => {

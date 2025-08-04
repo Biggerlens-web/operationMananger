@@ -25,7 +25,7 @@
                 <div class="filter-row">
 
 
-                    <div class="filter-item">
+                    <div class="filter-item" v-if="activeKey === 'normalMaterial'">
                         <el-select filterable v-model="searchParams.region" clearable placeholder="地区"
                             @change="changeFunction" class="filter-select">
                             <el-option v-for="item in regionList" :key="item.value" :label="item.label"
@@ -38,20 +38,20 @@
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.functionValue" clearable placeholder="功能"
                             @change="changeFunction" class="filter-select">
-                            <el-option v-for="item in functionList" :key="item.value" :label="item.note"
-                                :value="item.value" />
+                            <el-option v-for="item in functionList" :key="item.id" :label="item.name"
+                                :value="item.id" />
                         </el-select>
 
 
                     </div>
-                    <div class="filter-item">
+                    <div class="filter-item" v-if="activeKey === 'normalMaterial'">
                         <el-select filterable v-model="searchParams.classId" clearable placeholder="一级分类"
                             class="filter-select" @change="changeFirstClass">
                             <el-option v-for="item in firstCategoryList" :key="item.id" :label="item.className"
                                 :value="item.id" />
                         </el-select>
                     </div>
-                    <div class="filter-item">
+                    <div class="filter-item" v-if="activeKey === 'normalMaterial'">
                         <el-select filterable v-model="searchParams.secondClassId" clearable placeholder="二级分类"
                             class="filter-select">
                             <el-option v-for="item in secondCategoryList" :key="item.id" :label="item.className"
@@ -96,7 +96,7 @@
             </customButton>
         </div> -->
     </div>
-    <editMaterial v-model:dialog-visible="dialogEditMaterial" />
+    <editMaterial v-model:dialog-visible="dialogEditMaterial" :material-info="materialInfo" />
     <addClass v-model:dialog-visible="dialogAddClass" :firstCategoryList="firstCategoryList" />
 </template>
 
@@ -192,7 +192,7 @@
 
             if (res.data.code === 200) {
                 functionList.value = res.data.data.functionType
-                searchParams.value.functionValue = res.data.data.functionType[0].value
+                searchParams.value.functionValue = res.data.data.functionType[0].id
             } else {
                 ElMessage.error(res.data.msg)
             }
@@ -301,6 +301,8 @@
         },
     ])
 
+
+
     const handleActionBtn = (item: ActionBtnItem) => {
         switch (item.key) {
             case 'addCategory':
@@ -407,11 +409,18 @@
 
     //编辑素材
     const dialogEditMaterial = ref<boolean>(false)
+    const materialInfo = ref<any>()
     const EditingMaterial = (info: any) => {
         console.log('编辑数据', info);
+        materialInfo.value = info
         dialogEditMaterial.value = true
     }
-
+    watch(() => dialogEditMaterial.value, (newV) => {
+        if (!newV) {
+            materialInfo.value = ''
+            callSpecificMethod()
+        }
+    })
 
 
     onMounted(async () => {
