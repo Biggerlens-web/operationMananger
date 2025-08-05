@@ -201,7 +201,12 @@
 
             if (res.data.code === 200) {
                 functionList.value = res.data.data.functionType
-                searchParams.value.functionValue = res.data.data.functionType[0].id
+                if (res.data.data.functionType.length) {
+                    searchParams.value.functionValue = res.data.data.functionType[0].id || ''
+                } else {
+                    searchParams.value.functionValue = ''
+                }
+
             } else {
                 ElMessage.error(res.data.msg)
             }
@@ -397,7 +402,8 @@
 
 
 
-    watch(() => defaultAppNo.value, () => {
+    watch(() => defaultAppNo.value, async () => {
+        await getFunctionList()
         callSpecificMethod()
     })
 

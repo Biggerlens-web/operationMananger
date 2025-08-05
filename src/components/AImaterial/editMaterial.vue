@@ -1,5 +1,6 @@
 <template>
-    <el-dialog v-model="dialogVisible" title="编辑素材" :before-close="() => resetForm(ruleFormRef)">
+    <el-dialog v-model="dialogVisible" :title="`${ruleForm.id ? '编辑' : '新增'}素材`"
+        :before-close="() => resetForm(ruleFormRef)">
         <el-form ref="ruleFormRef" style="max-width: 600px" :model="ruleForm" :rules="rules" label-width="auto">
             <el-form-item label="素材名称" prop="name">
                 <el-input v-model="ruleForm.name" placeholder="请输入素材名称" />
@@ -55,14 +56,15 @@
                     </template>
                 </el-upload>
             </el-form-item>
-            <el-form-item label="其他语言" prop="language">
-                <el-select v-model="ruleForm.language" placeholder="请选择其他语言">
+            <el-form-item label="其他语言" prop="languageList">
+                <el-select v-model="ruleForm.languageList" placeholder="请选择其他语言" multiple @change="changeLanguage">
                     <el-option v-for="langOption in international" :key="langOption.value" :label="langOption.language"
                         :value="langOption.value" />
                 </el-select>
             </el-form-item>
-            <el-form-item label="输入其他语言" prop="languageText">
-                <el-input v-model="ruleForm.languageText" placeholder="请输入其他语言" />
+            <el-form-item v-for="lang in ruleForm.languageObjList" :key="lang.language"
+                :label="`请输入${lang.languageName}`" prop="languageText">
+                <el-input v-model="lang.languageText" :placeholder="`请输入${lang.languageName}`" />
             </el-form-item>
             <el-form-item label="UID" prop="uid">
                 <el-input v-model="ruleForm.uid" placeholder="" :disabled="true" />
@@ -119,14 +121,32 @@
         classId: '',
         secondClassId: '',
         imageUrl: '',
-        languageText: '',
         promptWords: '',
         reversePrompts: '',
         region: '',
         diffusionValue: 0,
-
+        languageList: [],
+        languageObjList: []
 
     })
+
+
+    //选择语言
+    const changeLanguage = () => {
+
+        ruleForm.languageObjList = ruleForm.languageList.map((item: any) => {
+            const langObj = international.value.find((lang: any) => lang.value === item)
+            const text = ruleForm.languageObjList.find((lang: any) => lang.language === item)
+
+            return {
+                language: item,
+                languageText: text?.languageText || '',
+                languageName: langObj.language
+            }
+        })
+
+    }
+
 
     const getUid = async () => {
         try {
@@ -230,10 +250,22 @@
 
                         params.imageUrl = ruleForm.imageUrl.split(',')[1]
                     }
-                    if (ruleForm.language) {
-                        const langObj = {
-                            [ruleForm.language]: ruleForm.languageText
+                    if (ruleForm.languageObjList.length) {
+
+
+                        const langObj: any = {
+
                         }
+                        ruleForm.languageObjList.forEach((item: any) => {
+                            langObj[item.language] = item.languageText
+
+                        })
+                        for (const key in langObj) {
+                            if (!langObj[key]) {
+                                delete langObj[key]
+                            }
+                        }
+                        console.log("🚀 ~ submitForm ~ langObj:", langObj)
                         params.international = JSON.stringify(langObj)
                     }
 
@@ -265,6 +297,8 @@
     const resetForm = (formEl: FormInstance | undefined) => {
         if (!formEl) return
         formEl.resetFields()
+        ruleForm.languageObjList = []
+        ruleForm.languageList = []
         // 清空文件列表和图片URL
         fileList.value = []
         ruleForm.imageUrl = ''
@@ -304,7 +338,20 @@
         }
         if (data.international) {
             const langObj = JSON.parse(data.international)
+            const keys = Object.keys(langObj)
+            for (let i = 0; i < keys.length; i++) {
+                const key = keys[i];
+                const element = langObj[key];
+                ruleForm.languageObjList.push({
+                    language: key,
+                    languageText: element,
+                    languageName: international.value.find((lang: any) => lang.value === key).language
+                })
+                ruleForm.languageList.push(key)
+
+            }
             ruleForm.language = Object.keys(langObj)[0]
+
             ruleForm.languageText = langObj[Object.keys(langObj)[0]]
         }
     }
