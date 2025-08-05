@@ -5,7 +5,8 @@
                 <el-input v-model="ruleForm.name" placeholder="请输入素材名称" />
             </el-form-item>
             <el-form-item label="应用" prop="appNo">
-                <el-select v-model="ruleForm.appNo" placeholder="请选择应用" filterable @change="changeFunction">
+                <el-select :disabled="true" v-model="defaultAppNo" placeholder="请选择应用" filterable
+                    @change="changeFunction">
                     <el-option v-for="item in appList" :key="item.appNo"
                         :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
                         :value="item.appNo" />
@@ -18,8 +19,8 @@
             </el-form-item>
             <el-form-item label="功能点" prop="functionValue">
                 <el-select v-model="ruleForm.functionValue" placeholder="请选择功能点" @change="changeFunction">
-                    <el-option v-for="item in functionList" :key="item.value" :label="item.note"
-                        :value="item.value"></el-option>
+                    <el-option v-for="item in functionList" :key="item.id" :label="item.name"
+                        :value="item.id"></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item label="分类" prop="classId">
@@ -98,7 +99,7 @@
     import { desEncrypt } from '@/utils/des'
     import service from '@/axios'
     const counterStore = useCounterStore()
-    const { appList, functionList, international, regionList, showLoading } = storeToRefs(counterStore)
+    const { appList, functionList, international, regionList, showLoading, defaultAppNo } = storeToRefs(counterStore)
     const dialogVisible = defineModel('dialogVisible', {
         type: Boolean,
         default: false
@@ -131,7 +132,9 @@
         try {
             const params = {
                 timestamp: Date.now(),
-                functionValue: ruleForm.functionValue
+                functionValue: ruleForm.functionValue,
+                appNo: defaultAppNo.value,
+                region: ruleForm.region
             }
             console.log("🚀 ~ getUid ~ params:", params)
             const enData = desEncrypt(JSON.stringify(params))
@@ -166,10 +169,7 @@
             { required: true, message: '请输入素材名称', trigger: 'blur' },
             { min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur' }
         ],
-        appNo: [
-            { required: true, message: '请选择应用', trigger: 'change' },
 
-        ],
         functionValue: [
             { required: true, message: '请选择功能点', trigger: 'change' }
         ],
@@ -211,7 +211,7 @@
                         timestamp: Date.now(),
                         id: ruleForm.id,
                         name: ruleForm.name,
-                        appNo: ruleForm.appNo,
+                        appNo: defaultAppNo.value,
                         functionValue: ruleForm.functionValue,
                         uid: ruleForm.uid,
                         promptWords: ruleForm.promptWords,
@@ -320,7 +320,7 @@
         try {
             const params = {
                 timestamp: Date.now(),
-                appNo: ruleForm.appNo,
+                appNo: defaultAppNo.value,
                 functionValue: ruleForm.functionValue
             }
             const enData = desEncrypt(JSON.stringify(params))

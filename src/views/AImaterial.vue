@@ -187,7 +187,16 @@
     const getFunctionList = async () => {
 
         try {
-            const res = await service.get('/hairMaterials/functionValues')
+            const params = {
+                timestamp: Date.now(),
+                appNo: defaultAppNo.value
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get('/hairMaterials/functionValues', {
+                params: {
+                    enData
+                }
+            })
             console.log("🚀 ~ getFunctionList ~ res:", res)
 
             if (res.data.code === 200) {
