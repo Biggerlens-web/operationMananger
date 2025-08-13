@@ -24,6 +24,9 @@
           </el-button>
         </div>
       </div>
+      <div style="margin-bottom: 20px;" v-if="formData.bigUrl.includes('http') || formData.smallUrl.includes('http')">
+        <el-button type="primary" @click="downloadImg">下载图片</el-button>
+      </div>
 
       <!-- 表单内容区域 -->
       <div class="form-content">
@@ -134,6 +137,47 @@
     'update:dialogEditor': [value: boolean]
     confirm: [data: any]
   }>()
+
+
+  // 下载单个图片的辅助函数
+  const downloadSingleImage = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      // 清理blob URL
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('下载图片失败:', error);
+      // 如果fetch失败，回退到直接打开链接
+      window.open(url, '_blank');
+    }
+  };
+
+  //下载图片
+  const downloadImg = async () => {
+    console.log('下载图片');
+
+    // 下载大图
+    if (formData.bigUrl && formData.bigUrl.includes('http')) {
+      await downloadSingleImage(formData.bigUrl, `big_image_${Date.now()}.jpg`);
+    }
+
+    // 下载小图
+    if (formData.smallUrl && formData.smallUrl.includes('http')) {
+      await downloadSingleImage(formData.smallUrl, `small_image_${Date.now()}.jpg`);
+    }
+  }
+
 
   // 表单数据
   const formData = reactive<any>({
