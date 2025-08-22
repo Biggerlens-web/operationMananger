@@ -1,7 +1,6 @@
 <template>
     <div class="view">
 
-
         <el-card class="filter-card">
             <div class="card-header" style="margin: 0;">
                 <div class="right-actions ">
@@ -97,7 +96,39 @@
         </div> -->
     </div>
     <editMaterial v-model:dialog-visible="dialogEditMaterial" :material-info="materialInfo" />
-    <addClass v-model:dialog-visible="dialogAddClass" :firstCategoryList="firstCategoryList" />
+    <addClass v-model:dialog-visible="dialogAddClass" :firstCategoryList="firstCategoryList"
+        :editClassInfo="editClassInfo" />
+
+    <!-- 分类管理 -->
+    <el-dialog title="分类管理" v-model="dialogClass" width="550">
+
+        <div class="all-category-container">
+            <div class="all-category-item" v-for="item in allCategoryList" :key="item.id">
+                <div class="category-content">
+                    <div class="category-main-info">
+                        <span class="category-title">{{ item.className }}</span>
+                        <span class="category-meta">ID: {{ item.id }}</span>
+                    </div>
+                </div>
+                <div class="category-operations">
+                    <el-button @click="handleEditFirstClass(item)" type="primary" size="small" plain>
+
+                        <el-icon>
+                            <Edit />
+                        </el-icon>
+                        编辑
+                    </el-button>
+                </div>
+            </div>
+            <div v-if="allCategoryList.length === 0" class="all-category-empty">
+                <el-icon class="empty-icon">
+                    <FolderOpened />
+                </el-icon>
+                <p>暂无分类数据</p>
+            </div>
+        </div>
+    </el-dialog>
+
 </template>
 
 <script setup lang="ts">
@@ -220,7 +251,8 @@
     //获取分类列表
     const firstCategoryList = ref<any>([])
     const secondCategoryList = ref<any>([])
-    const getCategoryList = async () => {
+    const getCategoryList = async (isViewClass?: boolean) => {
+
         try {
             const params = {
                 timestamp: Date.now(),
@@ -236,8 +268,30 @@
 
 
             if (res.data.code === 200) {
-                firstCategoryList.value = res.data.data.hairMaterialClassification
-                secondCategoryList.value = []
+
+                if (isViewClass) {
+                    allCategoryList.value = []
+                    res.data.data.hairMaterialClassification.forEach((item: any) => {
+                        allCategoryList.value.push(
+                            item
+                        )
+                        item.children.forEach((child: any) => {
+                            allCategoryList.value.push(
+                                child
+                            )
+
+                        })
+                    })
+                    console.log('allCategoryList', allCategoryList.value);
+
+                } else {
+                    firstCategoryList.value = res.data.data.hairMaterialClassification
+                    secondCategoryList.value = []
+                    if (searchParams.value.classId) {
+                        secondCategoryList.value = firstCategoryList.value.find((item: any) => item.id === searchParams.value.classId)?.children
+                    }
+
+                }
 
             } else {
                 ElMessage.error(res.data.msg)
@@ -302,6 +356,12 @@
             key: 'addMaterial'
         },
         {
+            label: '分类管理',
+            key: 'categoryManagement'
+
+        },
+
+        {
             label: '加权管理',
             key: 'weightedManagement'
         },
@@ -333,6 +393,10 @@
                 isDelete.value = !isDelete.value
 
                 break;
+            case 'categoryManagement':
+                dialogClass.value = true
+                break;
+
             default:
                 break;
         }
@@ -411,13 +475,31 @@
 
 
 
+    //分类管理
+    const dialogClass = ref<boolean>(false)
+    const allCategoryList = ref<any>([])
+    const editClassInfo = ref<any>()
+    const handleEditFirstClass = (item: any) => {
+        editClassInfo.value = item
+        dialogAddClass.value = true
+    }
 
+    watch(() => dialogClass.value, (newV) => {
+        if (newV) {
+            getCategoryList(true)
+
+        } else {
+            editClassInfo.value = false
+
+        }
+    })
 
     //新增分类
     const dialogAddClass = ref<boolean>(false)
     watch(() => dialogAddClass.value, (newV) => {
         if (!newV) {
             getCategoryList()
+            getCategoryList(true)
         }
     })
 
@@ -763,6 +845,304 @@
                 opacity: 0.8;
                 transform: rotate(3deg);
                 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        /* 分类管理样式 */
+        .category-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: #ffffff;
+            border: 1px solid #e4e7ed;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+
+            &:hover {
+                border-color: #409eff;
+                box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+                transform: translateY(-1px);
+            }
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        .category-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .category-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #303133;
+            line-height: 1.4;
+        }
+
+        .category-id {
+            font-size: 12px;
+            color: #909399;
+            font-family: 'Courier New', monospace;
+        }
+
+        .category-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            color: #909399;
+            text-align: center;
+
+            .empty-icon {
+                font-size: 48px;
+                margin-bottom: 16px;
+                opacity: 0.6;
+            }
+
+            p {
+                margin: 0;
+                font-size: 14px;
+                line-height: 1.5;
+            }
+        }
+
+        /* 全部分类列表样式 - 优化版本 */
+        .all-category-container {
+            max-height: 480px;
+            overflow-y: auto;
+            padding: 16px 0;
+
+            /* 自定义滚动条 */
+            &::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            &::-webkit-scrollbar-track {
+                background: #f5f7fa;
+                border-radius: 3px;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background: linear-gradient(180deg, #409eff, #67c23a);
+                border-radius: 3px;
+
+                &:hover {
+                    background: linear-gradient(180deg, #337ecc, #529b2e);
+                }
+            }
+        }
+
+        .all-category-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff 0%, #fafbfc 50%, #f8f9fa 100%);
+            border: 1px solid #e4e7ed;
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+
+            /* 渐变边框效果 */
+            &::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 5px;
+                height: 100%;
+                background: linear-gradient(180deg, #409eff 0%, #67c23a 50%, #e6a23c 100%);
+                transform: scaleY(0);
+                transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+                border-radius: 0 3px 3px 0;
+            }
+
+            /* 光泽效果 */
+            &::after {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+                transition: transform 0.6s ease;
+                pointer-events: none;
+            }
+
+            &:hover {
+                border-color: #409eff;
+                box-shadow:
+                    0 8px 32px rgba(64, 158, 255, 0.12),
+                    0 4px 16px rgba(64, 158, 255, 0.08),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+                transform: translateY(-3px) scale(1.02);
+                background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 50%, #e6f7ff 100%);
+
+                &::before {
+                    transform: scaleY(1);
+                }
+
+                &::after {
+                    transform: translateX(100%) translateY(100%) rotate(45deg);
+                }
+
+                .category-title {
+                    color: #1890ff;
+                }
+
+                .category-meta {
+                    background: linear-gradient(135deg, #e6f7ff, #bae7ff);
+                    color: #1890ff;
+                    border: 1px solid #91d5ff;
+                }
+            }
+
+            &:active {
+                transform: translateY(-1px) scale(1.01);
+                transition: all 0.1s ease;
+            }
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        .category-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+            /* 防止文本溢出 */
+        }
+
+        .category-main-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .category-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1.5;
+            letter-spacing: 0.2px;
+            transition: color 0.3s ease;
+            word-break: break-word;
+
+            /* 文字渐变效果 */
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .category-meta {
+            font-size: 13px;
+            color: #718096;
+            font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            padding: 4px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            width: fit-content;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .category-operations {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-left: auto;
+            flex-shrink: 0;
+
+            .el-button {
+                border-radius: 10px;
+                font-weight: 600;
+                padding: 8px 16px;
+                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                box-shadow: 0 2px 8px rgba(64, 158, 255, 0.15);
+
+                &:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 16px rgba(64, 158, 255, 0.25);
+                }
+
+                &:active {
+                    transform: translateY(0);
+                }
+            }
+        }
+
+        .all-category-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            color: #8492a6;
+            text-align: center;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 16px;
+            margin: 20px 0;
+            border: 2px dashed #cbd5e0;
+
+            .empty-icon {
+                font-size: 64px;
+                margin-bottom: 24px;
+                opacity: 0.6;
+                color: #a0aec0;
+                animation: float 3s ease-in-out infinite;
+            }
+
+            p {
+                margin: 0;
+                font-size: 16px;
+                line-height: 1.6;
+                color: #718096;
+                font-weight: 500;
+            }
+        }
+
+        /* 浮动动画 */
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
             }
         }
 

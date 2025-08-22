@@ -61,6 +61,7 @@
                     </p>
 
                 </template>
+
                 <template v-if="item.key === 'subPageConfigHWProductsVos'" #default="scope">
 
                     <p v-for="el in scope.row[item.key]" :key="el.id">
@@ -70,6 +71,31 @@
                         <el-button type="primary" size="small" @click="editProductsSort(scope.row)">编辑</el-button>
                     </p>
 
+                </template>
+                <template v-if="item.key === 'popUpTiming'" #default="scope">
+                    <el-switch v-model="scope.row[item.key]" :active-value="true" :inactive-value="false" />
+                    <div v-show="scope.row[item.key]">
+                        <el-input-number style="width: 100px;" v-model="scope.row.popUpTimingCount"
+                            size="small"></el-input-number>
+                        <el-select v-model="scope.row.popUpTimingPlan" @change="saveChangeProbability(scope.row)">
+                            <el-option v-for="value in popuptimingList" :key="value.mark"
+                                :label="value.mark === 1 ? `安装第${scope.row.popUpTimingCount === null ? 0 : scope.row.popUpTimingCount}天后弹出` : `安装第${scope.row.popUpTimingCount === null ? 0 : scope.row.popUpTimingCount}次后弹出`"
+                                :value="value.value" />
+                        </el-select>
+                    </div>
+
+                </template>
+                <template v-if="item.key === 'thatLaterClicks'" #default="scope">
+                    <el-switch v-model="scope.row[item.key]" :active-value="true" :inactive-value="false" />
+                    <div v-show="scope.row[item.key]">
+                        <el-input-number style="width: 100px;" v-model="scope.row.thatLaterClicksCount"
+                            size="small"></el-input-number>
+                        <el-select v-model="scope.row.thatLaterClicksPlan" @change="saveChangeProbability(scope.row)">
+                            <el-option v-for="value in thatLaterClicksPlanList" :key="value.mark"
+                                :label="value.mark === 1 ? `点击第${scope.row.popUpTimingCount === null ? 0 : scope.row.thatLaterClicksCount}天后弹出` : `点击第${scope.row.popUpTimingCount === null ? 0 : scope.row.thatLaterClicksCount}次后弹出`"
+                                :value="value.value" />
+                        </el-select>
+                    </div>
                 </template>
             </el-table-column>
         </template>
@@ -185,6 +211,28 @@
 
 
 
+    // 弹出时机方案列表
+    const popuptimingList = ref<any>([
+        {
+
+            value: 'plan1',
+            mark: 1
+        }, {
+            value: 'plan2',
+            mark: 2
+        }
+    ])
+
+    //用户点击以后再说按钮配置方案
+    const thatLaterClicksPlanList = ref<any>([
+        {
+            value: 'plan1',
+            mark: 1
+        }, {
+            value: 'plan2',
+            mark: 2
+        }
+    ])
 
     //格式化概率选择
     const initProbabilitys = (item: any) => {

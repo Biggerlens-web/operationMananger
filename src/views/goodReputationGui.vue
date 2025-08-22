@@ -269,8 +269,25 @@
                 probability: item.probability,
                 functionStartNum: item.functionStartNum,
                 timeOn: item.timeOn,
+                popUpTimingCount: item.popUpTimingCount,
+                popUpTiming: item.popUpTiming,
+                popUpTimingPlan: item.popUpTimingPlan,
+                thatLaterClicks: item.thatLaterClicks,
+                thatLaterClicksPlan: item.thatLaterClicksPlan,
+                thatLaterClicksCount: item.thatLaterClicksCount,
             }
 
+            if (!params.popUpTiming) {
+                delete params.popUpTimingCount
+                delete params.popUpTimingPlan
+                delete params.probability
+                delete params.functionStartNum
+                delete params.timeOn
+            }
+            if (!params.thatLaterClicks) {
+                delete params.thatLaterClicksPlan
+                delete params.thatLaterClicksCount
+            }
             console.log('提交修改参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
@@ -334,6 +351,8 @@
         os: '系统',
         name: '名称',
         open: '开关',
+        popUpTiming: '弹出时机',
+        thatLaterClicks: '用户点击以后',
         probability: '概率设置',
         functionStartNum: '功能打开次数',
         timeOn: '计时打开(s)'

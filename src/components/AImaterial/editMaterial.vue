@@ -147,8 +147,12 @@
 
     }
 
+    let isGettingUid = false
 
     const getUid = async () => {
+        if (isGettingUid) return
+        isGettingUid = true
+
         try {
             const params = {
                 timestamp: Date.now(),
@@ -172,6 +176,8 @@
         } catch (err) {
             console.log("🚀 ~ getUid ~ err:", err)
 
+        } finally {
+            isGettingUid = false
         }
     }
     watch(() => dialogVisible.value, (newV) => {
