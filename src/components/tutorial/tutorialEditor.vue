@@ -39,7 +39,7 @@
                 </el-select>
             </el-form-item>
             <el-form-item label="分类类型" prop="category">
-                <el-select filterable v-model="formData.category" placeholder="教程" class="filter-select">
+                <el-select filterable v-model="formData.category" placeholder="类型" class="filter-select">
                     <el-option v-for="item in categoryTypes" :key="item.id" :label="item.categoryName"
                         :value="item.id" />
                 </el-select>
@@ -244,9 +244,18 @@
                 enData
             })
             console.log('获取编辑信息', res);
-            formData.value.category = res.data.data.categoryName
+            formData.value.category = res.data.data.categoryName === 'null' ? 0 : res.data.data.categoryName
             if (res.data.data.tutorialTextAndImages.length) {
                 tutorialTextArr.value = res.data.data.tutorialTextAndImages
+            } else {
+                tutorialTextArr.value = [
+                    {
+                        text: '',
+                        image: [],
+                        desc: '',
+                        imgUrl: '',
+                    }
+                ]
             }
         } catch (err) {
             console.log('获取编辑信息失败', err);
@@ -258,6 +267,16 @@
         if (newV && props.editInfo) {
             Object.assign(formData.value, props.editInfo)
             getTypeInfo()
+        }
+        if (!newV) {
+            tutorialTextArr.value = [
+                {
+                    text: '',
+                    image: [],
+                    desc: '',
+                    imgUrl: '',
+                }
+            ]
         }
 
         console.log('formData.value', formData.value);
@@ -351,7 +370,7 @@
             reader.onload = (e) => {
                 const fullBase64 = e.target?.result as string;
                 tutorialTextArr.value[index].imgUrl = fullBase64
-                tutorialTextArr.value[index].imageName = ''
+                tutorialTextArr.value[index].imgName = ''
             };
             reader.readAsDataURL(uploadFile.raw);
 
@@ -391,6 +410,7 @@
     const removeCoverImageTextImage = (index: number) => {
         tutorialTextArr.value[index].imgUrl = ''
         tutorialTextArr.value[index].image = []
+        tutorialTextArr.value[index].imgName = ''
     }
     const removeCoverImage = () => {
         formData.value.coverImgUrl = '';
@@ -467,9 +487,9 @@
 
                     if (key === 'os') {
                         form.append(key, formData.value[key].toLowerCase())
-                    } else if (key === 'version') {
-                        form.append(key, formData.value[key])
-                    } else {
+                    }
+                    else {
+
                         form.append(key, formData.value[key])
                     }
                 } else if (key === 'language') {
@@ -477,6 +497,9 @@
                 }
 
 
+            }
+            if (formData.value.version === null || formData.value.version === '') {
+                form.delete('version')
             }
             form.delete('videoUrl')
             form.delete('coverImgUrl')
@@ -493,8 +516,8 @@
                         form.append('video', formData.value.video[0].raw)
                         form.delete('videoName')
                     } else {
-                        ElMessage.error('请上传视频')
-                        return
+
+
                     }
 
                 }
@@ -508,16 +531,21 @@
                 tutorialTextArr.value.forEach((item: any) => {
                     form.append('textAndImageDesc', item.desc)
                     form.append('text', item.text)
-
+                    if (item.textAndImageId) {
+                        form.append('textAndImageId', item.textAndImageId)
+                    }
                     if (item.imgName) {
-                        form.append('imageName', item.imgName)
+                        form.append('textAndImageImgName', item.imgName)
+                        form.append('image_exist', 'true')
                     } else {
+                        console.log('item.image', item);
                         if (item.image && item.image[0] && item.image[0].raw) {
-                            form.append('imageName', item.image[0].raw)
+                            form.append('image', item.image[0].raw)
+                            form.append('image_exist', 'true')
                         } else {
-                            ElMessage.error('请上传图片')
-
+                            form.append('image_exist', 'false')
                         }
+
                     }
                     if (item.id) {
                         form.append('textAndImageId', item.id)
@@ -530,7 +558,7 @@
                     form.append('coverImg', formData.value.coverImg[0].raw)
                     form.delete('coverImgName')
                 } else {
-                    ElMessage.error('请上传封面图片')
+
 
                 }
             }

@@ -30,7 +30,7 @@ coverage
 *.tsbuildinfo
 
 # Environment variables
-# .env.local
-# .env.*.local
+.env.local
+.env.*.local
 # 注意：.env, .env.development, .env.production 通常会提交到仓库
 # 如果包含敏感信息，请添加到上面的忽略列表中
