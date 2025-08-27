@@ -3,7 +3,7 @@
         <el-form ref="ruleFormRef" style="max-width: 600px" :model="formData" :rules="rules" label-width="auto"
             class="demo-ruleForm" status-icon>
             <el-form-item label="所属应用" prop="appNo">
-                <el-select v-model="formData.appNo" filterable>
+                <el-select v-model="defaultAppNo" filterable :disabled="true">
                     <el-option v-for="item in appList" :key="item.appNo"
                         :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
                         :value="item.appNo" />
@@ -99,7 +99,7 @@
         }
     })
     const counterStore = useCounterStore()
-    const { appList, OSlist, regionList, showLoading, international } = storeToRefs(counterStore)
+    const { appList, OSlist, regionList, showLoading, international, defaultAppNo } = storeToRefs(counterStore)
     const emit = defineEmits<{
         'update:showEditor': [value: boolean]
     }>()
@@ -151,6 +151,7 @@
         }
         showLoading.value = true
         try {
+            formData.value.appNo = defaultAppNo.value
             const params = {
                 ...formData.value,
                 timestamp: Date.now()
