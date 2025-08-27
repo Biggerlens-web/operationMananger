@@ -190,7 +190,8 @@
     import { ref, reactive, watch, onMounted } from 'vue'
     import { ElMessage, ElMessageBox } from 'element-plus'
     import type { FormInstance, FormRules } from 'element-plus'
-    import { ArrowDown, Close, Plus } from '@element-plus/icons-vue'
+    import { ArrowDown, Close, Delete, Plus } from '@element-plus/icons-vue'
+
     import { useCounterStore } from '@/stores/counter'
     import { storeToRefs } from 'pinia'
     import { decryptDes, desEncrypt } from '@/utils/des'
@@ -367,6 +368,7 @@
         sdk.showDropdown = false
         ElMessage.success('已应用SDK模板')
     }
+
 
     // 删除SDK
     const removeSdk = (index: number) => {

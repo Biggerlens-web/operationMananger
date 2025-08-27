@@ -3,7 +3,8 @@
         <el-form ref="ruleFormRef" style="max-width: 600px" :model="formData" :rules="rules" label-width="auto"
             class="demo-ruleForm" status-icon>
             <el-form-item label="所属应用" prop="appNo">
-                <el-select filterable v-model="formData.appNo" :disabled="!!formData.id">
+                <!-- :disabled="!!formData.id" -->
+                <el-select filterable v-model="defaultAppNo" disabled placeholder="请选择应用">
                     <el-option v-for="item in appList" :key="item.appNo"
                         :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
                         :value="item.appNo" />
@@ -62,7 +63,8 @@
 
                 <div class="image-upload-container">
                     <el-upload class="image-uploader" v-model:file-list="formData.coverImg" :show-file-list="false"
-                        action="#" :on-remove="handleRemove" :auto-upload="false" :on-change="handleChangeimge">
+                        action="#" :on-remove="handleRemove" :auto-upload="false" :on-change="handleChangeimge"
+                        accept="image/*">
                         <img v-if="formData.coverImgUrl" :src="formData.coverImgUrl" class="uploaded-image" />
                         <div v-else class="upload-placeholder">
                             <el-icon>
@@ -154,6 +156,7 @@
                                     <el-upload class="tutorial-image-uploader" v-model:file-list="item.image"
                                         :show-file-list="false" action="#"
                                         :on-remove="() => handleRemoveTextImage(index)" :auto-upload="false"
+                                        accept="image/*"
                                         :on-change="(uploadFile: UploadUserFile, uploadFiles: UploadFiles) => handleChangeCoverImage(uploadFile, index)">
                                         <div v-if="item.imgUrl" class="tutorial-image-preview">
                                             <img :src="item.imgUrl" class="tutorial-uploaded-image" />
@@ -260,7 +263,7 @@
         console.log('formData.value', formData.value);
     })
     const counterStore = useCounterStore()
-    const { appList, OSlist, regionList, showLoading, international } = storeToRefs(counterStore)
+    const { appList, OSlist, regionList, showLoading, international, defaultAppNo } = storeToRefs(counterStore)
     const emit = defineEmits<{
         'update:showEditor': [value: boolean]
     }>()
@@ -458,6 +461,7 @@
         try {
 
             const form = new FormData()
+            formData.value.appNo = defaultAppNo.value
             for (let key in formData.value) {
                 if (key !== 'coverImg' && key !== 'video' && key !== 'language') {
 
@@ -485,8 +489,14 @@
 
             if (formData.value.tutorialType === 'video') {
                 if (!formData.value.videoName) {
-                    form.append('video', formData.value.video[0].raw)
-                    form.delete('videoName')
+                    if (formData.value.video && formData.value.video[0] && formData.value.video[0].raw) {
+                        form.append('video', formData.value.video[0].raw)
+                        form.delete('videoName')
+                    } else {
+                        ElMessage.error('请上传视频')
+                        return
+                    }
+
                 }
             } else {
                 form.delete('videoName')
@@ -502,7 +512,12 @@
                     if (item.imgName) {
                         form.append('imageName', item.imgName)
                     } else {
-                        form.append('imageName', item.image[0].raw)
+                        if (item.image && item.image[0] && item.image[0].raw) {
+                            form.append('imageName', item.image[0].raw)
+                        } else {
+                            ElMessage.error('请上传图片')
+
+                        }
                     }
                     if (item.id) {
                         form.append('textAndImageId', item.id)
@@ -511,8 +526,13 @@
             }
 
             if (!formData.value.coverImgName) {
-                form.append('coverImg', formData.value.coverImg[0].raw)
-                form.delete('coverImgName')
+                if (formData.value.coverImg && formData.value.coverImg[0] && formData.value.coverImg[0].raw) {
+                    form.append('coverImg', formData.value.coverImg[0].raw)
+                    form.delete('coverImgName')
+                } else {
+                    ElMessage.error('请上传封面图片')
+
+                }
             }
 
 
@@ -786,7 +806,7 @@
     .tutorial-uploaded-image {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         transition: transform 0.3s ease;
     }
 

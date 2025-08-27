@@ -178,6 +178,8 @@
 
         } finally {
             isGettingUid = false
+
+
         }
     }
     watch(() => dialogVisible.value, (newV) => {
@@ -224,6 +226,10 @@
         if (!formEl) return
         await formEl.validate(async (valid, fields) => {
             if (valid) {
+                if (isGettingUid) {
+                    ElMessage.warning('正在获取uid')
+                    return
+                }
                 if (!ruleForm.classId) {
                     ElMessage.error('请选择一级分类')
                     return

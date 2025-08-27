@@ -5,7 +5,7 @@ import router from '@/router'
 import { decryptDes } from '@/utils/des'
 const service: AxiosInstance = axios.create({
   // baseURL: 'http://192.168.31.36:18097',
-  baseURL: 'https://privacy.biggerlens.cn:18091',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   // baseURL: '/api',
 
   headers: {
