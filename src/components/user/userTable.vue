@@ -75,11 +75,12 @@
                 <template v-if="item.key === 'popUpTiming'" #default="scope">
                     <el-switch v-model="scope.row[item.key]" :active-value="true" :inactive-value="false" />
                     <div v-show="scope.row[item.key]">
-                        <el-input-number style="width: 100px;" v-model="scope.row.popUpTimingCount"
-                            size="small"></el-input-number>
-                        <el-select v-model="scope.row.popUpTimingPlan" @change="saveChangeProbability(scope.row)">
+                        <el-input-number style="width: 100px;" v-model="scope.row.popUpTimingCount" size="small"
+                            :min="2"></el-input-number>
+                        <el-select style="margin-top: 10px;" v-model="scope.row.popUpTimingPlan"
+                            @change="saveChangeProbability(scope.row)">
                             <el-option v-for="value in popuptimingList" :key="value.mark"
-                                :label="value.mark === 1 ? `安装第${scope.row.popUpTimingCount === null ? 0 : scope.row.popUpTimingCount}天后弹出` : `安装第${scope.row.popUpTimingCount === null ? 0 : scope.row.popUpTimingCount}次后弹出`"
+                                :label="value.mark === 1 ? `安装应用第${scope.row.popUpTimingCount === null ? 0 : scope.row.popUpTimingCount}天时弹出` : `进入应用第${scope.row.popUpTimingCount === null ? 0 : scope.row.popUpTimingCount}次时弹出`"
                                 :value="value.value" />
                         </el-select>
                     </div>
@@ -88,11 +89,12 @@
                 <template v-if="item.key === 'thatLaterClicks'" #default="scope">
                     <el-switch v-model="scope.row[item.key]" :active-value="true" :inactive-value="false" />
                     <div v-show="scope.row[item.key]">
-                        <el-input-number style="width: 100px;" v-model="scope.row.thatLaterClicksCount"
-                            size="small"></el-input-number>
-                        <el-select v-model="scope.row.thatLaterClicksPlan" @change="saveChangeProbability(scope.row)">
+                        <el-input-number style="width: 100px;" v-model="scope.row.thatLaterClicksCount" size="small"
+                            :min="1"></el-input-number>
+                        <el-select style="margin-top: 10px;" v-model="scope.row.thatLaterClicksPlan"
+                            @change="saveChangeProbability(scope.row)">
                             <el-option v-for="value in thatLaterClicksPlanList" :key="value.mark"
-                                :label="value.mark === 1 ? `点击第${scope.row.popUpTimingCount === null ? 0 : scope.row.thatLaterClicksCount}天后弹出` : `点击第${scope.row.popUpTimingCount === null ? 0 : scope.row.thatLaterClicksCount}次后弹出`"
+                                :label="value.mark === 1 ? `间隔${scope.row.popUpTimingCount === null ? 0 : scope.row.thatLaterClicksCount}天后弹出` : `间隔${scope.row.popUpTimingCount === null ? 0 : scope.row.thatLaterClicksCount}次后弹出`"
                                 :value="value.value" />
                         </el-select>
                     </div>

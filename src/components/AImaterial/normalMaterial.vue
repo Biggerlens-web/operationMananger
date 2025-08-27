@@ -1,4 +1,21 @@
 <template>
+    <!-- 复制素材 -->
+    <el-dialog title="复制素材" v-model="isShowCopy" width="400">
+        <el-form :model="copyData" :rules="copyRules" ref="copyFormRef">
+            <el-form-item label="目标地区" prop="region">
+                <el-select filterable v-model="copyData.region" clearable placeholder="地区" class="filter-select">
+                    <el-option v-for="item in regionList" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+            </el-form-item>
+        </el-form>
+        <template #footer>
+            <el-button type="primary" @click="handleCopy(copyFormRef)">确定</el-button>
+        </template>
+    </el-dialog>
+
+
+
+
     <div class="stickTp_manage">
         <draggable tag="ul" v-model="appData" item-key="id" :animation="200" class="template-grid"
             ghost-class="ghost-class" chosen-class="chosen-class" drag-class="dragging-class"
@@ -6,11 +23,11 @@
             <template #item="{ element, index }">
                 <li :key="element.id" class="template-item">
                     <!-- 右上角复选框 -->
-                    <!-- <div class="checkbox-wrapper" @click.stop>
+                    <div class="checkbox-wrapper" @click.stop>
                         <input type="checkbox" :id="`checkbox-${element.id}`" :checked="isSelected(element.id)"
                             @change="handleCheckBoxChange($event, element.id)" class="custom-checkbox" />
                         <label :for="`checkbox-${element.id}`" class="checkbox-label"></label>
-                    </div> -->
+                    </div>
 
                     <div class="template_data" @click.stop>
                         <p class="p_id">ID:{{ element.id }}</p>
@@ -45,11 +62,11 @@
     import { desEncrypt } from '@/utils/des';
     import { ElMessage, ElMessageBox } from 'element-plus';
     import { storeToRefs } from 'pinia';
-    import { onActivated, ref } from 'vue';
+    import { onActivated, reactive, ref, toRaw, watch } from 'vue';
     import draggable from 'vuedraggable'
     import dayjs from 'dayjs'
     const counterStore = useCounterStore()
-    const { showLoading, defaultAppNo } = storeToRefs(counterStore)
+    const { showLoading, defaultAppNo, regionList } = storeToRefs(counterStore)
     interface Props {
         isDelete: boolean;
         searchParams: any
@@ -85,17 +102,98 @@
 
 
     //选中模板集合
-    // const selectedList = ref<any>([])
-    // const isSelected = (id: number) => {
-    //     return selectedList.value.includes(id)
-    // }
-    // const handleCheckBoxChange = (e: any, id: number) => {
-    //     if (e.target.checked) {
-    //         selectedList.value.push(id)
-    //     } else {
-    //         selectedList.value = selectedList.value.filter((item: number) => item !== id)
-    //     }
-    // }
+    const selectedList = ref<any>([])
+    const isSelected = (id: number) => {
+        return selectedList.value.includes(id)
+    }
+    const handleCheckBoxChange = (e: any, id: number) => {
+        if (e.target.checked) {
+            selectedList.value.push(id)
+        } else {
+            selectedList.value = selectedList.value.filter((item: number) => item !== id)
+        }
+    }
+
+    //清空选中
+    const clearSelected = () => {
+        selectedList.value = []
+    }
+
+
+    //复制素材
+    const copyFormRef = ref<any>()
+
+    const copyData = reactive({
+        region: ''
+    })
+    const copyRules = reactive({
+        region: [
+            { required: true, message: '请输入目标地区', trigger: 'blur' }
+        ]
+    })
+
+    const isShowCopy = ref<boolean>(false)
+    watch(() => isShowCopy.value, (newVal) => {
+        if (newVal && copyFormRef.value) {
+            copyFormRef.value.resetFields()
+        }
+    })
+    const copyChosedItem = () => {
+        if (selectedList.value.length === 0) {
+            ElMessage.error('请选择要复制的素材')
+            return
+        }
+        console.log('复制素材');
+        isShowCopy.value = true
+
+    }
+    const handleCopy = (el: any) => {
+        el.validate(async (valid: any) => {
+            if (valid) {
+                console.log('表单验证通过');
+                if (showLoading.value) return
+                showLoading.value = true
+
+
+
+                try {
+                    console.log('selectedList', selectedList.value);
+                    const params = {
+                        timestamp: Date.now(),
+
+                        ids: toRaw(selectedList.value),
+
+                        region: copyData.region,
+                    }
+                    console.log("🚀 ~ handleCopy ~ params:", params)
+                    const enData = desEncrypt(JSON.stringify(params))
+
+                    const res = await service.post('/hairMaterials/copyMaterialTemplate', {
+                        enData
+
+                    })
+                    console.log("🚀 ~ handleCopy ~ res:", res)
+                    if (res.data.code === 200) {
+                        ElMessage.success('复制成功')
+
+                        getMaterialData()
+                        isShowCopy.value = false
+                    } else {
+                        ElMessage.error(res.data.msg)
+                    }
+
+                } catch (err) {
+
+                } finally {
+                    showLoading.value = false
+                }
+            } else {
+                console.log('表单验证失败');
+            }
+        })
+    }
+
+
 
 
 
@@ -169,6 +267,8 @@
             console.log("🚀 ~ getMaterialData ~ res:", res)
             if (res.data.code === 200) {
                 appData.value = res.data.data.list
+                clearSelected()
+
             } else {
                 ElMessage.error(res.data.msg)
             }
@@ -182,7 +282,9 @@
 
     // 暴露方法给父组件
     defineExpose({
-        getMaterialData
+        copyChosedItem,
+        getMaterialData,
+        clearSelected
     })
 
 </script>

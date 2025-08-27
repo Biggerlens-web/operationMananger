@@ -351,9 +351,10 @@
         os: '系统',
         name: '名称',
         open: '开关',
-        popUpTiming: '弹出时机',
-        thatLaterClicks: '用户点击以后',
         probability: '概率设置',
+        popUpTiming: '新用户弹出策略',
+        thatLaterClicks: '点击以后再说弹出策略',
+
         functionStartNum: '功能打开次数',
         timeOn: '计时打开(s)'
 

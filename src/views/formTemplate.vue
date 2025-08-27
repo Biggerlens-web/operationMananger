@@ -7,7 +7,8 @@
                 <div class="filter-row">
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.bigTemplate" placeholder="大分类"
-                            @change="getSmallClassificationData" class="filter-select">
+                            @change="getSmallClassificationData" class="filter-select" clearable>
+
                             <el-option v-for="item in bigTemplateList" :key="item.cid" :label="item.name"
                                 :value="item.cid" />
                         </el-select>
@@ -299,6 +300,14 @@
 
     //获取小分类
     const getSmallClassificationData = async () => {
+        if (!searchParams.value.bigTemplate) {
+            smallTemplateList.value = []
+            searchParams.value.smallTemplate = ''
+
+            return
+
+        }
+
         try {
             const params = {
                 timestamp: Date.now(),

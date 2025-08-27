@@ -47,7 +47,7 @@
                 <el-input v-model="formData.name" />
             </el-form-item>
             <el-form-item label="版本" prop="version">
-                <el-input v-model="formData.version" />
+                <el-input-number v-model="formData.version" />
             </el-form-item>
             <el-form-item label="埋点标识" prop="baseSign" v-if="formData.tutorialType === 'text_and_image'">
                 <el-input v-model="formData.baseSign" />
@@ -463,6 +463,8 @@
 
                     if (key === 'os') {
                         form.append(key, formData.value[key].toLowerCase())
+                    } else if (key === 'version') {
+                        form.append(key, formData.value[key])
                     } else {
                         form.append(key, formData.value[key])
                     }

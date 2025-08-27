@@ -373,6 +373,11 @@
             label: '删除素材',
             key: 'deleteMaterial'
         },
+        {
+            label: '复制素材',
+            key: 'copyMaterial'
+        },
+
     ])
 
 
@@ -396,6 +401,10 @@
             case 'categoryManagement':
                 dialogClass.value = true
                 break;
+            case 'copyMaterial':
+                childComponentRef.value.copyChosedItem?.()
+                break;
+
 
             default:
                 break;
