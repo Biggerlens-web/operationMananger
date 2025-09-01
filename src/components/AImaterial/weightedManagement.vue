@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div v-loading="showLoading">
         <el-table :data="tableData" style="width: 100%" height="650">
             <el-table-column prop="name" label="权重名称" width="180" />
             <el-table-column prop="weight" label="权重值" />

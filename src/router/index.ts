@@ -3,6 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 import service from '@/axios'
 import { pinia } from '@/main'
 import { useCounterStore } from '@/stores/counter'
+import { hasToken } from '@/utils/cookie'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 
@@ -93,8 +94,9 @@ const getRouterList = async () => {
 }
 
 const getMeuns = async () => {
-  const hasToken = localStorage.getItem('token')
-  if (hasToken) {
+  // 使用Cookie检查token
+  const tokenExists = hasToken()
+  if (tokenExists) {
     await getRouterList()
   }
 }
@@ -185,9 +187,10 @@ router.beforeEach(async (to, from, next) => {
   // 开始进度条
   NProgress.start()
 
-  const hasToken = localStorage.getItem('token')
+  // 使用Cookie检查token
+  const tokenExists = hasToken()
   setMenuStore()
-  if (hasToken) {
+  if (tokenExists) {
     if (to.path === '/login') {
       next('/')
     } else {

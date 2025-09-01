@@ -6,6 +6,10 @@
             <div class="filter-container">
                 <div class="filter-row">
                     <div class="filter-item">
+                        <el-input v-model="searchParams.templateName" placeholder="模板名称" clearable
+                            class="filter-input" />
+                    </div>
+                    <div class="filter-item">
                         <el-select filterable v-model="searchParams.bigTemplate" placeholder="大分类"
                             @change="getSmallClassificationData" class="filter-select" clearable>
 
@@ -92,12 +96,20 @@
                             <el-button type="primary" @click="previewImg(element)" size='samll'>
                                 预览
                             </el-button>
+                            <el-button type="primary" @click="handleEdit(element)" size='samll'>
+                                编辑
+                            </el-button>
+                            <el-button type="danger" @click="handleDelete(element)" size='samll'>
+                                删除
+                            </el-button>
                         </p>
                     </li>
                 </template>
             </draggable>
         </el-card>
     </div>
+    <editFormTemDialog v-model:is-edit-template="isEditTemplate" :language="searchParams.language"
+        :bigTemplateList="bigTemplateList" :editInfo="editInfo" />
 </template>
 
 <script lang="ts" setup>
@@ -106,8 +118,9 @@
     import { useCounterStore } from '@/stores/counter'
     import { storeToRefs } from 'pinia'
     import service from '@/axios'
-    import { ElMessage } from 'element-plus'
+    import { ElMessage, ElMessageBox } from 'element-plus'
     import { desEncrypt } from '@/utils/des'
+    import editFormTemDialog from '@/components/formTemplate/editFormTemDialog.vue'
     const counterStore = useCounterStore()
     const { showLoading } = storeToRefs(counterStore)
     interface listItem {
@@ -160,6 +173,36 @@
     }
 
 
+
+
+    //编辑模板
+    const editInfo = ref<any>()
+    const isEditTemplate = ref<boolean>(false)
+    const handleEdit = (item: any) => {
+        console.log('item', item);
+        editInfo.value = item
+        isEditTemplate.value = true
+    }
+    watch(() => isEditTemplate.value, (newVal) => {
+        if (!newVal) {
+
+            editInfo.value = ''
+        }
+    })
+
+
+    //删除模板
+    const handleDelete = (item: any) => {
+        console.log('item', item);
+        ElMessageBox.confirm('确定删除吗？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+        }).then(() => {
+
+        })
+    }
+
     //选中模板集合
     const selectedList = ref<any>([])
     const isSelected = (tid: number) => {
@@ -186,6 +229,7 @@
     //搜索参数
     const searchParams = ref<any>(
         {
+            templateName: '',
             bigTemplate: '',
             smallTemplate: '',
             templateType: 'all',
@@ -204,16 +248,18 @@
     }
 
     //重置搜索
-    const resetSearch = () => {
+    const resetSearch = async () => {
         searchParams.value = {
-
+            templateName: '',
             bigTemplate: bigTemplateList.value[0].cid,
+
             smallTemplate: '',
             templateType: 'all',
             os: 'iOS',
             language: 'zh'
 
         }
+        await getSmallClassificationData()
         getFormTemplateData()
 
 
@@ -300,13 +346,7 @@
 
     //获取小分类
     const getSmallClassificationData = async () => {
-        if (!searchParams.value.bigTemplate) {
-            smallTemplateList.value = []
-            searchParams.value.smallTemplate = ''
 
-            return
-
-        }
 
         try {
             const params = {
@@ -400,6 +440,8 @@
 </script>
 
 <style lang="scss" scoped>
+
+
     .filter-card {
         width: 100%;
         margin-bottom: 20px;
@@ -462,7 +504,7 @@
 
     .stickTp_manage {
         /* position: relative;  不再需要，因为 back-icon 改为 fixed 定位 */
-        height: 669px;
+        height: 680px;
         overflow-y: scroll;
 
         .template-grid {
@@ -510,6 +552,7 @@
         .custom-checkbox {
             display: none;
         }
+
 
         .checkbox-label {
             display: inline-block;

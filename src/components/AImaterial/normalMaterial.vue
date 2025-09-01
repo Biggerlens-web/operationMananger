@@ -16,7 +16,7 @@
 
 
 
-    <div class="stickTp_manage">
+    <div class="stickTp_manage" v-loading="showLoading">
         <draggable tag="ul" v-model="appData" item-key="id" :animation="200" class="template-grid"
             ghost-class="ghost-class" chosen-class="chosen-class" drag-class="dragging-class"
             :group="{ name: 'items' }">

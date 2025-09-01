@@ -82,7 +82,7 @@
       </el-header>
 
       <!-- 主内容区域 -->
-      <el-main class="main" style="overflow-y: scroll;">
+      <el-main class="main" style="overflow-y: auto;">
         <!-- 路由视图，用于显示子页面 -->
         <router-view></router-view>
       </el-main>
