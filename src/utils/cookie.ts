@@ -18,7 +18,7 @@ export class CookieUtils {
       expires,
       secure: window.location.protocol === 'https:', // HTTPS环境下启用secure
       sameSite: 'strict', // 防止CSRF攻击
-      path: '/' // 全站可用
+      path: '/', // 全站可用
     })
   }
 

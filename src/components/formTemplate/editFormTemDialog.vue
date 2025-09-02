@@ -5,7 +5,7 @@
             <el-form-item label="大分类" prop="bigClass">
                 <el-select v-model="formData.bigClass" placeholder="请选择大分类" @change="getSmallClassificationData"
                     clearable>
-                    <el-option v-for="item in bigTemplateList" :key="item.cid" :label="item.name" :value="item.cid" />
+                    <el-option v-for="item in bigTemplateList" :key="item.id" :label="item.name" :value="item.id" />
                 </el-select>
             </el-form-item>
             <el-form-item label="小分类" prop="smallClass">
@@ -24,10 +24,16 @@
 
 <script lang="ts" setup>
     import service from '@/axios'
+    import { useCounterStore } from '@/stores/counter'
     import { desEncrypt } from '@/utils/des'
     import { ElMessage } from 'element-plus'
+    import { storeToRefs } from 'pinia'
     import { ref, watch } from 'vue'
-
+    const counterStore = useCounterStore()
+    const { showLoading } = storeToRefs(counterStore)
+    const emit = defineEmits<{
+        'update': []
+    }>()
     const isEditTemplate = defineModel('isEditTemplate', {
         type: Boolean,
         default: false
@@ -50,7 +56,7 @@
 
         if (props.editInfo) {
             // formData.value.bigClass = props.editInfo.cid
-            formData.value.bigClass = 0
+            formData.value.bigClass = props.editInfo.subId
             formData.value.smallClass = props.editInfo.name
             getSmallClassificationData()
 
@@ -80,12 +86,40 @@
     //保存
     const handleSave = () => {
         if (!formRef.value) return
-        formRef.value.validate((valid: any) => {
+        formRef.value.validate(async (valid: any) => {
             if (valid) {
-                ElMessage.success('校验通过')
-                isEditTemplate.value = false
-            } else {
+                if (showLoading.value) return
+                showLoading.value = true
+                try {
+                    const params = {
+                        timestamp: Date.now(),
+                        id: props.editInfo.id,
+                        subId: formData.value.bigClass,
+                        name: formData.value.smallClass,
+                        nameEn: smallTemplateList.value.find((item: any) => item.name === formData.value.smallClass)?.nameEn,
+                    }
+                    console.log('保存参数', params);
+                    const enData = desEncrypt(JSON.stringify(params))
+                    const res = await service.post('/formTemplate/save', {
+                        enData
+                    })
+                    if (res.data.code === 200) {
+                        ElMessage.success(res.data.msg)
+                        isEditTemplate.value = false
+                        showLoading.value = false
+                        emit('update')
+                    } else {
+                        ElMessage.error(res.data.msg)
+                    }
+                } catch (err) {
+                    console.log("🚀 ~ handleSave ~ err:", err)
+                } finally {
+                    showLoading.value = false
+                }
 
+
+            } else {
+                console.log('表单验证失败');
             }
         })
 
@@ -100,7 +134,7 @@
         try {
             const params = {
                 timestamp: Date.now(),
-                cid: formData.value.bigClass,
+                id: formData.value.bigClass,
                 language: props.language,
             }
             console.log("🚀 ~ getSmallClassificationData ~ params:", params)
@@ -123,6 +157,7 @@
         }
 
     }
+
 
 </script>
 
