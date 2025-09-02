@@ -190,10 +190,11 @@
     import { ref, reactive, watch, onMounted } from 'vue'
     import { ElMessage, ElMessageBox } from 'element-plus'
     import type { FormInstance, FormRules } from 'element-plus'
-    import { ArrowDown, Close, Plus } from '@element-plus/icons-vue'
+    import { ArrowDown, Close, Delete, Plus } from '@element-plus/icons-vue'
+
     import { useCounterStore } from '@/stores/counter'
     import { storeToRefs } from 'pinia'
-    import { desEncrypt } from '@/utils/des'
+    import { decryptDes, desEncrypt } from '@/utils/des'
     import service from '@/axios'
     const stores = useCounterStore()
 
@@ -278,7 +279,7 @@
 
         sdkList: [
             {
-                id: '',
+                threesdkId: '',
                 text: '',
                 text1: '',
                 text2: '',
@@ -328,7 +329,7 @@
     // 添加SDK
     const addSdk = () => {
         formData.sdkList.push({
-            id: '',
+            threesdkId: '',
             text: '',
             text1: '',
             text2: '',
@@ -363,9 +364,11 @@
         sdk.text4 = template.sdkCompany || ''
         sdk.text5 = template.useScenario || ''
         sdk.text6 = template.infoCollected || ''
+        sdk.threesdkId = template.id
         sdk.showDropdown = false
         ElMessage.success('已应用SDK模板')
     }
+
 
     // 删除SDK
     const removeSdk = (index: number) => {
@@ -428,7 +431,7 @@
         ]
         formData.sdkList = [
             {
-                id: '',
+                threesdkId: '',
                 text: '',
                 text1: '',
                 text2: '',
@@ -479,7 +482,7 @@
                     item.channelAppName
                 ),
                 threesdkIds: formData.sdkList.map(item =>
-                    String(item.id)
+                    String(item.threesdkId)
                 ),
                 threesdkText: formData.sdkList.map(item =>
                     item.text
@@ -526,6 +529,8 @@
 
             console.log('提交参数', params);
             const enData = desEncrypt(JSON.stringify(params))
+            const decData = decryptDes(enData)
+            console.log("🚀 ~ saveChange ~ decData:", decData)
             showLoading.value = true
             const res = await service.post('/privacy/saveDetail', {
                 enData

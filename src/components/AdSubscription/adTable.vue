@@ -10,8 +10,9 @@
             </div>
         </div>
         <el-button type="primary" @click="addData">新增</el-button>
-        <el-table :data="viewList" border style="width: 100%" :min-height="420" :max-height="600" highlight-current-row
-            :header-cell-style="{ background: '#f5f7fa' }" :cell-style="{ padding: '8px 0' }">
+        <el-table v-loading="showLoading" :data="viewList" border style="width: 100%" :min-height="420"
+            :max-height="600" highlight-current-row :header-cell-style="{ background: '#f5f7fa' }"
+            :cell-style="{ padding: '8px 0' }">
             <template v-for="item in keyList" :key="item.key">
                 <el-table-column :prop="item.key" :label="item.note" show-overflow-tooltip min-width="130">
                     <!-- 处理嵌套对象属性 -->

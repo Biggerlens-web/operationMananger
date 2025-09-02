@@ -8,7 +8,7 @@ import App from './App.vue'
 import router from './router'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import 'animate.css'
-
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 // 1. 创建 pinia 实例
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
@@ -23,7 +23,9 @@ app.use(VueLazyload, {
 })
 app.use(pinia)
 app.use(router)
-app.use(ElementPlus)
+app.use(ElementPlus, {
+  locale: zhCn,
+})
 
 // 4. 注册 Element Plus 图标
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {

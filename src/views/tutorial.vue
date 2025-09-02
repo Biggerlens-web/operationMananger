@@ -83,7 +83,7 @@
 
             </div>
         </el-card>
-        <el-card class="stickTp_manage">
+        <el-card class="stickTp_manage" v-loading="showLoading">
 
             <draggable tag="ul" v-model="appData" item-key="id" :animation="200" class="template-grid"
                 ghost-class="ghost-class" chosen-class="chosen-class" drag-class="dragging-class"
@@ -449,7 +449,7 @@
     })
     const getUserList = async () => {
         try {
-            const params = {
+            const params: any = {
                 timestamp: Date.now(),
                 appNo: defaultAppNo.value,
                 os: searchParams.value.os,
@@ -458,6 +458,9 @@
                 category: searchParams.value.category,
                 deviceType: searchParams.value.deviceType,
                 language: searchParams.value.region !== 'domestic' ? searchParams.value.language : "zh",
+            }
+            if (!searchParams.value.category) {
+                delete params.category
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))

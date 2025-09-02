@@ -71,7 +71,7 @@
             </div>
         </el-card>
         <!-- 内容展示卡片 -->
-        <el-card class="content-card">
+        <el-card class="content-card" v-loading="showLoading">
             <!-- 动态组件，带过渡效果 -->
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
@@ -269,8 +269,25 @@
                 probability: item.probability,
                 functionStartNum: item.functionStartNum,
                 timeOn: item.timeOn,
+                popUpTimingCount: item.popUpTimingCount,
+                popUpTiming: item.popUpTiming,
+                popUpTimingPlan: item.popUpTimingPlan,
+                thatLaterClicks: item.thatLaterClicks,
+                thatLaterClicksPlan: item.thatLaterClicksPlan,
+                thatLaterClicksCount: item.thatLaterClicksCount,
             }
 
+            if (!params.popUpTiming) {
+                delete params.popUpTimingCount
+                delete params.popUpTimingPlan
+                delete params.probability
+                delete params.functionStartNum
+                delete params.timeOn
+            }
+            if (!params.thatLaterClicks) {
+                delete params.thatLaterClicksPlan
+                delete params.thatLaterClicksCount
+            }
             console.log('提交修改参数', params);
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
@@ -335,6 +352,9 @@
         name: '名称',
         open: '开关',
         probability: '概率设置',
+        popUpTiming: '新用户弹出策略',
+        thatLaterClicks: '点击以后再说弹出策略',
+
         functionStartNum: '功能打开次数',
         timeOn: '计时打开(s)'
 

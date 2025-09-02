@@ -449,17 +449,19 @@
                             url = '/maskDetail/saveItem'
                             break;
                     }
+                    break;
                 case 'wallpapper':
                     params.wallpaperId = parseInt(route.query.id as string)
                     switch (operationClass.value) {
                         case 1:
                             url = '/wallpaperDetail/saveOperationItem'
-
                             break;
                         case 0:
+                            console.log('???????????????????????????????????');
                             url = '/wallpaperDetail/saveItem'
                             break;
                     }
+                    break;
                 case 'shape':
                     params.shapeId = parseInt(route.query.id as string)
                     switch (operationClass.value) {
@@ -470,6 +472,7 @@
                             url = '/shapeDetail/saveItem'
                             break;
                     }
+                    break;
                 case 'otherMaterial':
                     params.materialId = parseInt(route.query.id as string)
                     switch (operationClass.value) {
@@ -480,6 +483,7 @@
                             url = '/otherMaterialDetail/saveItem'
                             break;
                     }
+                    break;
             }
             console.log('参数', params);
             const enData = desEncrypt(JSON.stringify(params))

@@ -10,7 +10,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://192.168.31.36:18097',
+        target: 'https://privacy.biggerlens.cn:18091',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },

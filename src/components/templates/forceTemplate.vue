@@ -14,7 +14,7 @@
                             <span class="template-id">{{ 'ID:' + element.id }}</span>
                         </div>
                         <div class="card-image">
-                            <img :src="element.imageUrl" :alt="'模板'" />
+                            <img :src="element.imageUrl" :alt="'字体模板'" />
                         </div>
 
 
@@ -296,7 +296,7 @@
         img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             transition: transform 0.3s ease;
         }
 

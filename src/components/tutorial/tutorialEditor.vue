@@ -3,7 +3,8 @@
         <el-form ref="ruleFormRef" style="max-width: 600px" :model="formData" :rules="rules" label-width="auto"
             class="demo-ruleForm" status-icon>
             <el-form-item label="所属应用" prop="appNo">
-                <el-select filterable v-model="formData.appNo" :disabled="!!formData.id">
+                <!-- :disabled="!!formData.id" -->
+                <el-select filterable v-model="defaultAppNo" disabled placeholder="请选择应用">
                     <el-option v-for="item in appList" :key="item.appNo"
                         :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
                         :value="item.appNo" />
@@ -38,7 +39,7 @@
                 </el-select>
             </el-form-item>
             <el-form-item label="分类类型" prop="category">
-                <el-select filterable v-model="formData.category" placeholder="教程" class="filter-select">
+                <el-select filterable v-model="formData.category" placeholder="类型" class="filter-select">
                     <el-option v-for="item in categoryTypes" :key="item.id" :label="item.categoryName"
                         :value="item.id" />
                 </el-select>
@@ -47,7 +48,7 @@
                 <el-input v-model="formData.name" />
             </el-form-item>
             <el-form-item label="版本" prop="version">
-                <el-input v-model="formData.version" />
+                <el-input-number v-model="formData.version" />
             </el-form-item>
             <el-form-item label="埋点标识" prop="baseSign" v-if="formData.tutorialType === 'text_and_image'">
                 <el-input v-model="formData.baseSign" />
@@ -62,7 +63,8 @@
 
                 <div class="image-upload-container">
                     <el-upload class="image-uploader" v-model:file-list="formData.coverImg" :show-file-list="false"
-                        action="#" :on-remove="handleRemove" :auto-upload="false" :on-change="handleChangeimge">
+                        action="#" :on-remove="handleRemove" :auto-upload="false" :on-change="handleChangeimge"
+                        accept="image/*">
                         <img v-if="formData.coverImgUrl" :src="formData.coverImgUrl" class="uploaded-image" />
                         <div v-else class="upload-placeholder">
                             <el-icon>
@@ -154,6 +156,7 @@
                                     <el-upload class="tutorial-image-uploader" v-model:file-list="item.image"
                                         :show-file-list="false" action="#"
                                         :on-remove="() => handleRemoveTextImage(index)" :auto-upload="false"
+                                        accept="image/*"
                                         :on-change="(uploadFile: UploadUserFile, uploadFiles: UploadFiles) => handleChangeCoverImage(uploadFile, index)">
                                         <div v-if="item.imgUrl" class="tutorial-image-preview">
                                             <img :src="item.imgUrl" class="tutorial-uploaded-image" />
@@ -241,9 +244,18 @@
                 enData
             })
             console.log('获取编辑信息', res);
-            formData.value.category = res.data.data.categoryName
+            formData.value.category = res.data.data.categoryName === 'null' ? 0 : res.data.data.categoryName
             if (res.data.data.tutorialTextAndImages.length) {
                 tutorialTextArr.value = res.data.data.tutorialTextAndImages
+            } else {
+                tutorialTextArr.value = [
+                    {
+                        text: '',
+                        image: [],
+                        desc: '',
+                        imgUrl: '',
+                    }
+                ]
             }
         } catch (err) {
             console.log('获取编辑信息失败', err);
@@ -256,11 +268,21 @@
             Object.assign(formData.value, props.editInfo)
             getTypeInfo()
         }
+        if (!newV) {
+            tutorialTextArr.value = [
+                {
+                    text: '',
+                    image: [],
+                    desc: '',
+                    imgUrl: '',
+                }
+            ]
+        }
 
         console.log('formData.value', formData.value);
     })
     const counterStore = useCounterStore()
-    const { appList, OSlist, regionList, showLoading, international } = storeToRefs(counterStore)
+    const { appList, OSlist, regionList, showLoading, international, defaultAppNo } = storeToRefs(counterStore)
     const emit = defineEmits<{
         'update:showEditor': [value: boolean]
     }>()
@@ -348,7 +370,7 @@
             reader.onload = (e) => {
                 const fullBase64 = e.target?.result as string;
                 tutorialTextArr.value[index].imgUrl = fullBase64
-                tutorialTextArr.value[index].imageName = ''
+                tutorialTextArr.value[index].imgName = ''
             };
             reader.readAsDataURL(uploadFile.raw);
 
@@ -388,6 +410,7 @@
     const removeCoverImageTextImage = (index: number) => {
         tutorialTextArr.value[index].imgUrl = ''
         tutorialTextArr.value[index].image = []
+        tutorialTextArr.value[index].imgName = ''
     }
     const removeCoverImage = () => {
         formData.value.coverImgUrl = '';
@@ -458,12 +481,15 @@
         try {
 
             const form = new FormData()
+            formData.value.appNo = defaultAppNo.value
             for (let key in formData.value) {
                 if (key !== 'coverImg' && key !== 'video' && key !== 'language') {
 
                     if (key === 'os') {
                         form.append(key, formData.value[key].toLowerCase())
-                    } else {
+                    }
+                    else {
+
                         form.append(key, formData.value[key])
                     }
                 } else if (key === 'language') {
@@ -471,6 +497,9 @@
                 }
 
 
+            }
+            if (formData.value.version === null || formData.value.version === '') {
+                form.delete('version')
             }
             form.delete('videoUrl')
             form.delete('coverImgUrl')
@@ -483,8 +512,14 @@
 
             if (formData.value.tutorialType === 'video') {
                 if (!formData.value.videoName) {
-                    form.append('video', formData.value.video[0].raw)
-                    form.delete('videoName')
+                    if (formData.value.video && formData.value.video[0] && formData.value.video[0].raw) {
+                        form.append('video', formData.value.video[0].raw)
+                        form.delete('videoName')
+                    } else {
+
+
+                    }
+
                 }
             } else {
                 form.delete('videoName')
@@ -496,11 +531,21 @@
                 tutorialTextArr.value.forEach((item: any) => {
                     form.append('textAndImageDesc', item.desc)
                     form.append('text', item.text)
-
+                    if (item.textAndImageId) {
+                        form.append('textAndImageId', item.textAndImageId)
+                    }
                     if (item.imgName) {
-                        form.append('imageName', item.imgName)
+                        form.append('textAndImageImgName', item.imgName)
+                        form.append('image_exist', 'true')
                     } else {
-                        form.append('imageName', item.image[0].raw)
+                        console.log('item.image', item);
+                        if (item.image && item.image[0] && item.image[0].raw) {
+                            form.append('image', item.image[0].raw)
+                            form.append('image_exist', 'true')
+                        } else {
+                            form.append('image_exist', 'false')
+                        }
+
                     }
                     if (item.id) {
                         form.append('textAndImageId', item.id)
@@ -509,8 +554,13 @@
             }
 
             if (!formData.value.coverImgName) {
-                form.append('coverImg', formData.value.coverImg[0].raw)
-                form.delete('coverImgName')
+                if (formData.value.coverImg && formData.value.coverImg[0] && formData.value.coverImg[0].raw) {
+                    form.append('coverImg', formData.value.coverImg[0].raw)
+                    form.delete('coverImgName')
+                } else {
+
+
+                }
             }
 
 
@@ -784,7 +834,7 @@
     .tutorial-uploaded-image {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         transition: transform 0.3s ease;
     }
 
