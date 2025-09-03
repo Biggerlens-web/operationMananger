@@ -321,9 +321,9 @@
 
 
 
-      configingItem.value.config = JSON.stringify(enCodeObj(jsonData.value))
+      configingItem.value.config = JSON.stringify((jsonData.value))
       console.log('configingItem.value.config', configingItem.value.config);
-      configingItem.value.configNote = JSON.stringify(enCodeObj(comments.value))
+      configingItem.value.configNote = JSON.stringify((comments.value))
       const params = {
         ...configingItem.value, timestamp: new Date().getTime()
       }
@@ -452,7 +452,7 @@
 
   const updateNote = (note: { value: string; path: string }) => {
     const { value, path } = note
-
+    console.log('note', note);
     try {
       const noteObj = getKeysAsObject(jsonData.value)
       let isUpdated = false
@@ -471,19 +471,26 @@
         }
       }
 
+      // 如果没有找到匹配的路径，说明是新增的key，直接添加到注释对象中
       if (!isUpdated) {
-        console.warn(`未找到路径: ${path}`)
-        return
+        console.log(`新增路径注释: ${path}`)
+        // 直接将新路径添加到注释对象中
+        assaginOBj(path, value, { [path]: value })
+        isUpdated = true
       }
 
-      // 防抖延迟同步，避免频繁重渲染导致展开状态丢失
-      if (updateNoteTimer) {
-        clearTimeout(updateNoteTimer)
-      }
+      // 只有成功更新时才触发界面刷新
+      if (isUpdated) {
+        // 防抖延迟同步，避免频繁重渲染导致展开状态丢失
+        if (updateNoteTimer) {
+          clearTimeout(updateNoteTimer)
+        }
 
-      updateNoteTimer = setTimeout(() => {
-        callChildMethod()
-      }, 150)
+        updateNoteTimer = setTimeout(() => {
+          console.log('更新注释');
+          callChildMethod()
+        }, 150)
+      }
 
     } catch (error) {
       console.error('更新注释失败:', error)
