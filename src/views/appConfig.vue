@@ -454,18 +454,21 @@
     const { value, path } = note
     console.log('note', note);
     try {
-      const noteObj = getKeysAsObject(jsonData.value)
+      // 直接更新comments对象，不需要通过getKeysAsObject重新生成
       let isUpdated = false
 
-      // 优化路径匹配逻辑
-      for (const [key] of Object.entries(noteObj)) {
-        if (key === path || (key.includes(',') && key.includes(path))) {
-          noteObj[key] = value
-          assaginOBj(key, value, noteObj)
-          isUpdated = true
-
-          // 如果是顶层属性，直接返回
-          if (key === path) {
+      // 首先检查是否有完全匹配的路径
+      if (comments.value[path] !== undefined) {
+        comments.value[path] = value
+        isUpdated = true
+        console.log(`直接更新路径注释: ${path} = ${value}`)
+      } else {
+        // 检查是否有包含该路径的复合键
+        for (const [key] of Object.entries(comments.value)) {
+          if (key.includes(',') && key.includes(path)) {
+            comments.value[key] = value
+            isUpdated = true
+            console.log(`更新复合路径注释: ${key} = ${value}`)
             break
           }
         }
@@ -473,23 +476,20 @@
 
       // 如果没有找到匹配的路径，说明是新增的key，直接添加到注释对象中
       if (!isUpdated) {
-        console.log(`新增路径注释: ${path}`)
-        // 直接将新路径添加到注释对象中
-        assaginOBj(path, value, { [path]: value })
+        console.log(`新增路径注释: ${path} = ${value}`)
+        comments.value[path] = value
         isUpdated = true
       }
 
-      // 只有成功更新时才触发界面刷新
+      // 成功更新后，直接更新DOM中的注释显示，避免重新渲染整个编辑器
       if (isUpdated) {
-        // 防抖延迟同步，避免频繁重渲染导致展开状态丢失
-        if (updateNoteTimer) {
-          clearTimeout(updateNoteTimer)
+        // 直接更新DOM中对应的注释元素
+        const editorInput = document.querySelector(`#jsoneditor-desc${path}`)
+        if (editorInput instanceof HTMLElement) {
+          editorInput.textContent = value
         }
 
-        updateNoteTimer = setTimeout(() => {
-          console.log('更新注释');
-          callChildMethod()
-        }, 150)
+        console.log('注释更新完成，当前comments:', comments.value)
       }
 
     } catch (error) {
