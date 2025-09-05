@@ -34,6 +34,7 @@ export class CookieUtils {
    * 删除token Cookie
    */
   static removeToken(): void {
+    console.log('清除token')
     Cookies.remove(TOKEN_KEY, { path: '/' })
   }
 

@@ -487,9 +487,17 @@
         const editorInput = document.querySelector(`#jsoneditor-desc${path}`)
         if (editorInput instanceof HTMLElement) {
           editorInput.textContent = value
+          console.log('注释更新完成，当前comments:', comments.value)
+        } else {
+          // 如果DOM中没有找到对应的注释元素（新增属性的情况），需要重新初始化注释显示
+          console.log('未找到注释元素，重新初始化注释显示')
+          if (updateNoteTimer) {
+            clearTimeout(updateNoteTimer)
+          }
+          updateNoteTimer = setTimeout(() => {
+            callChildMethod()
+          }, 100)
         }
-
-        console.log('注释更新完成，当前comments:', comments.value)
       }
 
     } catch (error) {
