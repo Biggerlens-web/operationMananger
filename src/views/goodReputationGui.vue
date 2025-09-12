@@ -280,7 +280,7 @@
             if (!params.popUpTiming) {
                 delete params.popUpTimingCount
                 delete params.popUpTimingPlan
-                delete params.probability
+                // delete params.probability
                 delete params.functionStartNum
                 delete params.timeOn
             }

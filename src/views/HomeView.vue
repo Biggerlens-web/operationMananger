@@ -97,7 +97,7 @@
   import { useRouter, useRoute } from 'vue-router'
   // 引入Element Plus图标
   import { Fold, Expand } from '@element-plus/icons-vue'
-
+  import { removeToken } from '@/utils/cookie'
   // 引入Pinia状态管理
   import { useCounterStore } from '@/stores/counter'
   import { storeToRefs } from 'pinia'
@@ -211,7 +211,8 @@
   // 处理用户退出登录
   const handleLogout = () => {
     // 清除token等登录信息
-    localStorage.removeItem('token')
+
+    removeToken()
     router.push('/login')
   }
 

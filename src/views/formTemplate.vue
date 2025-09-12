@@ -6,15 +6,15 @@
             <div class="filter-container">
                 <div class="filter-row">
                     <div class="filter-item">
-                        <el-input v-model="searchParams.templateName" placeholder="模板名称" clearable
-                            class="filter-input" />
+                        <el-input v-model="searchParams.fileName" placeholder="模板名称" clearable class="filter-input" />
                     </div>
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.bigTemplate" placeholder="大分类"
                             @change="getSmallClassificationData" class="filter-select" clearable>
 
-                            <el-option v-for="item in bigTemplateList" :key="item.cid" :label="item.name"
-                                :value="item.cid" />
+                            <el-option v-for="item in bigTemplateList" :key="item.id
+                                " :label="item.name" :value="item.id
+                                    " />
                         </el-select>
                     </div>
                     <div class="filter-item">
@@ -38,7 +38,7 @@
                     </div>
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.language" placeholder="语言" class="filter-select"
-                            @change="getALlData">
+                            @change="getAllData">
 
                             <el-option v-for="item in languageList" :key="item.value" :label="item.name"
                                 :value="item.value" />
@@ -109,7 +109,7 @@
         </el-card>
     </div>
     <editFormTemDialog v-model:is-edit-template="isEditTemplate" :language="searchParams.language"
-        :bigTemplateList="bigTemplateList" :editInfo="editInfo" />
+        :bigTemplateList="bigTemplateList" :editInfo="editInfo" @update="getFormTemplateData" />
 </template>
 
 <script lang="ts" setup>
@@ -166,7 +166,6 @@
         if (index !== -1) {
             currentPreviewIndex.value = index
         }
-
         showPreview.value = true
 
 
@@ -187,6 +186,7 @@
         if (!newVal) {
 
             editInfo.value = ''
+
         }
     })
 
@@ -198,8 +198,25 @@
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
-        }).then(() => {
+        }).then(async () => {
+            if (showLoading.value) return
+            showLoading.value = true
+            try {
+                const res = await service.post(`/formTemplate/delFormTemplateData/${item.id}`)
+                console.log('res', res);
+                if (res.data.code === 200) {
+                    ElMessage.success(res.data.msg)
+                    showLoading.value = false
+                    getFormTemplateData()
+                } else {
+                    ElMessage.error(res.data.msg)
+                }
+            } catch (err) {
+                console.log("🚀 ~ handleDelete ~ err:", err)
+            } finally {
+                showLoading.value = false
 
+            }
         })
     }
 
@@ -229,7 +246,7 @@
     //搜索参数
     const searchParams = ref<any>(
         {
-            templateName: '',
+            fileName: '',
             bigTemplate: '',
             smallTemplate: '',
             templateType: 'all',
@@ -250,8 +267,8 @@
     //重置搜索
     const resetSearch = async () => {
         searchParams.value = {
-            templateName: '',
-            bigTemplate: bigTemplateList.value[0].cid,
+            fileName: '',
+            bigTemplate: bigTemplateList.value[0].id,
 
             smallTemplate: '',
             templateType: 'all',
@@ -295,6 +312,7 @@
 
     })
     const getBaseData = async () => {
+
         try {
             const res = await service.get('/formTemplate/getSystemAndLanguage')
             console.log("🚀 ~ getBaseData ~ res:", res)
@@ -302,14 +320,12 @@
                 oslist.value = res.data.rows
                 await nextTick()
                 searchParams.value.language = 'zh'
-
-
             } else {
                 ElMessage.error(res.data.msg)
-
             }
         } catch (err) {
             console.log("🚀 ~ getBaseData ~ err:", err)
+        } finally {
 
         }
     }
@@ -332,7 +348,7 @@
             console.log("🚀 ~ getLargeClassificationData ~ res:", res)
             if (res.data.code === 200) {
                 bigTemplateList.value = res.data.rows
-                searchParams.value.bigTemplate = res.data.rows[0].cid
+                searchParams.value.bigTemplate = res.data.rows[0].id
             } else {
                 ElMessage.error(res.data.msg)
             }
@@ -347,11 +363,15 @@
     //获取小分类
     const getSmallClassificationData = async () => {
 
+        const id = searchParams.value.bigTemplate
+        if (id === undefined || id === null || id === '') {
+            return
+        }
 
         try {
             const params = {
                 timestamp: Date.now(),
-                cid: searchParams.value.bigTemplate,
+                id: id,
                 language: searchParams.value.language,
             }
             console.log("🚀 ~ getSmallClassificationData ~ params:", params)
@@ -390,7 +410,8 @@
 
             const params = {
                 timestamp: Date.now(),
-                cid: searchParams.value.bigTemplate,
+                fileName: searchParams.value.fileName,
+                subId: searchParams.value.bigTemplate,
                 language: searchParams.value.language,
                 name: searchParams.value.smallTemplate,
                 isVip: searchParams.value.templateType,
@@ -398,6 +419,7 @@
             if (searchParams.value.templateType === 'all') {
                 delete params.isVip
             }
+
 
             console.log("🚀 ~ getFormTemplateData ~ params:", params)
 
@@ -424,7 +446,7 @@
         }
     }
 
-    const getALlData = async () => {
+    const getAllData = async () => {
         await getLargeClassificationData()
         await getSmallClassificationData()
         getFormTemplateData()
