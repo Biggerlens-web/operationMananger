@@ -294,7 +294,7 @@
     const filterParams = ref<filterParams[]>()
     const getUserList = async () => {
         try {
-
+            showLoading.value = true
 
             const params = {
                 timestamp: Date.now(),
@@ -304,7 +304,7 @@
                 companyName: searchParams.value.companyName,
             }
             const enData = desEncrypt(JSON.stringify(params))
-            showLoading.value
+
             const res = await service.post('/companyInfo/list', {
                 enData
             })
