@@ -78,7 +78,7 @@
             <el-radio-group v-model="addParentData.region">
 
                 <el-radio v-for="item in regionList" :key="item.value" :value="item.value" size="large">{{ item.label
-                    }}</el-radio>
+                }}</el-radio>
 
             </el-radio-group>
 

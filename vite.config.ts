@@ -1,16 +1,20 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // 加载环境变量
+  const env = loadEnv(mode, process.cwd(), '')
+  
+  return {
   plugins: [vue(), vueDevTools()],
   server: {
     proxy: {
       '/api': {
-        target: 'http://192.168.31.36:18097',
+        target: env.VITE_API_BASE_URL || 'https://privacy.biggerlens.cn:18091',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
@@ -63,4 +67,5 @@ export default defineConfig({
   optimizeDeps: {
     include: ['vue', 'vue-router', 'pinia', 'axios', 'element-plus'],
   },
+  }
 })

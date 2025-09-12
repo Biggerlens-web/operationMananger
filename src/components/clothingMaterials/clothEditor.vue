@@ -3,7 +3,8 @@
         <el-form ref="ruleFormRef" style="max-width: 600px" :model="formData" :rules="rules" label-width="auto"
             class="demo-ruleForm" status-icon>
             <el-form-item label="所属应用" prop="appNo">
-                <el-select filterable v-model="formData.appNo" @change="getParentList" placeholder="请选择应用">
+                <el-select filterable v-model="formData.appNo" @change="getParentList" placeholder="请选择应用"
+                    :disabled="true">
                     <el-option v-for="item in appList" :key="item.appNo"
                         :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
                         :value="item.appNo" />
@@ -173,7 +174,7 @@
 
     watch(() => props.showEditor, async (newV) => {
         if (newV) {
-
+            console.log("🚀 ~ watch ~ props.editorInfo:", props.editorInfo)
             if (props.editorInfo && props.editorInfo.classImageUrl) {
                 // try {
                 //     const response = await fetch(props.editorInfo.classImageUrl);
@@ -214,6 +215,7 @@
             getParentList()
 
         }
+
 
     })
 
@@ -457,8 +459,9 @@
                 isOperationClass: formData.value.isOperationClass,
 
             }
+
             if (formData.value.classImageBase64.includes('http')) {
-                params.classImageName = props.editorInfo.classImageName
+                params.classImageName = props.editorInfo?.classImageName
             }
             if (props.noHaveParent) {
                 delete params.tids
@@ -512,6 +515,7 @@
         } finally {
             showLoading.value = false
         }
+
     }
     const handleComfirm = (ruleFormRef: any) => {
         ruleFormRef.validate(async (valid: any) => {

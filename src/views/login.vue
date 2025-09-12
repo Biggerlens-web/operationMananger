@@ -60,6 +60,7 @@
     import { desEncrypt } from '@/utils/des.ts'
     import { useCounterStore } from '@/stores/counter.ts'
     import { storeToRefs } from 'pinia'
+    import { setToken } from '@/utils/cookie'
     const counterStore = useCounterStore()
     const { userName, userAvatar, showLoading } = storeToRefs(counterStore)
     interface AccountForm {
@@ -178,7 +179,8 @@
             console.log('登录', res);
             if (res.data.code === 200) {
                 ElMessage.success('登录成功')
-                localStorage.setItem('token', res.data.data.token ?? '')
+                // 使用Cookie存储token，设置7天过期
+                setToken(res.data.data.token ?? '')
                 userName.value = res.data.data.userName ?? '管理员'
                 userAvatar.value = res.data.data.userAvatar ?? ''
                 router.go(0)

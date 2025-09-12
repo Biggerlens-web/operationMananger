@@ -32,7 +32,7 @@
             </div> -->
         </el-card>
         <!-- 内容展示卡片 -->
-        <el-card class="content-card">
+        <el-card class="content-card" v-loading="showLoading">
             <!-- 动态组件，带过渡效果 -->
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
@@ -297,7 +297,7 @@
         }
 
         .content-card {
-            height: calc(100vh - 220px);
+            height: max-content;
 
             .pagesBox {
                 margin-top: 30px;

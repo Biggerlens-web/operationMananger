@@ -27,7 +27,7 @@
     <!-- 筛选条件卡片 -->
     <el-card class="filter-card">
       <div class="filter-box">
-        <div class="filter-item">
+        <!-- <div class="filter-item">
           <span class="label">应用:</span>
           <el-select filterable v-model="activeApp" placeholder="请选择应用" @change="getAutoConfig" clearable
             class="filter-select">
@@ -35,7 +35,7 @@
               :label="`应用:${item.appAbbreviation} 公司:${item.companyName} [appId:${item.id || item.appNo}]`"
               :value="item.appNo" />
           </el-select>
-        </div>
+        </div> -->
         <div class="filter-item">
           <span class="label">渠道:</span>
           <el-select filterable v-model="activeChannel" placeholder="请选择渠道" @change="getAutoConfig" clearable
@@ -169,7 +169,7 @@
   const autoOprationStore = useAutoOpration()
   const { JSONEditorValue, JSONEditorNote } = storeToRefs(autoOprationStore) // 从store中解构状态
   const {
-    appList, channelList, OSlist, showLoading
+    appList, channelList, OSlist, showLoading, defaultAppNo
   } = storeToRefs(counterStore) // 从store中解构公共数据
   // 筛选条件状态
   const activeApp = ref<string | number>('') // 当前选中的应用
@@ -242,22 +242,7 @@
   //编辑JSON
   type JsonDataType = Record<string, any>;
   const jsonData = ref<JsonDataType>({
-    // "netip": "会员服务ip",
-    // "piCutConfigBean": "皮卡配置",
-    // "questionnaireConfigBeanList": "调查问卷配置",
-    // "xiaomiConfig": "小米配置",
-    // "adsConfig": "广告配置",
-    // "vipConfig": "vip配置",
-    // "xiaomiFirstPayDistanceOpen": "注释",
-    // "xiaomiFirstPayDistance": "注释",
-    // "huaweiConfig": "华为配置",
-    // "feeConfig": "付费点配置",
-    // "jsonUpdateTime": "2023-07-11 11:11:11",
-    // "helpMeRetouchConfig": {
-    //   "version": '123123',
-    //   "isShowTaobao": true,
-    //   "isCanPay": true,
-    // },
+
   })
   const comments = ref<JsonDataType>({})
 
@@ -336,9 +321,9 @@
 
 
 
-      configingItem.value.config = JSON.stringify(enCodeObj(jsonData.value))
+      configingItem.value.config = JSON.stringify((jsonData.value))
       console.log('configingItem.value.config', configingItem.value.config);
-      configingItem.value.configNote = JSON.stringify(enCodeObj(comments.value))
+      configingItem.value.configNote = JSON.stringify((comments.value))
       const params = {
         ...configingItem.value, timestamp: new Date().getTime()
       }
@@ -467,43 +452,67 @@
 
   const updateNote = (note: { value: string; path: string }) => {
     const { value, path } = note
-
+    console.log('note', note);
     try {
-      const noteObj = getKeysAsObject(jsonData.value)
+      // 直接更新comments对象，不需要通过getKeysAsObject重新生成
       let isUpdated = false
 
-      // 优化路径匹配逻辑
-      for (const [key] of Object.entries(noteObj)) {
-        if (key === path || (key.includes(',') && key.includes(path))) {
-          noteObj[key] = value
-          assaginOBj(key, value, noteObj)
-          isUpdated = true
-
-          // 如果是顶层属性，直接返回
-          if (key === path) {
+      // 首先检查是否有完全匹配的路径
+      if (comments.value[path] !== undefined) {
+        comments.value[path] = value
+        isUpdated = true
+        console.log(`直接更新路径注释: ${path} = ${value}`)
+      } else {
+        // 检查是否有包含该路径的复合键
+        for (const [key] of Object.entries(comments.value)) {
+          if (key.includes(',') && key.includes(path)) {
+            comments.value[key] = value
+            isUpdated = true
+            console.log(`更新复合路径注释: ${key} = ${value}`)
             break
           }
         }
       }
 
+      // 如果没有找到匹配的路径，说明是新增的key，直接添加到注释对象中
       if (!isUpdated) {
-        console.warn(`未找到路径: ${path}`)
-        return
+        console.log(`新增路径注释: ${path} = ${value}`)
+        comments.value[path] = value
+        isUpdated = true
       }
 
-      // 防抖延迟同步，避免频繁重渲染导致展开状态丢失
-      if (updateNoteTimer) {
-        clearTimeout(updateNoteTimer)
+      // 成功更新后，直接更新DOM中的注释显示，避免重新渲染整个编辑器
+      if (isUpdated) {
+        // 直接更新DOM中对应的注释元素
+        const editorInput = document.querySelector(`#jsoneditor-desc${path}`)
+        if (editorInput instanceof HTMLElement) {
+          editorInput.textContent = value
+          console.log('注释更新完成，当前comments:', comments.value)
+        } else {
+          // 如果DOM中没有找到对应的注释元素（新增属性的情况），需要重新初始化注释显示
+          console.log('未找到注释元素，重新初始化注释显示')
+          if (updateNoteTimer) {
+            clearTimeout(updateNoteTimer)
+          }
+          updateNoteTimer = setTimeout(() => {
+            callChildMethod()
+          }, 100)
+        }
       }
-
-      updateNoteTimer = setTimeout(() => {
-        callChildMethod()
-      }, 150)
 
     } catch (error) {
       console.error('更新注释失败:', error)
     }
   }
+
+
+
+  watch(() => defaultAppNo.value, (newV) => {
+    if (newV) {
+      activeApp.value = newV
+      getAutoConfig()
+    }
+  })
 
   const getAutoConfig = async () => {
     try {
@@ -585,7 +594,8 @@
 
   onMounted(() => {
     if (appList.value.length > 0) {
-      activeApp.value = appList.value[0].appNo
+      // activeApp.value = appList.value[0].appNo
+      activeApp.value = defaultAppNo.value
       getAutoConfig()
     }
   })

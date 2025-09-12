@@ -3,11 +3,9 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
 import { decryptDes } from '@/utils/des'
+import { getToken, removeToken } from '@/utils/cookie'
 const service: AxiosInstance = axios.create({
-  baseURL: 'http://192.168.31.36:18097',
-  // baseURL: 'https://privacy.biggerlens.cn:18091',
-  // baseURL: '/api',
-
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -16,7 +14,7 @@ const service: AxiosInstance = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    const token = getToken()
 
     if (token && config.headers) {
       config.headers['token'] = `${token}`
@@ -49,7 +47,7 @@ service.interceptors.response.use(
       if (code == 3) {
         if (window.location.pathname != '/login') {
           ElMessage.error(msg)
-          localStorage.removeItem('token')
+          removeToken()
           router.push('/login')
         }
       } else if (code == 1046) {
@@ -65,7 +63,7 @@ service.interceptors.response.use(
       switch (response.status) {
         case 401:
           ElMessage.error('未授权，请重新登录')
-          localStorage.removeItem('token')
+          removeToken()
           router.push('/login')
           break
         case 403:

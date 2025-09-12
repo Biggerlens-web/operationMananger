@@ -14,6 +14,8 @@ export const useCounterStore = defineStore(
         value: 'foreign',
       },
     ]) //地域列表
+
+    const functionList = ref<any>([]) //ai功能列表
     const international = ref<any>() //国际化信息
     const companyList = ref<any>([]) //公司列表
     const defaultCompanyNo = ref<string | number>('') //选中公司
@@ -70,6 +72,7 @@ export const useCounterStore = defineStore(
       shapeFliterParams,
       showLoading,
       otherFliterParams,
+      functionList,
     }
   },
   {

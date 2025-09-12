@@ -75,7 +75,7 @@
 
             </div>
         </el-card>
-        <el-card class="stickTp_manage">
+        <el-card class="stickTp_manage" v-loading="showLoading">
 
             <draggable tag="ul" v-model="appData" item-key="id" :animation="200" class="template-grid"
                 ghost-class="ghost-class" chosen-class="chosen-class" drag-class="dragging-class"
@@ -824,7 +824,7 @@
         }
 
         .content-card {
-            height: calc(100vh - 220px);
+            height: max-content;
 
             .pagesBox {
                 margin-top: 30px;

@@ -65,7 +65,7 @@
 
             </div>
         </el-card>
-        <el-card class="content-card">
+        <el-card class="content-card" v-loading="showLoading">
             <Transition enter-active-class="animate__animated animate__fadeIn"
                 leave-active-class="animate__animated animate__fadeOut" mode="out-in">
                 <component :is="componentName" :filterParams="filterParams" :tableData="appData" @editor="editorShape"
@@ -475,7 +475,7 @@
         }
 
         .content-card {
-            height: calc(100vh - 220px);
+            height: max-content;
 
             .pagesBox {
                 margin-top: 30px;

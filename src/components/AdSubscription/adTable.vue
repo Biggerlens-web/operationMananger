@@ -10,8 +10,9 @@
             </div>
         </div>
         <el-button type="primary" @click="addData">新增</el-button>
-        <el-table :data="viewList" border style="width: 100%" :min-height="420" :max-height="600" highlight-current-row
-            :header-cell-style="{ background: '#f5f7fa' }" :cell-style="{ padding: '8px 0' }">
+        <el-table v-loading="showLoading" :data="viewList" border style="width: 100%" :min-height="420"
+            :max-height="600" highlight-current-row :header-cell-style="{ background: '#f5f7fa' }"
+            :cell-style="{ padding: '8px 0' }">
             <template v-for="item in keyList" :key="item.key">
                 <el-table-column :prop="item.key" :label="item.note" show-overflow-tooltip min-width="130">
                     <!-- 处理嵌套对象属性 -->
@@ -106,13 +107,14 @@
 
             <el-table-column label="操作" fixed="right" width="150">
                 <template #default="scope">
-                    <div class="action-buttons" style="display: flex; flex-direction: column; gap: 4px;">
-                        <el-button v-if="type !== 'InterstitialAds'" type="primary" size="small" text
+                    <div class="action-buttons" style="display: flex; flex-direction: column; row-gap: 4px;">
+                        <el-button style="margin: 0;" v-if="type !== 'InterstitialAds'" type="primary" size="small" text
                             @click="handleEditor(scope.row)">
                             编辑
                         </el-button>
-                        <el-button type="primary" size="small" text @click="handleResult(scope.row)">提交修改</el-button>
-                        <el-button type="danger" size="small" text @click="handleDelete(scope.row)">
+                        <el-button style="margin: 0;" type="primary" size="small" text
+                            @click="handleResult(scope.row)">提交修改</el-button>
+                        <el-button style="margin: 0;" type="danger" size="small" text @click="handleDelete(scope.row)">
                             删除
                         </el-button>
                     </div>
