@@ -141,6 +141,11 @@
                 required: true, message: '请选择结束时间', trigger: 'blur'
             }
         ],
+        region: [
+            {
+                required: true, message: '请选择区域', trigger: 'blur'
+            }
+        ],
 
     })
     watch(() => props.dialogEditor, (newV) => {
