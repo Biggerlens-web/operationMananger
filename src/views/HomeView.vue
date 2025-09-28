@@ -58,7 +58,7 @@
             <el-select v-model="defaultAppNo" placeholder="🔍 请选择应用" size="default" @change="handleAppChange"
               filterable>
               <el-option v-for="app in appListInCom" :key="app.appNo"
-                :label="`${app.appAbbreviation}  [${app.id || app.appNo}]`" :value="app.appNo" />
+                :label="`${app.appAbbreviation}  [appName:${app.appName}] [appNo:${app.appNo}]`" :value="app.appNo" />
             </el-select>
           </div>
         </div>

@@ -163,6 +163,7 @@
         </el-table-column>
         <el-table-column label="应用编号" prop="appNo" />
         <el-table-column label="应用名称" prop="appAbbreviation" />
+        <el-table-column label="appName" prop="appName" />
         <el-table-column label="公司名称" prop="companyName" />
         <el-table-column label="AppKey" prop="appKey" />
         <el-table-column label="" prop="appMemberId" />
