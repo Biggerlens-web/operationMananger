@@ -55,15 +55,47 @@
     const notePath = ref<string>('')
     const noteInputRef = ref<HTMLElement>()
     const handleNote = () => {
-
         emit('updateNote', {
             value: noteText.value,
             path: notePath.value
         })
-        const editorInput = document.querySelector(`#jsoneditor-desc${notePath.value}`)
-        if (editorInput instanceof HTMLElement) {
-            editorInput.textContent = noteText.value
+        
+        // 使用更安全的方法查找DOM元素，避免特殊字符导致的querySelector错误
+        try {
+            const elementId = `jsoneditor-desc${notePath.value}`
+            let editorInput = document.getElementById(elementId)
+            
+            // 如果getElementById失败，尝试使用属性选择器
+            if (!editorInput) {
+                editorInput = document.querySelector(`[id="${elementId}"]`)
+            }
+            
+            // 如果还是找不到，使用更通用的方法遍历查找
+            if (!editorInput) {
+                const allDescElements = document.querySelectorAll('[id^="jsoneditor-desc"]')
+                for (const element of allDescElements) {
+                    if (element.id === elementId) {
+                        editorInput = element as HTMLElement
+                        break
+                    }
+                }
+            }
+            
+            if (editorInput instanceof HTMLElement) {
+                // 如果备注为空，显示默认提示文本，否则显示备注内容
+                const displayText = noteText.value || '点击添加备注'
+                editorInput.textContent = displayText
+                // 更新标记
+                if (!noteText.value) {
+                    editorInput.setAttribute('data-placeholder', 'true')
+                } else {
+                    editorInput.removeAttribute('data-placeholder')
+                }
+            }
+        } catch (domError) {
+            console.warn('DOM操作失败:', domError)
         }
+        
         noteText.value = null
     }
 
@@ -137,7 +169,15 @@
                                 const contentTr = (tds[2] as Element).querySelector('tr')
                                 const jsonPath = <string>contentTr?.querySelector('.jsoneditor-field')?.textContent
                                 console.log('jsonPath', jsonPath);
+                                
+                                // 确保jsonPath存在且有效
+                                if (!jsonPath) {
+                                    console.warn('jsonPath为空，跳过此项')
+                                    continue
+                                }
+                                
                                 const comment = <string>getCommentValue(jsonPath)
+                                console.log('comment for', jsonPath, ':', comment);
 
                                 const contentTd = contentTr?.querySelectorAll('td')
                                 const valueTd = contentTr?.querySelector('.jsoneditor-value')
@@ -232,54 +272,80 @@
 
 
                                 //修复key模板
-                                let haveDesc
+                                let haveDesc = false
                                 if (contentTd?.length) {
                                     for (let item of contentTd) {
                                         if (item.className === 'jsoneditor-desc') {
                                             console.log('item', item);
                                             haveDesc = true
-                                            item.textContent = comment
-                                            item.addEventListener('click', (e) => {
-                                                const target = e.target
-                                                if (target instanceof HTMLElement) {
-                                                    const rect = (e.target as HTMLElement).getBoundingClientRect();
-                                                    const elementX = rect.left;
-                                                    const elementY = rect.top;
-                                                    mouseX.value = `${elementX}px`
-                                                    mouseY.value = `${elementY}px`
-                                                    noteText.value = comment
-                                                    notePath.value = jsonPath
-                                                    noteInputRef.value?.focus()
+                                            // 确保备注内容正确显示，如果没有备注则显示默认提示
+                                            const displayText = comment || '点击添加备注'
+                                            item.textContent = displayText
+                                            // 为默认提示文本添加标记
+                                            if (!comment) {
+                                                item.setAttribute('data-placeholder', 'true')
+                                            } else {
+                                                item.removeAttribute('data-placeholder')
+                                            }
+                                            // 移除旧的事件监听器，避免重复绑定
+                                            item.replaceWith(item.cloneNode(true))
+                                            const newItem = contentTr?.querySelector('.jsoneditor-desc')
+                                            if (newItem) {
+                                                // 确保新元素也有正确的标记
+                                                if (!comment) {
+                                                    newItem.setAttribute('data-placeholder', 'true')
+                                                } else {
+                                                    newItem.removeAttribute('data-placeholder')
                                                 }
-                                            })
+                                                newItem.addEventListener('click', (e) => {
+                                                    const target = e.target
+                                                    if (target instanceof HTMLElement) {
+                                                        const rect = (e.target as HTMLElement).getBoundingClientRect();
+                                                        const elementX = rect.left;
+                                                        const elementY = rect.top;
+                                                        mouseX.value = `${elementX}px`
+                                                        mouseY.value = `${elementY}px`
+                                                        noteText.value = comment || ''
+                                                        notePath.value = jsonPath
+                                                        noteInputRef.value?.focus()
+                                                    }
+                                                })
+                                            }
                                             break
-                                        } else {
-                                            haveDesc = false
                                         }
                                     }
                                 }
-                                const newTd = document.createElement('td')
-                                newTd.className = 'jsoneditor-desc'
-                                newTd.id = `jsoneditor-desc${jsonPath}`
-                                newTd.textContent = comment
-                                newTd.addEventListener('click', (e) => {
-                                    console.log('e', e);
-                                    const target = e.target
-                                    console.log('target', target);
-                                    if (target instanceof HTMLElement) {
-
-                                        const rect = (e.target as HTMLElement).getBoundingClientRect();
-                                        console.log('rect', rect);
-                                        const elementX = rect.left;
-                                        const elementY = rect.top;
-                                        mouseX.value = `${elementX}px`
-                                        mouseY.value = `${elementY}px`
-                                        noteText.value = comment
-                                        notePath.value = jsonPath
-                                        noteInputRef.value?.focus()
+                                
+                                // 如果没有备注元素，创建新的备注元素
+                                if (!haveDesc && contentTr?.childNodes[1]) {
+                                    const newTd = document.createElement('td')
+                                    newTd.className = 'jsoneditor-desc'
+                                    newTd.id = `jsoneditor-desc${jsonPath}`
+                                    // 确保备注内容正确显示，如果没有备注则显示默认提示
+                                    const displayText = comment || '点击添加备注'
+                                    newTd.textContent = displayText
+                                    // 为默认提示文本添加标记
+                                    if (!comment) {
+                                        newTd.setAttribute('data-placeholder', 'true')
+                                    } else {
+                                        newTd.removeAttribute('data-placeholder')
                                     }
-                                })
-                                if (contentTr?.childNodes[1] && !haveDesc) {
+                                    newTd.addEventListener('click', (e) => {
+                                        console.log('e', e);
+                                        const target = e.target
+                                        console.log('target', target);
+                                        if (target instanceof HTMLElement) {
+                                            const rect = (e.target as HTMLElement).getBoundingClientRect();
+                                            console.log('rect', rect);
+                                            const elementX = rect.left;
+                                            const elementY = rect.top;
+                                            mouseX.value = `${elementX}px`
+                                            mouseY.value = `${elementY}px`
+                                            noteText.value = comment || ''
+                                            notePath.value = jsonPath
+                                            noteInputRef.value?.focus()
+                                        }
+                                    })
                                     contentTr.childNodes[1].after(newTd)
                                 }
                             }
@@ -452,13 +518,19 @@
         display: flex !important;
         align-items: center !important;
         color: #f2632e !important;
-
-
+        cursor: pointer;
+        font-size: 12px;
     }
 
     .jsoneditor-desc:hover {
         border: 1px solid #f2632e !important;
+    }
 
+    /* 无备注时的样式 */
+    .jsoneditor-desc:empty::after,
+    .jsoneditor-desc[data-placeholder="true"] {
+        color: #999 !important;
+        font-style: italic;
     }
 
     .jsoneditor-initvalue {
