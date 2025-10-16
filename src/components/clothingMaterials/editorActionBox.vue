@@ -182,6 +182,7 @@
 
   // 处理按钮点击事件
   const handleAction = (action: string) => {
+
     emit('actionClick', action)
   }
 

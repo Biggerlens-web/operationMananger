@@ -135,8 +135,13 @@
     import draggable from 'vuedraggable'
     import { reactive, ref, watch } from 'vue';
     const props = defineProps<{
-        dialogEditor: boolean
+
     }>()
+
+    const dialogEditor = defineModel('dialogEditor', {
+        type: Boolean,
+        default: false
+    })
     const emit = defineEmits<{
         'update:dialogEditor': [value: boolean]
     }>()
@@ -500,14 +505,15 @@
 
     /*图片预览*/
     .image-template-grid {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 131px);
+
         gap: 16px;
         margin-bottom: 20px;
 
         img {
-            width: 120px;
-            height: 80px;
+            width: 131px;
+            height: 131px;
 
         }
     }
