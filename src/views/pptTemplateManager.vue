@@ -18,13 +18,13 @@
 
 
 
-                    <div class="filter-item">
+                    <!-- <div class="filter-item">
                         <el-select filterable v-model="searchParams.os" placeholder="系统" class="filter-select"
                             clearable>
                             <el-option v-for="item in OSlist" :key="item.value" :label="item.note"
                                 :value="item.value" />
                         </el-select>
-                    </div>
+                    </div> -->
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
                             <el-option v-for="item in regionList" :key="item.value" :label="item.label"
@@ -32,24 +32,22 @@
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.os" placeholder="排序" class="filter-select"
+                        <el-select filterable v-model="searchParams.sort" placeholder="排序" class="filter-select"
                             clearable>
-                            <el-option v-for="item in OSlist" :key="item.value" :label="item.note"
-                                :value="item.value" />
+                            <el-option v-for="item in sortList" :key="item.id" :label="item.name" :value="item.id" />
                         </el-select>
                     </div>
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.os" placeholder="模版类目" class="filter-select"
+                        <el-select filterable v-model="searchParams.category" placeholder="模版类目" class="filter-select"
                             clearable>
-                            <el-option v-for="item in OSlist" :key="item.value" :label="item.note"
-                                :value="item.value" />
+                            <el-option v-for="item in categoryList" :key="item.id" :label="item.name"
+                                :value="item.id" />
                         </el-select>
                     </div>
                     <div class="filter-item">
                         <el-select filterable v-model="searchParams.isPay" placeholder="模板付费" class="filter-select"
                             clearable>
-                            <el-option v-for="item in OSlist" :key="item.value" :label="item.note"
-                                :value="item.value" />
+                            <el-option v-for="item in paysList" :key="item.id" :label="item.name" :value="item.id" />
                         </el-select>
                     </div>
                     <div class="filter-item">
@@ -59,7 +57,7 @@
 
 
                     <div class="filter-item filter-actions">
-                        <el-button type="primary" @click="getUserList">
+                        <el-button type="primary" @click="getUserList(1)">
                             <el-icon>
                                 <Search />
                             </el-icon>
@@ -94,16 +92,15 @@
 
                         <div class="template_data" @click.stop>
                             <p class="p_id">ID:{{ element.id }}</p>
-                            <p class="p_viewNum">模版名称:{{ element.likeNum }}</p>
+                            <p class="p_viewNum">模版名称:{{ element.fileName }}</p>
                             <p class="p_viewNum" v-if="element.viewNum">浏览数:{{ element.viewNum }}</p>
                         </div>
 
                         <div class="img-wrapper">
-                            <img :src="element.smallUrl || element.bigUrl || element.coverUrl" alt=""
-                                class="template-img" />
+                            <img :src="element.coverImagePaths[0]" alt="" class="template-img" />
                         </div>
                         <p class="template-name">
-                            <el-button @click="openPreview(element.coverUrl)">
+                            <el-button @click="openPreview(element.coverImagePaths)">
                                 预览
                             </el-button>
                             <!-- <el-button type="primary" size='samll' @click="openEditor(element)">
@@ -121,7 +118,7 @@
 
         <!-- 浮动操作栏 -->
         <div class="floating-actions" ref="actionBox" @mousedown="dragStart" @mouseup="dragEnd">
-            <el-pagination layout="prev, pager, next" :page-size="20" :total="1000"
+            <el-pagination layout="prev, pager, next" :page-size="20" :total="totalNum"
                 @current-change="handleCurrentChange" />
         </div>
     </div>
@@ -129,10 +126,7 @@
 </template>
 
 <script setup lang="ts">
-
-
     const actionBox = ref<HTMLElement>()
-
     const isDraging = ref<boolean>(false)
     const dragOffset = ref<{ x: number, y: number }>({ x: 0, y: 0 })
     const elementSize = ref<{ width: number, height: number }>({ width: 0, height: 0 })
@@ -182,7 +176,7 @@
     import userTable from '@/components/user/userTable.vue';
     import userList from '@/components/user/userList.vue';
 
-    import { onMounted, ref, watch } from 'vue';
+    import { onMounted, reactive, ref, watch } from 'vue';
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import { desEncrypt } from '@/utils/des';
@@ -195,6 +189,9 @@
 
 
 
+
+
+    const totalNum = ref<number>(0)
     const handleCurrentChange = (val: number) => {
 
         getUserList(val)
@@ -214,8 +211,8 @@
     const previewUrl = ref('')//预览图
     const previewUrlList = ref<any>([])//预览图列表
     const openPreview = (url: string) => {
-        previewUrl.value = url
-        previewUrlList.value = [url]
+        previewUrl.value = url[0]
+        previewUrlList.value = [...url]
 
 
 
@@ -268,18 +265,50 @@
     interface SearchParams {
         region: string
         os: string
-        sort: string,
+        sort: number,
         category: string,
-        isPay: boolean | string
+        isPay: number | string
         templateName: string
 
     }
+    //付类列表
+    const paysList = reactive<any[]>([
+        {
+            id: 0,
+            name: '全部'
+        },
+        {
+            id: 1,
+            name: '付费'
+        },
+        {
+            id: 2,
+            name: '免费'
+        }
+    ])
+
+    //排序列表
+    const sortList = reactive<any[]>([
+        {
+            id: 1,
+            name: '综合排序'
+        },
+        {
+            id: 2,
+            name: '最新'
+        },
+        {
+            id: 3,
+            name: '最热'
+        }
+    ])
+
     const searchParams = ref<SearchParams>(
         {
 
-            region: '',
+            region: regionList.value[0].value,
             os: '',
-            sort: '',
+            sort: 2,
             category: '',
             isPay: '',
             templateName: ''
@@ -291,7 +320,7 @@
         searchParams.value = {
             region: regionList.value[0].value,
             os: '',
-            sort: '',
+            sort: 2,
             category: '',
             isPay: '',
             templateName: ''
@@ -336,37 +365,39 @@
     })
 
     const getUserList = async (pageNum: number = 1) => {
+        console.log("🚀 ~ getUserList ~ pageNum:", pageNum)
         showLoading.value = true
+
         try {
             const params: Record<string, any> = {
                 timestamp: new Date().getTime(),
-                appNo: defaultAppNo.value,
                 region: searchParams.value.region,
-                os: searchParams.value.os,
-                sort: searchParams.value.sort,
-                category: searchParams.value.category,
-                templateName: searchParams.value.templateName,
-                pageNum: pageNum,
+                classId: searchParams.value.category,
+                type: searchParams.value.sort,
+                pageNumber: pageNum,
                 pageSize: 20,
-
             }
-            if (searchParams.value.isPay !== '') {
-                params.isPay = searchParams.value.isPay
+            if (searchParams.value.isPay === 1) {
+                params.isVip = 1
+            } else if (searchParams.value.isPay === 2) {
+                params.isVip = 0
             }
 
+            if (searchParams.value.templateName) {
+                params.type = 5
+                params.templateName = searchParams.value.templateName
+            }
 
-            console.log('筛选参数', params);
-
-            // console.log('获取水印参数', params);
-            // const enData = desEncrypt(JSON.stringify(params))
-            // const res = await service.post('/watermark/list', {
-            //     enData
-            // })
-
-            // console.log('获取水印', res);
-            // appData.value = res.data.rows
+            console.log('获取ppt模板参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/mate/ppt/template/findSearch', {
+                enData
+            })
+            console.log('获取ppt模板', res);
+            appData.value = res.data.data.data
+            totalNum.value = res.data.data.total
         } catch (err) {
-            console.log('获取水印失败', err);
+            console.log('获取ppt模板失败', err);
         } finally {
             showLoading.value = false
         }
@@ -405,9 +436,32 @@
 
 
 
-    onMounted(() => {
+    //获取类目
+    const categoryList = ref<any[]>([])
+    const getMenuList = async () => {
+        try {
+            const params: Record<string, any> = {
+                timestamp: new Date().getTime(),
+                region: searchParams.value.region,
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.get('/mate/ppt/template/findClass', {
+                params: {
+                    enData
+                }
+            })
+            console.log('获取类目', res);
+            categoryList.value = res.data.rows
 
+        } catch (err) {
+            console.log('获取类目失败', err);
+        }
+    }
+
+
+    onMounted(async () => {
         searchParams.value.region = regionList.value[0].value
+        await getMenuList()
         getUserList();
         showPagestion.value = true
     })
