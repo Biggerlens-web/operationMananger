@@ -119,8 +119,9 @@
 
         <!-- 浮动操作栏 -->
         <div class="floating-actions" ref="actionBox" @mousedown="dragStart" @mouseup="dragEnd">
-            <el-pagination layout="prev, pager, next" :page-size="20" :total="totalNum"
-                @current-change="handleCurrentChange" />
+            <el-pagination :page-sizes="[10, 20, 30, 40]" layout="sizes,prev, pager, next,total"
+                v-model:page-size="pageSize" v-model:current-page="currentPage" :total="totalNum"
+                @current-change="handleCurrentChange" @size-change="handleSizeChange" />
         </div>
     </div>
 
@@ -193,9 +194,15 @@
 
 
     const totalNum = ref<number>(0)
+    const pageSize = ref<number>(20)
+    const currentPage = ref<number>(1)
     const handleCurrentChange = (val: number) => {
 
         getUserList(val)
+    }
+    const handleSizeChange = (val: number) => {
+        pageSize.value = val
+        getUserList(currentPage.value)
     }
 
     const components: any = {
@@ -376,7 +383,7 @@
                 classId: searchParams.value.category,
                 type: searchParams.value.sort,
                 pageNumber: pageNum,
-                pageSize: 20,
+                pageSize: pageSize.value,
             }
             if (searchParams.value.isPay === 1) {
                 params.isVip = 1
