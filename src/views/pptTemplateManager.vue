@@ -26,7 +26,8 @@
                         </el-select>
                     </div> -->
                     <div class="filter-item">
-                        <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select">
+                        <el-select filterable v-model="searchParams.region" placeholder="国内外" class="filter-select"
+                            @change="getMenuList">
                             <el-option v-for="item in regionList" :key="item.value" :label="item.label"
                                 :value="item.value" />
                         </el-select>
