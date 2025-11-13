@@ -10,6 +10,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
   return {
+    // 根据环境变量设置基础路径，便于在子目录部署
+    base: env.VITE_BASE || '/',
     plugins: [vue(), vueDevTools()],
     server: {
       proxy: {
@@ -34,8 +36,8 @@ export default defineConfig(({ mode }) => {
       minify: 'terser',
       terserOptions: {
         compress: {
-          drop_console: true, // 移除 console
-          drop_debugger: true, // 移除 debugger
+          drop_console: false, // 移除 console
+          drop_debugger: false, // 移除 debugger
         },
       },
       rollupOptions: {

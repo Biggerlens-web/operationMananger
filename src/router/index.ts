@@ -103,7 +103,8 @@ const getMeuns = async () => {
 await getMeuns()
 
 const router = createRouter({
-  history: createWebHistory(),
+  // 使用构建时注入的 BASE_URL，避免部署在子路径时路由不正确
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 })
 //白名单
