@@ -10,7 +10,16 @@
     <sizeEdit v-model:dialogVisible="dialogSizeEdit" @addChildTemplate="addChildTemplate"
         @editChildTemplate="editChildTemplate" :isAddChild="isAddChild" />
     <forceTemplate v-model:dialogVisible="dialogForceTemplate" :parentTemplateId="parentTemplateId" />
-    <el-card class="stickTp_manage">
+    <el-card v-if="route.query.type === 'sitcker' || route.query.type === 'background'" style="margin-bottom: 10px;">
+        <el-select style="width: 100px;margin-right: 10px;" v-model="searchParams.isPay" placeholder="是否付费">
+            <el-option label="付费" :value="true" />
+            <el-option label="免费" :value="false" />
+        </el-select>
+
+        <el-button type="primary" @click="getMaterialList">查询</el-button>
+        <el-button type="primary" @click="resetSearchParams">重置</el-button>
+    </el-card>
+    <el-card class="stickTp_manage" v-loading="showLoading">
         <draggable tag="ul" v-model="list" item-key="id" :animation="200" class="template-grid"
             ghost-class="ghost-class" chosen-class="chosen-class" drag-class="dragging-class" :group="{ name: 'items' }"
             @start="onDragStart" @end="onDragEnd">
@@ -72,6 +81,16 @@
     const stores = useCounterStore()
     const { operationClass, showLoading } = storeToRefs(stores)
     const route = useRoute()
+
+
+
+    interface SearchParams {
+        isPay: boolean | string
+    }
+
+    const searchParams = ref<SearchParams>({
+        isPay: ''
+    })
 
     //其他尺寸
     const dialogSizeEdit = ref<boolean>(false)
@@ -173,14 +192,22 @@
             }
             const { type } = route.query
             let url: string = ''
+            selectedList.value = []
             if (type === 'clothing') {
                 params.clothingMaterialsId = parseInt(route.query.id as string)
                 url = '/clothingMaterialsDetail/list'
             } else if (type === 'sitcker') {
                 params.stickerId = parseInt(route.query.id as string)
+                console.log('searchParams.value.isPay', typeof searchParams.value.isPay);
+                if (searchParams.value.isPay !== '') {
+                    params.isPay = searchParams.value.isPay
+                }
                 url = '/stickerDetail/list'
             } else if (type === 'background') {
                 params.backId = parseInt(route.query.id as string)
+                if (searchParams.value.isPay !== '') {
+                    params.isPay = searchParams.value.isPay
+                }
                 url = '/backgroundDetail/list'
             } else if (type === 'template') {
                 params.templateUpId = parseInt(route.query.id as string)
@@ -244,6 +271,15 @@
         }
 
 
+    }
+
+
+    //重置
+    const resetSearchParams = () => {
+        searchParams.value = {
+            isPay: '',
+        }
+        getMaterialList()
     }
     onMounted(() => {
         getMaterialList()
@@ -596,7 +632,12 @@
                 break
             case 'save':
                 console.log('保存改动')
-                saveChanges()
+                if (searchParams.value.isPay !== '') {
+                    hasUnsavedChanges.value = false
+                } else {
+                    saveChanges()
+                }
+
                 break
 
             case 'back':

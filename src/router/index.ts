@@ -59,14 +59,14 @@ const getRouterList = async () => {
       // routes[0].redirect = '/appConfig/index'
       // routes[0].redirect = '/pptTemplate'
       //ppt模板管理 可删除
-      const pptRoute = {
-        path: '/pptTemplate',
-        name: 'pptTemplate',
-        component: () => import('../views/pptTemplate.vue'),
-        meta: {
-          title: 'PPT模板管理',
-        },
-      }
+      // const pptRoute = {
+      //   path: '/pptTemplate',
+      //   name: 'pptTemplate',
+      //   component: () => import('../views/pptTemplate.vue'),
+      //   meta: {
+      //     title: 'PPT模板管理',
+      //   },
+      // }
 
       //模板素材页面
       const stickerRoute = {
@@ -77,7 +77,7 @@ const getRouterList = async () => {
           title: '模板素材管理',
         },
       }
-      parentItem?.push(pptRoute)
+      // parentItem?.push(pptRoute)
 
       parentItem?.push(stickerRoute)
 
@@ -103,7 +103,8 @@ const getMeuns = async () => {
 await getMeuns()
 
 const router = createRouter({
-  history: createWebHistory(),
+  // 使用构建时注入的 BASE_URL，避免部署在子路径时路由不正确
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 })
 //白名单

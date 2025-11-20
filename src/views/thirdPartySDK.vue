@@ -9,9 +9,9 @@
                     <div class="android-config">
                         <el-descriptions label-width="200" title="Android 版本信息" :column="1" border class="version-info">
                             <el-descriptions-item label="TargetSdkVersion">{{ sdkForm.android.targetSdkVersion
-                            }}</el-descriptions-item>
+                                }}</el-descriptions-item>
                             <el-descriptions-item label="GradleVersion">{{ sdkForm.android.gradleVersion
-                            }}</el-descriptions-item>
+                                }}</el-descriptions-item>
                         </el-descriptions>
 
                         <!-- 核心依赖配置 -->

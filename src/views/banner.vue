@@ -119,25 +119,35 @@
     //配置轮播图
     const router = useRouter()
     const setBannerImg = (item: any) => {
-
-
         console.log('配置轮播图', item);
+        try {
+            // 兼容生产环境可能出现的空值，做兜底处理
+            const channelId = item?.channels?.channelId ?? channelList.value?.[0]?.id ?? ''
+            const os = typeof item?.os === 'string' ? item.os.toUpperCase() : (OSlist.value?.[0]?.value ?? '')
+            const appNo = item?.parentObj?.appNo ?? (defaultAppNo.value ?? '')
+            const lang = item?.languageVo?.languageName ?? (international.value?.[0]?.value ?? '')
+            const bannerId = item?.id
 
-        const channelId = item.channels.channelId
-        const os = item.os.toUpperCase()
-        const appNo = item.parentObj.appNo
-        const lang = item.languageVo.languageName
-        const bannerId = item.id
-        router.push({
-            path: '/bannerImgConfig/index',
-            query: {
-                channelId,
-                os,
-                appNo,
-                lang,
-                bannerId
+            const targetByName: any = {
+                name: 'bannerImgConfig',
+                query: { channelId, os, appNo, lang, bannerId }
             }
-        })
+            const resolved = router.resolve(targetByName)
+
+            if (resolved.matched && resolved.matched.length > 0) {
+                // 优先使用命名路由，避免 path 在不同环境不一致导致无法匹配
+                router.push(targetByName)
+            } else {
+                // 回退使用路径跳转
+                router.push({
+                    path: '/bannerImgConfig/index',
+                    query: { channelId, os, appNo, lang, bannerId }
+                })
+            }
+        } catch (e) {
+            console.error('跳转到轮播图配置失败', e)
+            ElMessage.error('跳转失败：数据不完整或路由未匹配')
+        }
     }
     //分页
     const pageNum = ref<number>(1)

@@ -483,14 +483,42 @@
 
       // 成功更新后，直接更新DOM中的注释显示，避免重新渲染整个编辑器
       if (isUpdated) {
-        // 直接更新DOM中对应的注释元素
-        const editorInput = document.querySelector(`#jsoneditor-desc${path}`)
-        if (editorInput instanceof HTMLElement) {
-          editorInput.textContent = value
-          console.log('注释更新完成，当前comments:', comments.value)
-        } else {
-          // 如果DOM中没有找到对应的注释元素（新增属性的情况），需要重新初始化注释显示
-          console.log('未找到注释元素，重新初始化注释显示')
+        // 使用更安全的方法查找DOM元素，避免特殊字符导致的querySelector错误
+        try {
+          const elementId = `jsoneditor-desc${path}`
+          let editorInput = document.getElementById(elementId)
+          
+          // 如果getElementById失败，尝试使用属性选择器
+          if (!editorInput) {
+            editorInput = document.querySelector(`[id="${elementId}"]`)
+          }
+          
+          // 如果还是找不到，使用更通用的方法遍历查找
+          if (!editorInput) {
+            const allDescElements = document.querySelectorAll('[id^="jsoneditor-desc"]')
+            for (const element of allDescElements) {
+              if (element.id === elementId) {
+                editorInput = element as HTMLElement
+                break
+              }
+            }
+          }
+          
+          if (editorInput instanceof HTMLElement) {
+            editorInput.textContent = value
+            console.log('注释更新完成，当前comments:', comments.value)
+          } else {
+            // 如果DOM中没有找到对应的注释元素（新增属性的情况），需要重新初始化注释显示
+            console.log('未找到注释元素，重新初始化注释显示')
+            if (updateNoteTimer) {
+              clearTimeout(updateNoteTimer)
+            }
+            updateNoteTimer = setTimeout(() => {
+              callChildMethod()
+            }, 100)
+          }
+        } catch (domError) {
+          console.warn('DOM操作失败，重新初始化注释显示:', domError)
           if (updateNoteTimer) {
             clearTimeout(updateNoteTimer)
           }

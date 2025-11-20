@@ -1,6 +1,8 @@
 <template>
     <div class="view">
+        <!-- JSON配置弹窗 -->
         <el-dialog v-model="dialogJSON" title="JSON配置" width="1000" :before-close="handleCloseJSON">
+            <!-- JSON编辑器组件 -->
             <jsonEditor ref="childRef" v-model="jsonConfig" :comment-data="jsonConfigNote" @updateNote="updateNote"
                 @inputChecked="inputChecked" @dateChange="dateChange" :editorType="editorType"
                 :dialogJSON="dialogJSON" />
@@ -100,7 +102,13 @@
     import appOSSEditor from '@/components/appOSS/appOSSEditor.vue';
     import { onMounted, ref, watch, nextTick } from 'vue';
 
-    // 防抖函数
+    /**
+     * 防抖函数工具
+     * 用于限制函数的执行频率，避免频繁调用
+     * @param func 需要防抖的函数
+     * @param delay 延迟时间（毫秒）
+     * @returns 防抖后的函数
+     */
     const debounce = (func: Function, delay: number) => {
         let timeoutId: ReturnType<typeof setTimeout>
         return (...args: any[]) => {
@@ -113,6 +121,42 @@
     import { ElMessage, ElMessageBox } from 'element-plus';
     import { desEncrypt } from '@/utils/des';
     import service from '@/axios';
+
+    /**
+     * 错误消息常量定义
+     * 统一管理所有错误提示信息，便于维护和国际化
+     */
+    const ERROR_MESSAGES = {
+        /** 配置ID验证相关 */
+        INVALID_CONFIG_ID: '配置ID不能为空',
+        INVALID_CONFIG_ITEM: '配置项无效',
+
+        /** JSON数据处理相关 */
+        JSON_PARSE_ERROR: 'JSON数据格式错误',
+        JSON_STRINGIFY_ERROR: 'JSON数据格式错误，无法保存',
+
+        /** 网络请求相关 */
+        NETWORK_ERROR: '网络请求失败，请稍后重试',
+        GET_CONFIG_FAILED: '获取配置失败',
+
+        /** 操作结果相关 */
+        SAVE_SUCCESS: '保存成功',
+        SAVE_FAILED: '保存失败',
+        UPDATE_NOTE_FAILED: '更新注释失败',
+        DATE_UPDATE_FAILED: '日期更新失败',
+        OPERATION_FAILED: '操作失败',
+
+        /** 数据验证相关 */
+        PROPERTY_NOT_FOUND: '属性 {key} 未找到',
+        INVALID_PATH: '路径不能为空',
+        INVALID_KEY: '键名不能为空'
+    } as const
+
+    /**
+     * 防抖延迟时间常量（毫秒）
+     * 用于优化用户输入体验，避免频繁触发更新
+     */
+    const DEBOUNCE_DELAY = 150
     const counterStore = useCounterStore()
     const { showPagestion, defaultAppNo, defaultCompanyNo, showLoading } = storeToRefs(counterStore)
     const components: any = {
@@ -268,57 +312,120 @@
     }
 
 
-    //编辑JSON
+    /**
+     * JSON配置相关接口定义
+     */
+
+    /**
+     * JSON数据类型定义
+     * 用于表示动态的JSON配置数据结构
+     */
+    interface JsonDataType {
+        [key: string]: any;
+    }
+
+    /**
+     * JSON配置状态管理接口
+     * 定义JSON编辑器的完整状态结构
+     */
+    interface JsonConfigState {
+        /** 是否显示JSON配置对话框 */
+        dialogJSON: boolean;
+        /** 编辑器类型（value/note） */
+        editorType: string;
+        /** JSON配置数据 */
+        jsonConfig: JsonDataType;
+        /** JSON配置注释数据 */
+        jsonConfigNote: JsonDataType;
+        /** 当前编辑的配置ID */
+        editJsonId?: number;
+    }
+
+    /**
+     * JSON配置状态管理
+     * 管理JSON编辑器的所有状态变量
+     */
+
+    /** JSON配置对话框显示状态 */
     const dialogJSON = ref<boolean>(false)
+
+    /** 编辑器类型，用于区分编辑值还是注释 */
     const editorType = ref<string>('value')
-    type JsonDataType = Record<string, any>;
-    const jsonConfig = ref<JsonDataType>({})//json数据
-    const jsonConfigNote = ref<JsonDataType>({})//json注释
-    const editJsonId = ref<number>()
-    const getJSONInfo = async (id: number) => {
+
+    /** JSON配置数据，存储实际的配置内容 */
+    const jsonConfig = ref<JsonDataType>({})
+
+    /** JSON配置注释数据，存储配置项的说明信息 */
+    const jsonConfigNote = ref<JsonDataType>({})
+
+    /** 当前正在编辑的配置项ID */
+    const editJsonId = ref<number | undefined>()
+    /**
+     * 获取JSON配置信息
+     * @param id 配置ID
+     */
+    const getJSONInfo = async (id: number): Promise<void> => {
+        if (!id) {
+            ElMessage.error(ERROR_MESSAGES.INVALID_CONFIG_ID)
+            return
+        }
+
         try {
             const params = {
                 timestamp: Date.now(),
-                id: id
+                id
             }
-            console.log('json参数', params);
+
             const enData = desEncrypt(JSON.stringify(params))
             showLoading.value = true
-            const res = await service.get(`/oss/jsonFile`, {
-                params: {
-                    enData
-                }
+
+            const res = await service.get('/oss/jsonFile', {
+                params: { enData }
             })
 
-            console.log('获取json', res);
             if (res.data.code === 200) {
-                if (res.data.rows[0]) {
-                    jsonConfig.value = JSON.parse(res.data.rows[0])
-                }
-                if (res.data.rows[1]) {
-                    jsonConfigNote.value = JSON.parse(res.data.rows[1])
+                // 安全解析JSON数据
+                try {
+                    jsonConfig.value = res.data.rows[0] ? JSON.parse(res.data.rows[0]) : {}
+                    jsonConfigNote.value = res.data.rows[1] ? JSON.parse(res.data.rows[1]) : {}
+                } catch (parseError) {
+                    console.error('JSON解析失败:', parseError)
+                    ElMessage.error(ERROR_MESSAGES.JSON_PARSE_ERROR)
+                    return
                 }
 
                 editJsonId.value = id
-                console.log('json数据', jsonConfig.value);
-                console.log('json注释', jsonConfigNote.value);
                 dialogJSON.value = true
             } else {
-                ElMessage.error(res.data.msg)
+                ElMessage.error(res.data.msg || ERROR_MESSAGES.GET_CONFIG_FAILED)
             }
-        } catch (err) {
-            console.log('获取JSON失败', err);
+        } catch (error) {
+            console.error('获取JSON配置失败:', error)
+            ElMessage.error(ERROR_MESSAGES.NETWORK_ERROR)
         } finally {
             showLoading.value = false
         }
     }
-    const editorJSON = (item: any) => {
-        console.log('编辑json', item);
+    /**
+     * 编辑JSON配置
+     * @param item 配置项
+     */
+    const editorJSON = (item: any): void => {
+        if (!item?.id) {
+            ElMessage.error(ERROR_MESSAGES.INVALID_CONFIG_ITEM)
+            return
+        }
         getJSONInfo(item.id)
     }
 
-    const handleCloseJSON = () => {
+    /**
+     * 关闭JSON配置弹窗
+     */
+    const handleCloseJSON = (): void => {
+        // 重置状态
         jsonConfig.value = {}
+        jsonConfigNote.value = {}
+        editJsonId.value = undefined
         dialogJSON.value = false
     }
 
@@ -343,7 +450,12 @@
         return false;
     }
 
-    //参数值url编码
+    /**
+     * 对象参数URL编码工具函数
+     * 递归遍历对象，对字符串值进行URL编码
+     * @param obj 需要编码的对象或数组
+     * @returns 编码后的对象或数组
+     */
     const enCodeObj = (obj: any): any => {
         const result: any = {};
         // Check if the input is an array
@@ -376,133 +488,216 @@
         // This handles cases where the initial input might be a non-string primitive
         return obj;
     }
-    //编辑备注
-    const assaginOBj = (key: string, value: any, obj: any) => {
-        if (Object.keys(jsonConfigNote.value).length === 0) {
-
-            jsonConfigNote.value = obj
-        } else {
-            jsonConfigNote.value[key] = value
-        }
-    }
 
 
+
+    /**
+     * 子组件引用
+     * 用于访问jsonEditor组件的方法和属性
+     */
     const childRef = ref()
-    // 调用子组件方法
-    const callChildMethod = () => {
+
+    /**
+     * 调用子组件方法同步数据
+     * 触发jsonEditor组件的setJsonData方法，同步JSON数据
+     */
+    const callChildMethod = (): void => {
         childRef.value?.setJsonData()
     }
-    // 防抖函数
-    let updateNoteTimer: ReturnType<typeof setTimeout> | null = null
 
-    const updateNote = (note: { value: string; path: string }) => {
+    // 防抖定时器
+
+
+    /**
+     * 更新注释信息
+     * @param note 注释对象，包含值和路径
+     */
+    const updateNote = debounce((note: { value: string; path: string }): void => {
         const { value, path } = note
 
+        if (!path) {
+            console.warn('注释路径不能为空')
+            return
+        }
+
         try {
-            const noteObj = getKeysAsObject(jsonConfig.value)
+            // 直接更新jsonConfigNote对象，不需要通过getKeysAsObject重新生成
             let isUpdated = false
 
-            // 优化路径匹配逻辑
-            for (const [key] of Object.entries(noteObj)) {
-                if (key === path || (key.includes(',') && key.includes(path))) {
-                    noteObj[key] = value
-                    assaginOBj(key, value, noteObj)
-                    isUpdated = true
-
-                    // 如果是顶层属性，直接返回
-                    if (key === path) {
+            // 首先检查是否有完全匹配的路径
+            if (jsonConfigNote.value[path] !== undefined) {
+                jsonConfigNote.value[path] = value
+                isUpdated = true
+                console.log(`直接更新路径注释: ${path} = ${value}`)
+            } else {
+                // 检查是否有包含该路径的复合键
+                for (const [key] of Object.entries(jsonConfigNote.value)) {
+                    if (key.includes(',') && key.includes(path)) {
+                        jsonConfigNote.value[key] = value
+                        isUpdated = true
+                        console.log(`更新复合路径注释: ${key} = ${value}`)
                         break
                     }
                 }
             }
 
+            // 如果没有找到匹配的路径，说明是新增的key，直接添加到注释对象中
             if (!isUpdated) {
-                console.warn(`未找到路径: ${path}`)
-                return
+                console.log(`新增路径注释: ${path} = ${value}`)
+                jsonConfigNote.value[path] = value
+                isUpdated = true
             }
 
-            // 防抖延迟同步，避免频繁重渲染导致展开状态丢失
-            if (updateNoteTimer) {
-                clearTimeout(updateNoteTimer)
+            // 成功更新后，直接更新DOM中的注释显示，避免重新渲染整个编辑器
+            if (isUpdated) {
+                // 使用更安全的方法查找DOM元素，避免特殊字符导致的querySelector错误
+                try {
+                    // 先尝试使用getElementById，因为ID中的特殊字符在getElementById中是安全的
+                    const elementId = `jsoneditor-desc${path}`
+                    let editorInput = document.getElementById(elementId)
+                    
+                    // 如果getElementById失败，尝试使用属性选择器
+                    if (!editorInput) {
+                        editorInput = document.querySelector(`[id="${elementId}"]`)
+                    }
+                    
+                    // 如果还是找不到，使用更通用的方法遍历查找
+                    if (!editorInput) {
+                        const allDescElements = document.querySelectorAll('[id^="jsoneditor-desc"]')
+                        for (const element of allDescElements) {
+                            if (element.id === elementId) {
+                                editorInput = element as HTMLElement
+                                break
+                            }
+                        }
+                    }
+                    
+                    if (editorInput instanceof HTMLElement) {
+                        editorInput.textContent = value
+                        console.log('注释更新完成，当前jsonConfigNote:', jsonConfigNote.value)
+                    } else {
+                        // 如果DOM中没有找到对应的注释元素（新增属性的情况），需要重新初始化注释显示
+                        console.log('未找到注释元素，重新初始化注释显示')
+                        setTimeout(() => {
+                            callChildMethod()
+                        }, 100)
+                    }
+                } catch (domError) {
+                    console.warn('DOM操作失败，重新初始化注释显示:', domError)
+                    setTimeout(() => {
+                        callChildMethod()
+                    }, 100)
+                }
             }
-
-            updateNoteTimer = setTimeout(() => {
-                callChildMethod()
-            }, 150)
 
         } catch (error) {
             console.error('更新注释失败:', error)
+            ElMessage.error(ERROR_MESSAGES.UPDATE_NOTE_FAILED)
         }
-    }
-    //编辑布尔值
-    const inputChecked = (key: string) => {
-        console.log('jsonData.value', jsonConfig.value);
-        // 遍历 jsonData 中的所有属性
-        for (const [dataKey, value] of Object.entries(jsonConfig.value)) {
-            // 如果是对象类型，检查其内部属性
-            if (typeof value === 'object' && value !== null) {
-                // 如果在嵌套对象中找到了对应的 key
-                if (key in value && typeof value[key] === 'boolean') {
-                    value[key] = !value[key];
-                    console.log(`修改嵌套值 ${dataKey}.${key}:`, value[key]);
-                    console.log('Jsondata', jsonConfig.value);
-
-                    return;
-                }
-            }
-            // 如果是顶层属性
-            else if (dataKey === key) {
-                if (typeof value === 'boolean') {
-                    jsonConfig.value[key] = !value;
-                } else {
-                    // 如果不是布尔值，可以设置一个默认的布尔值
-                    jsonConfig.value[key] = true;
-                }
-                console.log(`修改顶层值 ${key}:`, jsonConfig.value[key]);
-                console.log('Jsondata', jsonConfig.value);
-
-                return;
-            }
+    }, DEBOUNCE_DELAY)
+    /**
+     * 编辑布尔值
+     * @param key 要切换的布尔值键名
+     */
+    const inputChecked = (key: string): void => {
+        if (!key) {
+            console.warn(ERROR_MESSAGES.INVALID_KEY)
+            return
         }
 
-
-    }
-
-    //编辑日期
-    const dateChange = (dateObj: any) => {
-        const { path, value } = dateObj;
-
-        // 遍历 jsonData 中的所有属性
-        for (const [key, val] of Object.entries(jsonConfig.value)) {
-            // 如果是直接匹配到顶层属性
-            if (key === path) {
-                jsonConfig.value[path] = value;
-                console.log(`更新顶层属性 ${path}:`, value);
-                return;
-            }
-
-            // 如果是对象，检查其内部属性
-            if (val && typeof val === 'object' && !Array.isArray(val)) {
-                if (path in val) {
-                    val[path] = value;
-                    console.log(`更新嵌套属性 ${key}.${path}:`, value);
-                    return;
-                }
-            }
-        }
-
-        console.warn(`未找到路径 ${path}`);
-    }
-
-    //确定修改json
-    const handleComfirmJSON = async () => {
         try {
+            // 遍历JSON配置中的所有属性
+            for (const [dataKey, value] of Object.entries(jsonConfig.value)) {
+                // 检查嵌套对象中的属性
+                if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                    if (key in value && typeof value[key] === 'boolean') {
+                        value[key] = !value[key]
+                        return
+                    }
+                }
+                // 检查顶层属性
+                else if (dataKey === key && typeof value === 'boolean') {
+                    jsonConfig.value[key] = !value
+                    return
+                }
+            }
+
+            // 如果没找到对应的布尔值，设置默认值
+            console.warn(`未找到布尔值属性: ${key}，设置默认值为true`)
+            jsonConfig.value[key] = true
+        } catch (error) {
+            console.error('切换布尔值失败:', error)
+            ElMessage.error(ERROR_MESSAGES.OPERATION_FAILED)
+        }
+    }
+
+    /**
+     * 编辑日期值
+     * @param dateObj 日期对象，包含路径和值
+     */
+    const dateChange = (dateObj: { path: string; value: any }): void => {
+        const { path, value } = dateObj
+
+        if (!path) {
+            console.warn(ERROR_MESSAGES.INVALID_PATH)
+            return
+        }
+
+        try {
+            // 遍历JSON配置中的所有属性
+            for (const [key, val] of Object.entries(jsonConfig.value)) {
+                // 检查顶层属性
+                if (key === path) {
+                    jsonConfig.value[path] = value
+                    return
+                }
+
+                // 检查嵌套对象中的属性
+                if (val && typeof val === 'object' && !Array.isArray(val)) {
+                    if (path in val) {
+                        (val as Record<string, any>)[path] = value
+                        return
+                    }
+                }
+            }
+
+            console.warn(`未找到日期路径: ${path}`)
+        } catch (error) {
+            console.error('更新日期失败:', error)
+            ElMessage.error(ERROR_MESSAGES.DATE_UPDATE_FAILED)
+        }
+    }
+
+    /**
+     * 确认保存JSON配置
+     */
+    const handleComfirmJSON = async (): Promise<void> => {
+        if (!editJsonId.value) {
+            ElMessage.error(ERROR_MESSAGES.INVALID_CONFIG_ID)
+            return
+        }
+
+        try {
+            // 调用子组件方法同步数据
             callChildMethod()
 
+            // 等待一小段时间确保数据同步完成
+            await new Promise(resolve => setTimeout(resolve, 50))
 
-            const jsonData = JSON.stringify(enCodeObj(jsonConfig.value))
+            // 验证JSON数据
+            let jsonData: string
+            let jsonNote: string
 
-            const jsonNote = JSON.stringify(enCodeObj(jsonConfigNote.value))
+            try {
+                jsonData = JSON.stringify(jsonConfig.value)
+                console.log("🚀 ~ handleComfirmJSON ~ jsonData:", jsonData)
+                jsonNote = JSON.stringify(jsonConfigNote.value)
+                console.log("🚀 ~ handleComfirmJSON ~ jsonNote:", jsonNote)
+            } catch (stringifyError) {
+                console.error('JSON序列化失败:', stringifyError)
+                ElMessage.error(ERROR_MESSAGES.JSON_STRINGIFY_ERROR)
+                return
+            }
 
             const params = {
                 timestamp: Date.now(),
@@ -511,34 +706,24 @@
                 noteJson: jsonNote
             }
 
-            console.log('保存json参数', params);
             const enData = desEncrypt(JSON.stringify(params))
-
-
             showLoading.value = true
-            const res = await service.post('/oss/upJson', {
-                enData
-            })
-            console.log('保存结果', res);
 
+            const res = await service.post('/oss/upJson', { enData })
 
             if (res.data.code === 200) {
-                ElMessage.success('保存成功')
-
+                ElMessage.success(ERROR_MESSAGES.SAVE_SUCCESS)
                 handleCloseJSON()
-
-
                 getUserList()
             } else {
-                ElMessage.error('保存失败')
+                ElMessage.error(res.data.msg || ERROR_MESSAGES.SAVE_FAILED)
             }
-
-        } catch (err) {
-            ElMessage.error('保存失败')
+        } catch (error) {
+            console.error('保存JSON配置失败:', error)
+            ElMessage.error(ERROR_MESSAGES.NETWORK_ERROR)
         } finally {
             showLoading.value = false
         }
-
     }
 
 
