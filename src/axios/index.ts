@@ -67,7 +67,8 @@ service.interceptors.response.use(
           router.push('/login')
           break
         case 403:
-          ElMessage.error('拒绝访问')
+          console.log('response', response)
+          ElMessage.error(response.data.message)
           break
         case 404:
           ElMessage.error('请求的资源不存在')

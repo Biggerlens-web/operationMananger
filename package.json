@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
+    "@tailwindcss/vite": "^4.1.17",
     "animate.css": "^4.1.1",
     "axios": "^1.8.2",
     "build": "^0.1.4",
@@ -32,6 +33,7 @@
     "pinia-plugin-persistedstate": "^4.2.0",
     "sass": "^1.85.1",
     "sass-loader": "^16.0.5",
+    "tailwindcss": "^4.1.17",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0",
     "vue3-lazy": "^1.0.0-alpha.1",

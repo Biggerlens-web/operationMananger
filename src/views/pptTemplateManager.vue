@@ -94,8 +94,8 @@
                         <div class="template_data" @click.stop>
                             <p class="p_id">ID:{{ element.id }}</p>
                             <p class="p_viewNum">模版名称:{{ element.fileName }}</p>
-                            <p class="p_viewNum">浏览数:{{ element.viewNum }}</p>
-                            <p class="p_viewNum">封面点击数:{{ element.coverClickNum }}</p>
+                            <p class="p_viewNum">模板点击数:{{ element.viewNum }}</p>
+                            <p class="p_viewNum">模板进入编辑数:{{ element.coverClickNum }}</p>
                         </div>
 
                         <div class="img-wrapper">

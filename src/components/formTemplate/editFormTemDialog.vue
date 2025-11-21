@@ -10,8 +10,7 @@
             </el-form-item>
             <el-form-item label="小分类" prop="smallClass">
                 <el-select v-model="formData.smallClass" placeholder="请选择小分类" clearable>
-                    <el-option v-for="item in smallTemplateList" :key="item.name" :label="item.name"
-                        :value="item.name" />
+                    <el-option v-for="item in smallTemplateList" :key="item.name" :label="item.name" :value="item.id" />
                 </el-select>
             </el-form-item>
         </el-form>
@@ -31,8 +30,11 @@
     import { ref, watch } from 'vue'
     const counterStore = useCounterStore()
     const { showLoading } = storeToRefs(counterStore)
+    // 定义事件类型：update 无参；bathUpadte 需要传递一个对象
+    type BatchUpdatePayload = { subId: number; smallClassifyId: number }
     const emit = defineEmits<{
-        'update': []
+        update: []
+        bathUpadte: [payload: BatchUpdatePayload]
     }>()
     const isEditTemplate = defineModel('isEditTemplate', {
         type: Boolean,
@@ -43,6 +45,7 @@
         language: string
         bigTemplateList: any[]
         editInfo: any
+        isBatch: boolean
     }
     const props = withDefaults(defineProps<Props>(), {
         language: 'zh',
@@ -57,7 +60,7 @@
         if (props.editInfo) {
             // formData.value.bigClass = props.editInfo.cid
             formData.value.bigClass = props.editInfo.subId
-            formData.value.smallClass = props.editInfo.name
+            formData.value.smallClass = props.editInfo.smallClassifyId
             getSmallClassificationData()
 
         } else {
@@ -68,12 +71,12 @@
 
 
     interface FormData {
-        bigClass: number | string
-        smallClass: string
+        bigClass: number | null
+        smallClass: number | null
     }
     const formData = ref<FormData>({
-        bigClass: 0,
-        smallClass: ''
+        bigClass: null,
+        smallClass: null
     })
 
 
@@ -89,28 +92,39 @@
         formRef.value.validate(async (valid: any) => {
             if (valid) {
                 if (showLoading.value) return
-                showLoading.value = true
+
                 try {
-                    const params = {
-                        timestamp: Date.now(),
-                        id: props.editInfo.id,
-                        subId: formData.value.bigClass,
-                        name: formData.value.smallClass,
-                        nameEn: smallTemplateList.value.find((item: any) => item.name === formData.value.smallClass)?.nameEn,
-                    }
-                    console.log('保存参数', params);
-                    const enData = desEncrypt(JSON.stringify(params))
-                    const res = await service.post('/formTemplate/save', {
-                        enData
-                    })
-                    if (res.data.code === 200) {
-                        ElMessage.success(res.data.msg)
-                        isEditTemplate.value = false
-                        showLoading.value = false
-                        emit('update')
+                    if (props.isBatch) {
+                        const batchObj: BatchUpdatePayload = {
+                            subId: formData.value.bigClass as number,
+                            smallClassifyId: formData.value.smallClass as number,
+                        }
+                        console.log("🚀 ~ handleSave ~ batchObj:", batchObj)
+                        emit('bathUpadte', batchObj)
                     } else {
-                        ElMessage.error(res.data.msg)
+                        showLoading.value = true
+                        const params = {
+                            timestamp: Date.now(),
+                            id: props.editInfo.id,
+                            subId: formData.value.bigClass,
+                            smallClassifyId: formData.value.smallClass,
+
+                        }
+                        console.log('保存参数', params);
+                        const enData = desEncrypt(JSON.stringify(params))
+                        const res = await service.post('/formTemplate/save', {
+                            enData
+                        })
+                        if (res.data.code === 200) {
+                            ElMessage.success(res.data.msg)
+                            isEditTemplate.value = false
+                            showLoading.value = false
+                            emit('update')
+                        } else {
+                            ElMessage.error(res.data.msg)
+                        }
                     }
+
                 } catch (err) {
                     console.log("🚀 ~ handleSave ~ err:", err)
                 } finally {

@@ -31,6 +31,8 @@
 
             <el-menu-item :index="child.menuUrl" v-for="child in item.children" :key="child.id">
               {{ child.menuText }}
+              <!-- 路由提示 -->
+              <!-- <useRouteTips /> -->
             </el-menu-item>
           </el-sub-menu>
         </el-menu>
@@ -100,6 +102,8 @@
   import { removeToken } from '@/utils/cookie'
   // 引入Pinia状态管理
   import { useCounterStore } from '@/stores/counter'
+  // 引入路由提示组件
+
   import { storeToRefs } from 'pinia'
   // 引入axios实例
   import service from '@/axios'

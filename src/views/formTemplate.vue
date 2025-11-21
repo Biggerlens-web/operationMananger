@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="form-template-page">
         <el-image-viewer v-if="showPreview" :url-list="previewSrcList" show-progress
             :initial-index="currentPreviewIndex" @close="showPreview = false" />
         <el-card class="filter-card">
@@ -21,7 +21,7 @@
                         <el-select filterable v-model="searchParams.smallTemplate" placeholder="小分类" clearable
                             class="filter-select">
                             <el-option v-for="item in smallTemplateList" :key="item.name" :label="item.name"
-                                :value="item.name" />
+                                :value="item.id" />
                         </el-select>
                     </div>
                     <div class="filter-item">
@@ -44,6 +44,15 @@
                                 :value="item.value" />
                         </el-select>
                     </div>
+                    <div class="filter-item">
+                        <el-select filterable v-model="searchParams.sortViewMode" placeholder="排序" class="filter-select"
+                            @change="getFormTemplateData">
+
+                            <el-option v-for="item in sortTypeList" :key="item.value" :label="item.label"
+                                :value="item.value" />
+                        </el-select>
+                    </div>
+
 
                     <div class="filter-item filter-actions">
                         <el-button type="primary" @click="searching">
@@ -58,6 +67,17 @@
                             </el-icon>
                             重置
                         </el-button>
+
+                    </div>
+                    <div class="filter-item filter-actions">
+
+                        <el-button @click="switchViewMode">
+                            <el-icon>
+                                <Refresh />
+                            </el-icon>
+                            切换视图({{ searchParams.pushViewMode === 0 ? '未推送' : '已推送' }})
+                        </el-button>
+
                     </div>
                 </div>
 
@@ -69,20 +89,34 @@
         <el-card class="stickTp_manage" v-loading="showLoading">
 
             <draggable tag="ul" v-model="list" item-key="tid" :animation="200" class="template-grid"
-                ghost-class="ghost-class" chosen-class="chosen-class" drag-class="dragging-class"
-                :group="{ name: 'items' }" @start="onDragStart" @end="onDragEnd">
+                :class="searchParams.sortViewMode === 1 ? 'randomSort-grid' : ''" ghost-class="ghost-class"
+                chosen-class="chosen-class" drag-class="dragging-class" :group="{ name: 'items' }"
+                :disabled="isDisableList" @start="onDragStart" @end="onDragEnd">
                 <template #item="{ element, index }">
                     <li :key="element.tid" class="template-item">
                         <!-- 右上角复选框 -->
-                        <!-- <div class="checkbox-wrapper" @click.stop>
-                            <input type="checkbox" :id="`checkbox-${element.tid}`" :checked="isSelected(element.tid)"
-                                @change="handleCheckBoxChange($event, element.tid)" class="custom-checkbox" />
+                        <div class="checkbox-wrapper" @click.stop
+                            v-show="searchParams.pushViewMode === 0 && isShowCheckbox">
+                            <input type="checkbox" :id="`checkbox-${element.tid}`" :checked="isSelected(element.id)"
+                                @change="handleCheckBoxChange($event, element.id)" class="custom-checkbox" />
                             <label :for="`checkbox-${element.tid}`" class="checkbox-label"></label>
-                        </div> -->
+                        </div>
                         <div class="template_data" @click.stop>
-                            <p class="p_id">ID:{{ element.tid }}</p>
+                            <p class="p_id">ID:{{ element.id }}</p>
                             <p class="p_viewNum">模板名称:{{ element.fileName }}</p>
                             <p class="p_viewNum" v-if="element.viewNum">浏览数:{{ element.viewNum }}</p>
+                            <p class="p_pay">
+
+                                <el-tag size="small" :type="element.isVip ? 'warning' : 'success'" effect="plain">
+                                    {{ element.isVip ? 'VIP' : '免费' }}
+                                </el-tag>
+                                <el-tag size="small" v-show="element.isFreeTrial" :type="'success'" effect="plain">
+                                    {{ '限免' }}
+                                </el-tag>
+                                <el-tag size="small" v-show="element.isRecommend" :type="'success'" effect="plain">
+                                    {{ '推荐' }}
+                                </el-tag>
+                            </p>
                         </div>
 
                         <div class="img-wrapper">
@@ -92,7 +126,7 @@
                                 :fit="'contain'" loading="lazy" />
 
                         </div>
-                        <p class="template-name">
+                        <p class="template-name" v-if="searchParams.pushViewMode === 0">
                             <el-button type="primary" @click="previewImg(element)" size='samll'>
                                 预览
                             </el-button>
@@ -107,12 +141,102 @@
                 </template>
             </draggable>
         </el-card>
+        <!-- 多选操作 -->
+        <div class="multi-select-actions" v-show="isShowCheckbox">
+            <el-button type="primary" @click="handleSelectAll">
+                {{ isClickAll ? '取消全选' : '全选' }}
+            </el-button>
+            <el-button type="danger" @click="handleBatchDelete">
+                删除
+            </el-button>
+            <el-button type="primary" @click="handleMove">
+                移动
+            </el-button>
+
+        </div>
     </div>
     <editFormTemDialog v-model:is-edit-template="isEditTemplate" :language="searchParams.language"
-        :bigTemplateList="bigTemplateList" :editInfo="editInfo" @update="getFormTemplateData" />
+        :bigTemplateList="bigTemplateList" :editInfo="editInfo" :isBatch="isBatch" @update="getFormTemplateData"
+        @bathUpadte="handleBatchEdit" />
+    <classManagerDialog v-model:show-class-manager="showClassManager" :bigTemplateList="bigTemplateList"
+        :language="searchParams.language" />
+    <moveTemplateDialog v-model:show-move-template-dialog="showMoveTemplateDialog" :bigTemplateList="bigTemplateList"
+        :language="searchParams.language" :selectIds="selectedList" />
+
+
+
+    <!-- 浮动操作栏 -->
+    <div class="floating-actions" ref="actionBox" @mousedown="dragStart" @mouseup="dragEnd"
+        v-show="!showLoading && searchParams.pushViewMode === 0">
+        <el-button type="primary" @click="handleCategoryManage">
+            类目管理
+        </el-button>
+        <el-button :type="isShowCheckbox ? 'success' : 'primary'" :plain="isShowCheckbox"
+            :class="{ 'active-btn': isShowCheckbox }" @click="handleMultiSelect">
+            多选操作
+        </el-button>
+        <el-button type="primary" @click="handleOpenBatchEdit">
+            批量编辑
+        </el-button>
+        <el-button type="danger" @click="handleBatchDelete">
+            批量删除
+        </el-button>
+        <el-button type="primary" @click="handleRandomSort">
+            随机排序
+        </el-button>
+
+        <el-button type="primary" @click="handlePushUpdate">
+            推送更新
+        </el-button>
+
+    </div>
 </template>
 
 <script lang="ts" setup>
+    const actionBox = ref<HTMLElement>()
+    const isDraging = ref<boolean>(false)
+    const dragOffset = ref<{ x: number, y: number }>({ x: 0, y: 0 })
+    const elementSize = ref<{ width: number, height: number }>({ width: 0, height: 0 })
+    const dragStart = (e: MouseEvent) => {
+        if (actionBox.value) {
+            const rect = actionBox.value.getBoundingClientRect()
+            // 缓存元素尺寸，避免重复计算
+            elementSize.value.width = rect.width
+            elementSize.value.height = rect.height
+
+            dragOffset.value.x = e.clientX - rect.left
+            dragOffset.value.y = e.clientY - rect.top
+            isDraging.value = true
+            actionBox.value.style.right = 'auto'
+            actionBox.value.style.bottom = 'auto'
+            actionBox.value.style.left = rect.left + 'px'
+            actionBox.value.style.top = rect.top + 'px'
+            window.addEventListener('mousemove', dragMove)
+            // 防止文本选择
+            document.body.style.userSelect = 'none'
+        }
+    }
+
+    const dragMove = (e: MouseEvent) => {
+        if (actionBox.value && isDraging.value) {
+            const innerWidth = window.innerWidth
+            const innerHeight = window.innerHeight
+            const newX = Math.max(0, Math.min(e.clientX - dragOffset.value.x, innerWidth - elementSize.value.width))
+            const newY = Math.max(0, Math.min(e.clientY - dragOffset.value.y, innerHeight - elementSize.value.height))
+            actionBox.value.style.left = newX + 'px'
+            actionBox.value.style.top = newY + 'px'
+        }
+    }
+
+
+
+
+    const dragEnd = (e: MouseEvent) => {
+        isDraging.value = false
+        document.body.style.userSelect = ''
+        window.removeEventListener('mousemove', dragMove)
+
+    }
     import draggable from 'vuedraggable'
     import { computed, nextTick, onMounted, ref, watch } from 'vue'
     import { useCounterStore } from '@/stores/counter'
@@ -121,6 +245,8 @@
     import { ElMessage, ElMessageBox } from 'element-plus'
     import { desEncrypt } from '@/utils/des'
     import editFormTemDialog from '@/components/formTemplate/editFormTemDialog.vue'
+    import classManagerDialog from '@/components/formTemplate/classManagerDialog.vue'
+    import moveTemplateDialog from '@/components/formTemplate/moveTemplateDialog.vue'
     const counterStore = useCounterStore()
     const { showLoading } = storeToRefs(counterStore)
     interface listItem {
@@ -139,9 +265,53 @@
     }
     const hasUnsavedChanges = ref(false)
     const list = ref<listItem[]>([])
-    const onDragEnd = () => {
+
+    const isDisableList = computed(() => {
+        if (searchParams.value.pushViewMode) {
+            return true
+        } else {
+            if (searchParams.value.sortViewMode) {
+                return false
+            } else {
+                return true
+            }
+        }
+    })
+    const onDragEnd = async () => {
         console.log('结束拖动')
         hasUnsavedChanges.value = true
+
+        const sortList = list.value.map((item: any, index: number) => ({
+            [item.id]: index
+        }))
+        console.log("🚀 ~ onDragEnd ~ sortList:", sortList)
+
+
+        try {
+            const params: any = {
+                timestamp: Date.now(),
+                sortList: sortList,
+            }
+            if (searchParams.value.smallTemplate) {
+                params.smallClassifyId = searchParams.value.smallTemplate
+            } else {
+                params.bigClassifyId = searchParams.value.bigTemplate
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            console.log("🚀 ~ onDragEnd ~ params:", params)
+            const res = await service.post('/formTemplate/sortFormTemplateData', {
+                enData
+            })
+            console.log("🚀 ~ onDragEnd ~ res:", res)
+            if (res.data.code === 200) {
+                ElMessage.success(res.data.msg)
+                getFormTemplateData()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log("🚀 ~ onDragEnd ~ err:", err)
+        }
     }
     const onDragStart = () => {
         console.log('开始拖动')
@@ -172,7 +342,204 @@
     }
 
 
+    //类目管理
+    const showClassManager = ref<boolean>(false)
+    watch(() => showClassManager.value, (newVal) => {
+        if (!newVal) {
+            getAllData()
+        }
+    })
+    const handleCategoryManage = () => {
+        console.log('类目管理');
+        showClassManager.value = true
+    }
+    //多选操作
+    const isShowCheckbox = ref<boolean>(false)
+    const handleMultiSelect = () => {
+        isShowCheckbox.value = !isShowCheckbox.value
+        if (!isShowCheckbox.value) {
+            selectedList.value = []
+        }
+        console.log('多选操作', selectedList.value);
 
+    }
+    //随机排序
+    const handleRandomSort = async () => {
+        try {
+            console.log('随机排序', searchParams.value);
+            if (showLoading.value) return
+            showLoading.value = true
+            const params: any = {
+                timestamp: Date.now(),
+
+            }
+            if (searchParams.value.smallTemplate) {
+                params.smallClassifyId = searchParams.value.smallTemplate
+
+            } else {
+                params.bigClassifyId = searchParams.value.bigTemplate
+            }
+            console.log('随机排序参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/formTemplate/randomSortFormTemplateData', {
+                enData
+            })
+            console.log('随机排序成功', res);
+            if (res.data.code == 200) {
+                ElMessage.success(res.data.msg)
+                searchParams.value.sortViewMode = 1
+                showLoading.value = false
+                getFormTemplateData()
+            }
+
+        } catch (err) {
+            console.log('随机排序失败', err);
+        } finally {
+            showLoading.value = false
+        }
+
+    }
+    //推送更新
+    const handlePushUpdate = async () => {
+        console.log('推送更新');
+
+        try {
+            if (showLoading.value) return
+            showLoading.value = true
+
+            const res = await service.post('/formTemplate/pushFormTemplateData')
+            console.log('推送更新成功', res);
+            if (res.data.code == 200) {
+                ElMessage.success(res.data.msg)
+
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+
+        } catch (err) {
+            console.log('推送更新失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
+
+
+    //全选
+    const isClickAll = ref<boolean>(false)
+    const handleSelectAll = () => {
+        isClickAll.value = !isClickAll.value
+        if (isClickAll.value) {
+            selectedList.value = list.value.map((item: any) => item.id)
+        } else {
+            selectedList.value = []
+        }
+        console.log('selectedList', selectedList.value);
+    }
+
+
+    const showMoveTemplateDialog = ref<boolean>(false)
+    const handleMove = () => {
+        showMoveTemplateDialog.value = true
+        console.log('移动');
+    }
+    watch(() => showMoveTemplateDialog.value, (newVal) => {
+        if (!newVal) {
+            selectedList.value = []
+            getFormTemplateData()
+        }
+    })
+
+    //批量删除
+    const handleBatchDelete = async () => {
+        console.log('批量删除', selectedList.value);
+
+        try {
+            if (!selectedList.value.length) {
+                ElMessage.error('请选择要删除的模板')
+                return
+            }
+            if (showLoading.value) return
+            showLoading.value = true
+            const params: any = {
+                timestamp: Date.now(),
+                ids: [...selectedList.value]
+            }
+            console.log("🚀 ~ handleBatchDelete ~ params:", params)
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/formTemplate/batchDelFormTemplateData', {
+                enData
+            })
+            console.log('批量删除', res);
+            if (res.data.code === 200) {
+                ElMessage.success(res.data.msg)
+                showLoading.value = false
+                getFormTemplateData()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('批量删除失败', err);
+        } finally {
+            showLoading.value = false
+        }
+    }
+
+    //批量修改
+    const isBatch = ref<boolean>(false)
+    const handleOpenBatchEdit = () => {
+        console.log('打开批量编辑弹窗');
+        if (!selectedList.value.length) {
+            ElMessage.error('请选择要修改的模板')
+            return
+        }
+        isBatch.value = true
+        isEditTemplate.value = true
+    }
+
+    const handleBatchEdit = async (typeObj: { subId: number, smallClassifyId: number }) => {
+        console.log('批量修改', selectedList.value);
+        try {
+            if (!selectedList.value.length) {
+                ElMessage.error('请选择要修改的模板')
+                return
+            }
+            if (showLoading.value) return
+            showLoading.value = true
+
+            const params: any = {
+                timestamp: Date.now(),
+                templateIds: [...selectedList.value],
+                subId: typeObj.subId,
+                smallClassifyId: typeObj.smallClassifyId,
+            }
+
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/formTemplate/batchSave', {
+                enData
+            })
+            console.log('批量修改成功', res);
+            if (res.data.code === 200) {
+                ElMessage.success(res.data.msg)
+                showLoading.value = false
+                selectedList.value = []
+                isEditTemplate.value = false
+                getFormTemplateData()
+            } else {
+                ElMessage.error(res.data.msg)
+            }
+        } catch (err) {
+            console.log('批量修改失败', err);
+        } finally {
+            showLoading.value = false
+        }
+
+    }
+    //切换视图
+    const switchViewMode = () => {
+        searchParams.value.pushViewMode = searchParams.value.pushViewMode === 0 ? 1 : 0
+        // searchParams.value.sortViewMode = 0
+        getFormTemplateData()
+    }
 
     //编辑模板
     const editInfo = ref<any>()
@@ -186,7 +553,7 @@
         if (!newVal) {
 
             editInfo.value = ''
-
+            isBatch.value = false
         }
     })
 
@@ -222,14 +589,14 @@
 
     //选中模板集合
     const selectedList = ref<any>([])
-    const isSelected = (tid: number) => {
-        return selectedList.value.includes(tid)
+    const isSelected = (id: number) => {
+        return selectedList.value.includes(id)
     }
-    const handleCheckBoxChange = (e: any, tid: number) => {
+    const handleCheckBoxChange = (e: any, id: number) => {
         if (e.target.checked) {
-            selectedList.value.push(tid)
+            selectedList.value.push(id)
         } else {
-            selectedList.value = selectedList.value.filter((item: number) => item !== tid)
+            selectedList.value = selectedList.value.filter((item: number) => item !== id)
         }
     }
 
@@ -251,7 +618,9 @@
             smallTemplate: '',
             templateType: 'all',
             os: 'iOS',
-            language: 'zh'
+            language: 'zh',
+            sortViewMode: 0,
+            pushViewMode: 0
         }
     )
 
@@ -273,7 +642,9 @@
             smallTemplate: '',
             templateType: 'all',
             os: 'iOS',
-            language: 'zh'
+            language: 'zh',
+            sortViewMode: 0,
+            pushViewMode: 0
 
         }
         await getSmallClassificationData()
@@ -311,6 +682,18 @@
         return list?.language || []
 
     })
+
+    const sortTypeList = ref<{ label: string, value: number }[]>([
+        {
+            label: '按浏览量排序',
+            value: 0
+        },
+        {
+            label: '按自定义排序',
+            value: 1
+        }
+    ])
+
     const getBaseData = async () => {
 
         try {
@@ -386,7 +769,7 @@
             if (res.data.code === 200) {
                 smallTemplateList.value = res.data.rows
                 if (res.data.rows.length > 0) {
-                    searchParams.value.smallTemplate = res.data.rows[0].name
+                    searchParams.value.smallTemplate = res.data.rows[0].id
                 } else {
                     searchParams.value.smallTemplate = ''
                 }
@@ -413,8 +796,10 @@
                 fileName: searchParams.value.fileName,
                 subId: searchParams.value.bigTemplate,
                 language: searchParams.value.language,
-                name: searchParams.value.smallTemplate,
+                smallClassifyId: searchParams.value.smallTemplate,
                 isVip: searchParams.value.templateType,
+                pushViewMode: searchParams.value.pushViewMode,
+                sortViewMode: searchParams.value.sortViewMode,
             }
             if (searchParams.value.templateType === 'all') {
                 delete params.isVip
@@ -462,6 +847,13 @@
 </script>
 
 <style lang="scss" scoped>
+    .form-template-page {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 100px); // 使页面容器有确定高度
+        min-height: 0; // 允许子元素在 Flex 容器中正确计算剩余空间
+        position: relative;
+    }
 
 
     .filter-card {
@@ -503,6 +895,7 @@
                 display: flex;
                 gap: 16px;
                 margin-bottom: 16px;
+                flex-wrap: wrap;
 
                 &:last-child {
                     margin-bottom: 0;
@@ -524,10 +917,26 @@
         }
     }
 
+    // 优化“付费”显示样式
+    .template_data {
+        .p_pay {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 2px 0;
+        }
+
+        .pay-label {
+            font-size: 12px;
+            color: var(--el-text-color-placeholder);
+        }
+    }
+
     .stickTp_manage {
         /* position: relative;  不再需要，因为 back-icon 改为 fixed 定位 */
-        height: 680px;
-        overflow-y: scroll;
+        flex: 1; // 占满剩余父元素空间
+        min-height: 0; // 避免内容高度撑破，确保内部滚动生效
+        overflow-y: auto; // 使用 auto 更符合自适应滚动
 
         .template-grid {
             display: grid;
@@ -538,6 +947,10 @@
             padding: 0;
             list-style: none;
             margin: 0;
+        }
+
+        .randomSort-grid {
+            grid-template-columns: repeat(4, 1fr);
         }
 
         .template-item {
@@ -754,5 +1167,45 @@
             transform: rotate(3deg);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
+    }
+
+    .multi-select-actions {
+        position: absolute;
+        bottom: 0px;
+        left: 0;
+
+        z-index: 999;
+        display: flex;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 8px;
+
+    }
+
+    /* 浮动操作栏样式 */
+    .floating-actions {
+        position: fixed;
+        user-select: none;
+        cursor: move;
+        bottom: 7px;
+        right: 20px;
+        display: flex;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 8px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        z-index: 1000;
+
+    }
+
+    /* 激活状态的按钮样式 */
+    .floating-actions .active-btn {
+        box-shadow: 0 0 0 2px rgba(103, 194, 58, 0.35), 0 6px 18px rgba(103, 194, 58, 0.35);
+        transform: translateY(-1px);
     }
 </style>

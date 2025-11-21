@@ -2,7 +2,14 @@
   <div class="view">
     <permissionEditor v-model:dialog-visible="showPermissionEditor" :permissionInfo="permissionInfo" />
     <el-card class="filter-card">
+
+
+      <div style="justify-content: flex-start; column-gap: 10px;">
+        <el-input style="width: 200px;" v-model="searchText" placeholder="请输入权限名"></el-input>
+        <el-button type="primary" @click="getUserList">搜索</el-button>
+      </div>
       <div>
+
         <el-button type="primary" @click="addPermission"> <el-icon>
             <Plus />
           </el-icon>新增权限</el-button>
@@ -41,6 +48,11 @@
   }
   const componentStr = ref('userTable')
   const componentName = ref<any>(userTable)
+
+
+
+  //搜索权限名
+  const searchText = ref<string>('')
 
 
   //分页
@@ -124,6 +136,7 @@
     permissionCode: '权限码',
     type: '权限类型',
     subType: '权限小类',
+    url: '接口路径',
 
 
 
@@ -145,6 +158,7 @@
         timestamp: Date.now(),
         pageNum: pageNum.value,
         pageSize: pageSize.value,
+        name: searchText.value
       }
       const enData = desEncrypt(JSON.stringify(params))
       showLoading.value = true

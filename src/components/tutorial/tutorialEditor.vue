@@ -213,7 +213,7 @@
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
     import { ref, watch } from 'vue'
-    import { type UploadProps, type UploadUserFile, type UploadFiles, ElMessage } from 'element-plus'
+    import { type UploadProps, type UploadUserFile, type UploadFiles, type UploadRawFile, ElMessage } from 'element-plus'
     import { Plus, Delete, VideoPlay } from '@element-plus/icons-vue'
     import service from '@/axios';
     import { desEncrypt } from '@/utils/des';
@@ -247,13 +247,17 @@
             formData.value.category = res.data.data.categoryName === 'null' ? 0 : res.data.data.categoryName
             if (res.data.data.tutorialTextAndImages.length) {
                 tutorialTextArr.value = res.data.data.tutorialTextAndImages
+
+
             } else {
                 tutorialTextArr.value = [
                     {
+                        id: '',
                         text: '',
                         image: [],
                         desc: '',
                         imgUrl: '',
+                        imgName: ''
                     }
                 ]
             }
@@ -289,10 +293,11 @@
 
     const tutorialTextArr = ref<any>([
         {
+            id: '',
             text: '',
-            image: [],
             desc: '',
             imgUrl: '',
+            imgName: ''
         }
     ])
     const formData = ref<any>({
@@ -361,35 +366,104 @@
         }
         ruleFormRef.value?.resetFields()
     }
+    //上传图到服务器
+    const uploadFileToServer = async (file: any, type: string, index?: number) => {
+        try {
+            const form = new FormData()
+            form.append('file', file)
+            form.append('region', formData.value.region)
 
+            form.append('type', 'tutorial')
+            if (formData.value.tutorialType === 'video') {
+                form.append('tutorialType', 'video')
+            }
+            const res = await service.post('/file/upload', form, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            console.log('文件上传', res);
+            if (res.data.code == 200) {
+                if (type === 'teachImg' && index !== undefined) {
+                    tutorialTextArr.value[index].imgName = res.data.data.fileName
+                    tutorialTextArr.value[index].imgUrl = res.data.data.url
+                } else if (type === 'video') {
+                    formData.value.videoUrl = res.data.data.url
+                    formData.value.videoName = res.data.data.fileName
+                } else if (type === 'coverImg') {
+                    formData.value.coverImgUrl = res.data.data.url
+                    formData.value.coverImgName = res.data.data.fileName
+                }
+            }
+        } catch (err) {
+            console.log('文件上传失败', err);
+        }
+
+
+    }
+    //删除服务器上的图片
+    const deleteImgForServer = async (type: string, index?: number) => {
+        try {
+            let params: any = {
+                region: formData.value.region,
+                type: 'tutorial',
+                timestamp: Date.now()
+
+            }
+            if (type === 'teachImg' && index !== undefined) {
+                params.fileName = tutorialTextArr.value[index].imgName
+            } else if (type === 'video') {
+                params.tutorialType = 'video'
+                params.fileName = formData.value.videoName
+            } else if (type === 'coverImg') {
+                params.fileName = formData.value.coverImgName
+            }
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/file/del', {
+                enData
+            })
+            console.log('服务器删除图片', res);
+        } catch (err) {
+            console.log('删除失败', err);
+        }
+    }
 
     //处理图片
     const handleChangeCoverImage = (uploadFile: UploadUserFile, index: number) => {
         if (uploadFile.raw) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const fullBase64 = e.target?.result as string;
-                tutorialTextArr.value[index].imgUrl = fullBase64
-                tutorialTextArr.value[index].imgName = ''
-            };
-            reader.readAsDataURL(uploadFile.raw);
+
+
+
+            uploadFileToServer(uploadFile.raw, 'teachImg', index)
+
 
         }
     }
     const handleChangeimge = (uploadFile: UploadUserFile, uploadFiles: UploadFiles) => {
-        console.log(uploadFile.raw);
-
+        // 先本地预览，保证立即回显
         if (uploadFile.raw) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const fullBase64 = e.target?.result as string;
-                formData.value.coverImgUrl = fullBase64
-                formData.value.coverImgName = ''
-            };
-            reader.readAsDataURL(uploadFile.raw);
+            const raw = uploadFile.raw as UploadRawFile
+            // 为 raw 设置 uid，兼容 Element Plus 类型
+            raw.uid = raw.uid ?? Date.now()
+
+            // 使用本地对象 URL 快速预览（也可用 FileReader 转 base64）
+            const localUrl = URL.createObjectURL(raw)
+            formData.value.coverImgUrl = localUrl
+            // 清空后端文件名，表示当前为本地新选择的文件
+            formData.value.coverImgName = ''
+
+            // 同步到文件列表（尽管不显示 file-list，但保持数据一致）
+            formData.value.coverImg = [{
+                name: uploadFile.name || raw.name,
+                url: localUrl,
+                status: 'ready',
+                percentage: 0,
+                raw
+            }]
+
+            // 同步上传服务器，成功后用后端返回的 url/fileName 覆盖本地预览
+            uploadFileToServer(raw, 'coverImg')
         }
-
-
     }
 
 
@@ -400,10 +474,11 @@
 
     const handleRemove: UploadProps['onRemove'] = (uploadFile, uploadFiles) => {
 
-        console.log(uploadFile, uploadFiles)
+
 
         formData.value.coverImgUrl = ''
         formData.value.coverImg = []
+        deleteImgForServer('coverImg')
     }
 
 
@@ -411,6 +486,7 @@
         tutorialTextArr.value[index].imgUrl = ''
         tutorialTextArr.value[index].image = []
         tutorialTextArr.value[index].imgName = ''
+        deleteImgForServer('teachImg', index)
     }
     const removeCoverImage = () => {
         formData.value.coverImgUrl = '';
@@ -445,14 +521,7 @@
                 console.error('请选择视频文件');
                 return;
             }
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const fullBase64 = e.target?.result as string;
-                formData.value.videoUrl = fullBase64;
-                formData.value.videoName = ''
-            };
-            reader.readAsDataURL(uploadFile.raw);
+            uploadFileToServer(uploadFile.raw, 'video')
         }
     }
 
@@ -461,6 +530,7 @@
         formData.value.videoUrl = '';
         formData.value.videoName = '';
         formData.value.video = [];
+        deleteImgForServer('video')
     }
 
 
@@ -477,98 +547,87 @@
             ElMessage.warning('正在保存。。。')
             return
         }
-        showLoading.value = true
+        console.log('tutorialTextArr', tutorialTextArr.value);
+
+
+        // showLoading.value = true
         try {
 
-            const form = new FormData()
+
             formData.value.appNo = defaultAppNo.value
+            const params: any = {
+                timestamp: Date.now(),
+
+            }
+
             for (let key in formData.value) {
                 if (key !== 'coverImg' && key !== 'video' && key !== 'language') {
 
                     if (key === 'os') {
-                        form.append(key, formData.value[key].toLowerCase())
+                        params[key] = formData.value[key].toLowerCase()
                     }
                     else {
 
-                        form.append(key, formData.value[key])
+                        params[key] = formData.value[key]
                     }
                 } else if (key === 'language') {
-                    form.append(key, formData.value.region === 'domestic' ? 'zh' : formData.value.language)
+                    params[key] = formData.value.region === 'domestic' ? 'zh' : formData.value.language
                 }
-
 
             }
             if (formData.value.version === null || formData.value.version === '') {
-                form.delete('version')
+                delete params.version
             }
-            form.delete('videoUrl')
-            form.delete('coverImgUrl')
-            form.delete('createdAt')
-            form.delete('labels')
-            form.delete('likeNum')
-            form.delete('levels')
-            form.delete('osObj')
-            form.append('type', formData.value.id ? 'update' : 'add')
+
+            delete params.videoUrl
+            delete params.coverImgUrl
+            delete params.createdAt
+            delete params.labels
+            delete params.likeNum
+            delete params.levels
+            delete params.osObj
+            params.type = formData.value.id ? 'update' : 'add'
 
             if (formData.value.tutorialType === 'video') {
-                if (!formData.value.videoName) {
-                    if (formData.value.video && formData.value.video[0] && formData.value.video[0].raw) {
-                        form.append('video', formData.value.video[0].raw)
-                        form.delete('videoName')
-                    } else {
 
+                params.videoName = formData.value.videoName
+                params.videoUrl = formData.value.videoUrl
 
-                    }
-
-                }
             } else {
-                form.delete('videoName')
-                form.delete('videoUrlDy')
-                form.delete('videoDuration')
+                delete params.videoName
+                delete params.videoUrl
+                delete params.videoDuration
+                delete params.videoUrlDy
 
 
-
+                console.log('tutorialTextArr', tutorialTextArr.value);
+                const paramsTextAndImageArr: any = []
                 tutorialTextArr.value.forEach((item: any) => {
-                    form.append('textAndImageDesc', item.desc)
-                    form.append('text', item.text)
-                    if (item.textAndImageId) {
-                        form.append('textAndImageId', item.textAndImageId)
-                    }
-                    if (item.imgName) {
-                        form.append('textAndImageImgName', item.imgName)
-                        form.append('image_exist', 'true')
-                    } else {
-                        console.log('item.image', item);
-                        if (item.image && item.image[0] && item.image[0].raw) {
-                            form.append('image', item.image[0].raw)
-                            form.append('image_exist', 'true')
-                        } else {
-                            form.append('image_exist', 'false')
-                        }
 
+                    const textAndImgObj: any = {
+                        id: item.id,
+                        text: item.text,
+                        desc: item.desc,
+                        imgUrl: item.imgUrl,
+                        imgName: item.imgName,
                     }
-                    if (item.id) {
-                        form.append('textAndImageId', item.id)
-                    }
+                    paramsTextAndImageArr.push(textAndImgObj)
+
                 })
-            }
-
-            if (!formData.value.coverImgName) {
-                if (formData.value.coverImg && formData.value.coverImg[0] && formData.value.coverImg[0].raw) {
-                    form.append('coverImg', formData.value.coverImg[0].raw)
-                    form.delete('coverImgName')
-                } else {
-
-
-                }
+                params.textAndImageList = paramsTextAndImageArr
             }
 
 
-            const res = await service.post('/tutorial/save', form, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
+            params.coverImgName = formData.value.coverImgName
+            params.coverImgUrl = formData.value.coverImgUrl
+
+
+            console.log('保存参数', params);
+            const enData = desEncrypt(JSON.stringify(params))
+            const res = await service.post('/tutorial/save', {
+                enData
             })
+            console.log('保存教程', res);
             if (res.data.code === 200) {
                 ElMessage.success('保存成功')
                 handleClose()

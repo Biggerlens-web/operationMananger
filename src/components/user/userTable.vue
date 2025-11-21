@@ -1,151 +1,157 @@
 <template>
-    <el-table :data="tableData" border style="width: 100%" height="600px">
-        <template v-for="item in filterParams" :key="item.key">
-            <el-table-column :prop="item.key" :label="item.note" v-if="item.isShow" min-width="130">
-                <template v-if="item.key === 'avatar' || item.key === 'thumbnail' || item.key === 'image'"
-                    #default="scope">
-                    <img style="width:100%" :src="scope.row[item.key]" alt="">
-                </template>
-                <template
-                    v-if="item.key === 'isCanPay' || item.key === 'isShowTaobao' || item.key === 'open' || item.key === 'loginBeforeMemPage' || item.key === 'backBtnVisible' || item.key === 'rightEnterVipUI' || item.key === 'showUpdateVip' || item.key === 'rightShowAdsUnlock'"
-                    #default="scope">
-                    <el-switch v-model="scope.row[item.key]" :active-value="true" :inactive-value="false"
-                        @change="switchChange(scope.row, item.key)" />
-                </template>
+    <div ref="tableWrap" class="table-wrap">
+        <el-table :data="tableData" border style="width: 100%" :height="tableHeight">
+            <template v-for="item in filterParams" :key="item.key">
+                <el-table-column :prop="item.key" :label="item.note" v-if="item.isShow" min-width="130">
+                    <template v-if="item.key === 'avatar' || item.key === 'thumbnail' || item.key === 'image'"
+                        #default="scope">
+                        <img style="width:100%" :src="scope.row[item.key]" alt="">
+                    </template>
+                    <template
+                        v-if="item.key === 'isCanPay' || item.key === 'isShowTaobao' || item.key === 'open' || item.key === 'loginBeforeMemPage' || item.key === 'backBtnVisible' || item.key === 'rightEnterVipUI' || item.key === 'showUpdateVip' || item.key === 'rightShowAdsUnlock'"
+                        #default="scope">
+                        <el-switch v-model="scope.row[item.key]" :active-value="true" :inactive-value="false"
+                            @change="switchChange(scope.row, item.key)" />
+                    </template>
 
-                <template
-                    v-if="item.key === 'photoEditTitle' || item.key === 'version' || item.key === 'taobaoPageLink' || item.key === 'helpMeTitle' || item.key === 'taobaoPageLink' || item.key === 'wechatServiceLink'"
-                    #default="scope">
-                    <el-input v-model="scope.row[item.key]" @blur="handleInput(scope.row, item.key)" />
-                </template>
+                    <template
+                        v-if="item.key === 'photoEditTitle' || item.key === 'version' || item.key === 'taobaoPageLink' || item.key === 'helpMeTitle' || item.key === 'taobaoPageLink' || item.key === 'wechatServiceLink'"
+                        #default="scope">
+                        <el-input v-model="scope.row[item.key]" @blur="handleInput(scope.row, item.key)" />
+                    </template>
 
-                <template
-                    v-if="item.key === 'price' || item.key === 'functionStartNum' || item.key === 'timeOn' || item.key === 'adsVideoUnlockCount' || item.key === 'adsVideoUseCount' || item.key === 'freeCount' || item.key === 'paymentAmount' || item.key === 'paymentUnlockCount' || item.key === 'paymentUseCount' || item.key === 'questionnaireUseCount' || item.key === 'questionnaireUnlockCount' || item.key === 'shareAppUnlockCount' || item.key === 'shareAppUseCount'"
-                    #default="scope">
-                    <el-input-number @change="handleNumInput(scope.row, item.key)" style="width: 100px;" size="small"
-                        v-model="scope.row[item.key]" />
-                </template>
+                    <template
+                        v-if="item.key === 'price' || item.key === 'functionStartNum' || item.key === 'timeOn' || item.key === 'adsVideoUnlockCount' || item.key === 'adsVideoUseCount' || item.key === 'freeCount' || item.key === 'paymentAmount' || item.key === 'paymentUnlockCount' || item.key === 'paymentUseCount' || item.key === 'questionnaireUseCount' || item.key === 'questionnaireUnlockCount' || item.key === 'shareAppUnlockCount' || item.key === 'shareAppUseCount'"
+                        #default="scope">
+                        <el-input-number @change="handleNumInput(scope.row, item.key)" style="width: 100px;"
+                            size="small" v-model="scope.row[item.key]" />
+                    </template>
 
-                <template v-if="item.key === 'i18nConfig'" #default="scope">
-                    <el-button @click="eidtorLanguage(scope.row)">配置</el-button>
-                </template>
-                <template v-if="item.key === 'autoOpen'" #default="scope">
-                    <el-select v-model="scope.row[item.key]" @change="changeAutoOpen(scope.row)">
-                        <el-option v-for="el in scope.row.subPageConfigAutoOpenVos" :label="el.autoOpenName"
-                            :value="Number(el.autoOpenId)" />
+                    <template v-if="item.key === 'i18nConfig'" #default="scope">
+                        <el-button @click="eidtorLanguage(scope.row)">配置</el-button>
+                    </template>
+                    <template v-if="item.key === 'autoOpen'" #default="scope">
+                        <el-select v-model="scope.row[item.key]" @change="changeAutoOpen(scope.row)">
+                            <el-option v-for="el in scope.row.subPageConfigAutoOpenVos" :label="el.autoOpenName"
+                                :value="Number(el.autoOpenId)" />
 
-                    </el-select>
-
-                    <el-button @click="addAutoOpenMethod(scope.row)"
-                        style="width: 100%;margin-top: 10px;">添加</el-button>
-                </template>
-                <template v-if="item.key === 'international'" #default="scope">
-                    <p v-for="(value, key) in JSON.parse(scope.row.international)" :key="key">
-                        {{ initLanguage(key) }}:{{ value }}
-                    </p>
-
-                </template>
-                <template v-if="item.key === 'probability'" #default="scope">
-                    <el-select v-model="scope.row[item.key]" @change="saveChangeProbability(scope.row)">
-                        <el-option v-for="value in initProbabilitys(scope.row.probabilitys)" :key="value" :label="value"
-                            :value="value" />
-                    </el-select>
-                </template>
-                <template v-if="item.key === 'bannerImgs' || item.key === 'noPayTimes'" #default="scope">
-
-                    <p v-for="el in JSON.parse(scope.row[item.key])" :key="item">
-                        {{ el }}
-                    </p>
-                    <p>
-                        <el-button type="primary" size="small" @click="addListData(scope.row, item.key)">添加</el-button>
-                    </p>
-
-                </template>
-
-                <template v-if="item.key === 'subPageConfigHWProductsVos'" #default="scope">
-
-                    <p v-for="el in scope.row[item.key]" :key="el.id">
-                        {{ `${el.productName}:${el.productId}` }}
-                    </p>
-                    <p>
-                        <el-button type="primary" size="small" @click="editProductsSort(scope.row)">编辑</el-button>
-                    </p>
-
-                </template>
-                <template v-if="item.key === 'popUpTiming'" #default="scope">
-                    <el-switch v-model="scope.row[item.key]" :active-value="true" :inactive-value="false" />
-                    <div v-show="scope.row[item.key]">
-                        <el-input-number style="width: 100px;" v-model="scope.row.popUpTimingCount" size="small"
-                            :min="2"></el-input-number>
-                        <el-select style="margin-top: 10px;" v-model="scope.row.popUpTimingPlan"
-                            @change="saveChangeProbability(scope.row)">
-                            <el-option v-for="value in popuptimingList" :key="value.mark"
-                                :label="value.mark === 1 ? `安装应用第${scope.row.popUpTimingCount === null ? 0 : scope.row.popUpTimingCount}天时弹出` : `进入应用第${scope.row.popUpTimingCount === null ? 0 : scope.row.popUpTimingCount}次时弹出`"
-                                :value="value.value" />
                         </el-select>
-                    </div>
 
-                </template>
-                <template v-if="item.key === 'thatLaterClicks'" #default="scope">
-                    <el-switch v-model="scope.row[item.key]" :active-value="true" :inactive-value="false" />
-                    <div v-show="scope.row[item.key]">
-                        <el-input-number style="width: 100px;" v-model="scope.row.thatLaterClicksCount" size="small"
-                            :min="1"></el-input-number>
-                        <el-select style="margin-top: 10px;" v-model="scope.row.thatLaterClicksPlan"
-                            @change="saveChangeProbability(scope.row)">
-                            <el-option v-for="value in thatLaterClicksPlanList" :key="value.mark"
-                                :label="value.mark === 1 ? `间隔${scope.row.popUpTimingCount === null ? 0 : scope.row.thatLaterClicksCount}天后弹出` : `间隔${scope.row.popUpTimingCount === null ? 0 : scope.row.thatLaterClicksCount}次后弹出`"
-                                :value="value.value" />
+                        <el-button @click="addAutoOpenMethod(scope.row)"
+                            style="width: 100%;margin-top: 10px;">添加</el-button>
+                    </template>
+                    <template v-if="item.key === 'international'" #default="scope">
+                        <p v-for="(value, key) in JSON.parse(scope.row.international)" :key="key">
+                            {{ initLanguage(key) }}:{{ value }}
+                        </p>
+
+                    </template>
+                    <template v-if="item.key === 'probability'" #default="scope">
+                        <el-select v-model="scope.row[item.key]" @change="saveChangeProbability(scope.row)">
+                            <el-option v-for="value in initProbabilitys(scope.row.probabilitys)" :key="value"
+                                :label="value" :value="value" />
                         </el-select>
-                    </div>
+                    </template>
+                    <template v-if="item.key === 'bannerImgs' || item.key === 'noPayTimes'" #default="scope">
+
+                        <p v-for="el in JSON.parse(scope.row[item.key])" :key="item">
+                            {{ el }}
+                        </p>
+                        <p>
+                            <el-button type="primary" size="small"
+                                @click="addListData(scope.row, item.key)">添加</el-button>
+                        </p>
+
+                    </template>
+
+                    <template v-if="item.key === 'subPageConfigHWProductsVos'" #default="scope">
+
+                        <p v-for="el in scope.row[item.key]" :key="el.id">
+                            {{ `${el.productName}:${el.productId}` }}
+                        </p>
+                        <p>
+                            <el-button type="primary" size="small" @click="editProductsSort(scope.row)">编辑</el-button>
+                        </p>
+
+                    </template>
+                    <template v-if="item.key === 'popUpTiming'" #default="scope">
+                        <el-switch v-model="scope.row[item.key]" :active-value="true" :inactive-value="false" />
+                        <div v-show="scope.row[item.key]">
+                            <el-input-number style="width: 100px;" v-model="scope.row.popUpTimingCount" size="small"
+                                :min="2"></el-input-number>
+                            <el-select style="margin-top: 10px;" v-model="scope.row.popUpTimingPlan"
+                                @change="saveChangeProbability(scope.row)">
+                                <el-option v-for="value in popuptimingList" :key="value.mark"
+                                    :label="value.mark === 1 ? `安装应用第${scope.row.popUpTimingCount === null ? 0 : scope.row.popUpTimingCount}天时弹出` : `进入应用第${scope.row.popUpTimingCount === null ? 0 : scope.row.popUpTimingCount}次时弹出`"
+                                    :value="value.value" />
+                            </el-select>
+                        </div>
+
+                    </template>
+                    <template v-if="item.key === 'thatLaterClicks'" #default="scope">
+                        <el-switch v-model="scope.row[item.key]" :active-value="true" :inactive-value="false" />
+                        <div v-show="scope.row[item.key]">
+                            <el-input-number style="width: 100px;" v-model="scope.row.thatLaterClicksCount" size="small"
+                                :min="1"></el-input-number>
+                            <el-select style="margin-top: 10px;" v-model="scope.row.thatLaterClicksPlan"
+                                @change="saveChangeProbability(scope.row)">
+                                <el-option v-for="value in thatLaterClicksPlanList" :key="value.mark"
+                                    :label="value.mark === 1 ? `间隔${scope.row.popUpTimingCount === null ? 0 : scope.row.thatLaterClicksCount}天后弹出` : `间隔${scope.row.popUpTimingCount === null ? 0 : scope.row.thatLaterClicksCount}次后弹出`"
+                                    :value="value.value" />
+                            </el-select>
+                        </div>
+                    </template>
+                </el-table-column>
+            </template>
+
+            <el-table-column label="操作" fixed="right" width="150" v-if="showAction">
+                <template #default="scope">
+                    <el-button style="margin: 0;" type="text" size="small" @click="banUser(scope.row)"
+                        v-if="userList">{{
+                            scope.row.status === 1 ? '禁用' : '启用' }}</el-button>
+                    <el-button v-if="isUpdate" style="margin: 0;" type="text" size="small"
+                        @click="updateInfo(scope.row)">{{
+                            '提交修改' }}</el-button>
+                    <el-button style="margin: 0;" type="text" size="small" @click="handleRoles(scope.row)"
+                        v-if="userList">分配角色</el-button>
+                    <el-button v-if="roleList" style="margin: 0;" type="text" size="small"
+                        @click="onAssginRole(scope.row)">分配权限</el-button>
+
+                    <el-button style="margin: 0;" type="text" size="small" @click="scanImg(scope.row)"
+                        v-if="bannerPath">扫描该路径下图片</el-button>
+                    <el-button style="margin: 0;" type="text" size="small" v-if="banner"
+                        @click="setBannerImg(scope.row)">配置轮播图</el-button>
+                    <el-button style="margin: 0;" type="text" size="small" v-if="copy"
+                        @click="copyInfo(scope.row)">复制</el-button>
+
+                    <el-button style="margin: 0;" type="text" size="small" @click="handleView(scope.row)"
+                        v-if="viewButton || isShowButton(scope.row, 'view') || showview(scope.row)">查看</el-button>
+                    <el-button v-if="moveIndex || isShowButton(scope.row, 'topIndex')" style="margin: 0;" type="text"
+                        size="small" @click="goMove(scope.row, 'topMove')">置顶</el-button>
+                    <el-button v-if="moveIndex || isShowButton(scope.row, 'upIndex')" style="margin: 0;" type="text"
+                        size="small" @click="goMove(scope.row, 'upMove')">上移</el-button>
+                    <el-button v-if="moveIndex || isShowButton(scope.row, 'downIndex')" style="margin: 0;" type="text"
+                        size="small" @click="goMove(scope.row, 'downMove')">下移</el-button>
+                    <el-button v-if="isEditJSON" style="margin: 0;" type="text"
+                        @click="editorJSON(scope.row)">JSON配置</el-button>
+                    <el-button v-if="isDownload" style="margin: 0;" type="text"
+                        @click="downloadOSS(scope.row)">下载OSS文件</el-button>
+                    <el-button style="margin: 0;" type="text" size="small" @click="handleEditor(scope.row)"
+                        v-if="!ishideEdit">编辑</el-button>
+
+                    <el-button style="margin: 0;" type="text" size="small"
+                        @click="handleDelete(scope.row)">删除</el-button>
+
                 </template>
             </el-table-column>
-        </template>
-
-        <el-table-column label="操作" fixed="right" width="150" v-if="showAction">
-            <template #default="scope">
-                <el-button style="margin: 0;" type="text" size="small" @click="banUser(scope.row)" v-if="userList">{{
-                    scope.row.status === 1 ? '禁用' : '启用' }}</el-button>
-                <el-button v-if="isUpdate" style="margin: 0;" type="text" size="small" @click="updateInfo(scope.row)">{{
-                    '提交修改' }}</el-button>
-                <el-button style="margin: 0;" type="text" size="small" @click="handleRoles(scope.row)"
-                    v-if="userList">分配角色</el-button>
-                <el-button v-if="roleList" style="margin: 0;" type="text" size="small"
-                    @click="onAssginRole(scope.row)">分配权限</el-button>
-
-                <el-button style="margin: 0;" type="text" size="small" @click="scanImg(scope.row)"
-                    v-if="bannerPath">扫描该路径下图片</el-button>
-                <el-button style="margin: 0;" type="text" size="small" v-if="banner"
-                    @click="setBannerImg(scope.row)">配置轮播图</el-button>
-                <el-button style="margin: 0;" type="text" size="small" v-if="copy"
-                    @click="copyInfo(scope.row)">复制</el-button>
-
-                <el-button style="margin: 0;" type="text" size="small" @click="handleView(scope.row)"
-                    v-if="viewButton || isShowButton(scope.row, 'view') || showview(scope.row)">查看</el-button>
-                <el-button v-if="moveIndex || isShowButton(scope.row, 'topIndex')" style="margin: 0;" type="text"
-                    size="small" @click="goMove(scope.row, 'topMove')">置顶</el-button>
-                <el-button v-if="moveIndex || isShowButton(scope.row, 'upIndex')" style="margin: 0;" type="text"
-                    size="small" @click="goMove(scope.row, 'upMove')">上移</el-button>
-                <el-button v-if="moveIndex || isShowButton(scope.row, 'downIndex')" style="margin: 0;" type="text"
-                    size="small" @click="goMove(scope.row, 'downMove')">下移</el-button>
-                <el-button v-if="isEditJSON" style="margin: 0;" type="text"
-                    @click="editorJSON(scope.row)">JSON配置</el-button>
-                <el-button v-if="isDownload" style="margin: 0;" type="text"
-                    @click="downloadOSS(scope.row)">下载OSS文件</el-button>
-                <el-button style="margin: 0;" type="text" size="small" @click="handleEditor(scope.row)"
-                    v-if="!ishideEdit">编辑</el-button>
-
-                <el-button style="margin: 0;" type="text" size="small" @click="handleDelete(scope.row)">删除</el-button>
-
-            </template>
-        </el-table-column>
-    </el-table>
+        </el-table>
+    </div>
 </template>
 
 <script lang="ts" setup>
     import { useCounterStore } from '@/stores/counter';
     import { storeToRefs } from 'pinia';
-    import { ref, onMounted } from 'vue'
+    import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
     import { useRoute } from 'vue-router';
 
     const route = useRoute()
@@ -212,6 +218,45 @@
 
 
 
+
+    // 表格高度：占满剩余页面高度
+    const tableWrap = ref<HTMLElement | null>(null)
+    const tableHeight = ref<number>(600)
+    const BOTTOM_GAP = 120 // 预留底部安全间距，减少页面出现垂直滚动条的可能
+
+    const computeTableHeight = () => {
+        const viewportHeight = window.innerHeight
+        const top = tableWrap.value?.getBoundingClientRect().top ?? 0
+        // 考虑容器的外边距，避免被 margin-bottom 推出可视区
+        const wrapStyles = tableWrap.value ? window.getComputedStyle(tableWrap.value) : null
+        const marginBottom = wrapStyles ? parseInt(wrapStyles.marginBottom || '0') : 0
+        let h = viewportHeight - top - marginBottom - BOTTOM_GAP
+        // 设置一个最小高度，避免过小影响交互
+        if (h < 240) h = 240
+        tableHeight.value = Math.round(h)
+    }
+
+    const applyTableHeight = () => {
+        computeTableHeight()
+        // 二次校正：如果页面仍出现垂直滚动（超出可视区），再减去超出的高度与少量缓冲
+        nextTick(() => {
+            const doc = document.documentElement
+            const overflow = doc.scrollHeight - doc.clientHeight
+            if (overflow > 0) {
+                const adjusted = tableHeight.value - overflow - 12
+                tableHeight.value = Math.max(240, Math.round(adjusted))
+            }
+        })
+    }
+
+    onMounted(() => {
+        applyTableHeight()
+        window.addEventListener('resize', applyTableHeight)
+    })
+
+    onBeforeUnmount(() => {
+        window.removeEventListener('resize', applyTableHeight)
+    })
 
     // 弹出时机方案列表
     const popuptimingList = ref<any>([
@@ -443,4 +488,8 @@
     }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+    .table-wrap {
+        width: 100%;
+    }
+</style>

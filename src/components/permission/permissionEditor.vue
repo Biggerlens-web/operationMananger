@@ -28,6 +28,12 @@
                         :value="item.value" />
                 </el-select>
             </el-form-item>
+            <el-form-item label="接口路径" prop="url"
+                v-if="formData.permissionType1 === 2 && formData.permissionType === 1">
+                <el-input v-model="formData.url" placeholder="请输入接口路径" />
+
+
+            </el-form-item>
         </el-form>
         <template #footer>
             <div class="dialog-footer">
@@ -67,6 +73,7 @@
                 formData.value.permissionType1 = props.permissionInfo.permissionType1.value
                 formData.value.permissionName = props.permissionInfo.permissionName
                 formData.value.permissionCode = props.permissionInfo.permissionCode
+                formData.value.url = props.permissionInfo.url
                 if (formData.value.permissionCode.includes('APP')) {
                     formData.value.appNo = parseInt(formData.value.permissionCode.split(':')[1])
                 } else {
@@ -113,7 +120,8 @@
         permissionType1: '',
         permissionName: '',
         permissionCode: '',
-        appNo: ''
+        appNo: '',
+        url: ''
     })
 
     const rules = ref<any>({
@@ -131,6 +139,7 @@
             permissionType1: '',
             permissionName: '',
             permissionCode: '',
+            url: '',
             appNo: ''
         }
     }
@@ -150,6 +159,7 @@
                 permissionType: formData.value.permissionType,
                 appNo: formData.value.appNo,
                 type: formData.value.id ? 'update' : 'add',
+                url: formData.value.url,
             }
             console.log('参数', params)
             const enData = desEncrypt(JSON.stringify(params))
