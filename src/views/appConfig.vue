@@ -273,6 +273,7 @@
     jsonData.value = JSON.parse(item.config)
     comments.value = JSON.parse(item.configNote)
     dialogJSON.value = true
+    console.log('comments.value', comments.value);
     console.log('jsonData.value', jsonData.value);
   }
 
@@ -487,12 +488,12 @@
         try {
           const elementId = `jsoneditor-desc${path}`
           let editorInput = document.getElementById(elementId)
-          
+
           // 如果getElementById失败，尝试使用属性选择器
           if (!editorInput) {
             editorInput = document.querySelector(`[id="${elementId}"]`)
           }
-          
+
           // 如果还是找不到，使用更通用的方法遍历查找
           if (!editorInput) {
             const allDescElements = document.querySelectorAll('[id^="jsoneditor-desc"]')
@@ -503,7 +504,7 @@
               }
             }
           }
-          
+
           if (editorInput instanceof HTMLElement) {
             editorInput.textContent = value
             console.log('注释更新完成，当前comments:', comments.value)

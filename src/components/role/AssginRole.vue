@@ -1,8 +1,9 @@
 <template>
     <el-dialog :model-value="dialogVisible" title="分配权限" width="500" :before-close="handleClose">
-
+        <el-input v-model="searchText" placeholder="请输入搜索内容" clearable />
         <el-tree ref="treeRef" style="max-width: 600px" :data="data" show-checkbox node-key="id" highlight-current
-            :props="defaultProps" @check="checkedbox" :default-checked-keys="defaultChecked" />
+            :props="defaultProps" @check="checkedbox" :default-checked-keys="defaultChecked"
+            :filter-node-method="filterNode" />
 
         <template #footer>
             <div class="dialog-footer">
@@ -18,7 +19,7 @@
 <script lang="ts" setup>
     import service from '@/axios';
     import { useCounterStore } from '@/stores/counter';
-
+    import type { FilterNodeMethodFunction, TreeInstance } from 'element-plus'
     import { desEncrypt } from '@/utils/des';
     import { ElMessage, ElTree } from 'element-plus'
     import { storeToRefs } from 'pinia';
@@ -32,6 +33,21 @@
 
 
 
+
+
+    //搜索内容
+    const searchText = ref<string>('')
+    const filterNode: FilterNodeMethodFunction = (value: string, data: any) => {
+        if (!value) return true
+        const label = String(data.text ?? '')
+        return label.includes(value)
+    }
+
+    const treeRef = ref<TreeInstance>()
+    watch(searchText, (newV) => {
+
+        treeRef.value?.filter(newV)
+    })
 
 
     const props = defineProps<{
